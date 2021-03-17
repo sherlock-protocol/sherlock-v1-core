@@ -1,5 +1,8 @@
 {
   "name": "hardhat-project",
+  "scripts": {
+    "forktest": "npx hardhat node & P1=$! sleep 3 && npx hardhat --network localhost run scripts/frontend.js & wait $P1"
+  },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.2",
     "@nomiclabs/hardhat-waffle": "^2.0.1",

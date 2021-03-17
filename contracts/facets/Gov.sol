@@ -18,6 +18,23 @@ contract Gov is IGov {
         gs.withdrawTimeLock = _timeLock;
     }
 
+    function getClaimPeriod()
+        external
+        override
+        view
+        returns (uint256 claimPeriod)
+    {
+        // TODO only gov
+        GovStorage.Base storage gs = GovStorage.gs();
+        claimPeriod = gs.withdrawClaimPeriod;
+    }
+
+    function getTimeLock() external override view returns (uint256 timeLock) {
+        // TODO only gov
+        GovStorage.Base storage gs = GovStorage.gs();
+        timeLock = gs.withdrawTimeLock;
+    }
+
     function protocolAdd(
         bytes32 _protocol,
         address _eoaProtocolAgent,

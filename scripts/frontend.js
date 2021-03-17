@@ -3,6 +3,13 @@ const { constants } = require("ethers");
 const { insurance } = require("../test/utils.js");
 const hre = require("hardhat");
 
+const PROTOCOL_1 =
+  "0x561ca898cce9f021c15a441ef41899706e923541cee724530075d1a1144761c1";
+const PROTOCOL_2 =
+  "0x561ca898cce9f021c15a441ef41899706e923541cee724530075d1a1144761c2";
+const PROTOCOL_3 =
+  "0x561ca898cce9f021c15a441ef41899706e923541cee724530075d1a1144761c3";
+
 async function main() {
   [owner, alice, bob, charlie] = await ethers.getSigners();
   [owner.address, alice.address, bob.address, charlie.address] = [
@@ -13,7 +20,6 @@ async function main() {
   ];
 
   insure = await insurance(owner.address);
-  console.log("insure", insure.address);
 
   // Deploying 4 tokens
   const Token = await ethers.getContractFactory("MockToken");
@@ -51,9 +57,33 @@ async function main() {
   await insure.setTimeLock(10);
   await insure.setClaimPeriod(5);
 
+  // Add protocols
+  await insure.protocolAdd(PROTOCOL_1, owner.address, owner.address);
+  await insure.protocolAdd(PROTOCOL_2, owner.address, owner.address);
+  await insure.protocolAdd(PROTOCOL_3, owner.address, owner.address);
+
   //
   // Function below are optional
   //
+
+  // set premiums
+  // 4 = 10 million
+  await insure.setProtocolPremiums(
+    PROTOCOL_1,
+    [tokenDAI.address, tokenUSDC.address],
+    [parseEther("4"), parseEther("12")]
+  );
+  await insure.setProtocolPremiums(
+    PROTOCOL_2,
+    [tokenUSDC.address, tokenAAVE.address],
+    [parseEther("4"), parseEther("12")]
+  );
+  await insure.setProtocolPremiums(
+    PROTOCOL_3,
+    [tokenUSDC.address, tokenAAVE.address, tokenWETH.address],
+    [parseEther("4"), parseEther("12"), parseEther("6")]
+  );
+
   await tokenDAI.approve(insure.address, constants.MaxUint256);
   await tokenUSDC.approve(insure.address, constants.MaxUint256);
   await tokenAAVE.approve(insure.address, constants.MaxUint256);
@@ -63,6 +93,8 @@ async function main() {
   await stakeUSDC.approve(insure.address, constants.MaxUint256);
   await stakeAAVE.approve(insure.address, constants.MaxUint256);
   await stakeWETH.approve(insure.address, constants.MaxUint256);
+
+  console.log("insure", insure.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

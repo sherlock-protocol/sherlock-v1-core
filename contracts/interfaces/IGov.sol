@@ -9,6 +9,10 @@ interface IGov {
 
     function setTimeLock(uint256 _timeLock) external;
 
+    function getClaimPeriod() external view returns (uint256 claimPeriod);
+
+    function getTimeLock() external view returns (uint256 timeLock);
+
     event TokenAdded(IERC20 _token, IStake _stake);
 
     function protocolAdd(

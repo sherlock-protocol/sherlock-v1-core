@@ -87,7 +87,7 @@ describe("Greeter", function () {
       [parseUnits("1", 15), parseUnits("5", 15)]
     );
   });
-  it("Set premiums", async function () {
+  it("Get premiums", async function () {
     expect(await insure.getTotalPremiumPerBlock(tokenA.address)).to.eq(
       parseUnits("1", 15)
     );
