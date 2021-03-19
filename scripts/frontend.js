@@ -76,12 +76,12 @@ async function main() {
   await insure.setProtocolPremiums(
     PROTOCOL_2,
     [tokenUSDC.address, tokenAAVE.address],
-    [parseEther("4"), parseEther("12")]
+    [parseEther("0.4"), parseEther("0.12")]
   );
   await insure.setProtocolPremiums(
     PROTOCOL_3,
     [tokenUSDC.address, tokenAAVE.address, tokenWETH.address],
-    [parseEther("4"), parseEther("12"), parseEther("6")]
+    [parseEther("0.4"), parseEther("0.12"), parseEther("0.06")]
   );
 
   await tokenDAI.approve(insure.address, constants.MaxUint256);
@@ -93,6 +93,10 @@ async function main() {
   await stakeUSDC.approve(insure.address, constants.MaxUint256);
   await stakeAAVE.approve(insure.address, constants.MaxUint256);
   await stakeWETH.approve(insure.address, constants.MaxUint256);
+
+  await insure.stake(parseUnits("100", 6), owner.address, tokenDAI.address);
+  await insure.stake(parseUnits("100", 8), owner.address, tokenUSDC.address);
+  await insure.stake(parseUnits("100", 18), owner.address, tokenAAVE.address);
 
   console.log("insure", insure.address);
 }
