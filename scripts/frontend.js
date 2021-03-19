@@ -71,17 +71,17 @@ async function main() {
   await insure.setProtocolPremiums(
     PROTOCOL_1,
     [tokenDAI.address, tokenUSDC.address],
-    [parseEther("4"), parseEther("12")]
+    [parseUnits("4", 10), parseUnits("12", 10)]
   );
   await insure.setProtocolPremiums(
     PROTOCOL_2,
     [tokenUSDC.address, tokenAAVE.address],
-    [parseEther("0.4"), parseEther("0.12")]
+    [parseUnits("0.4", 10), parseUnits("0.12", 10)]
   );
   await insure.setProtocolPremiums(
     PROTOCOL_3,
     [tokenUSDC.address, tokenAAVE.address, tokenWETH.address],
-    [parseEther("0.4"), parseEther("0.12"), parseEther("0.06")]
+    [parseUnits("0.4", 10), parseUnits("0.12", 10), parseUnits("0.06", 10)]
   );
 
   await tokenDAI.approve(insure.address, constants.MaxUint256);
