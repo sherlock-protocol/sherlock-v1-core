@@ -53,6 +53,15 @@ contract Pool {
         );
     }
 
+    function getTotalAccruedDebt() public view returns (uint256) {
+        (, PoolStorage.Base storage ps) = baseData();
+
+        return
+            block.number.sub(ps.totalPremiumLastPaid).mul(
+                getTotalPremiumPerBlock()
+            );
+    }
+
     function exchangeRate() external view returns (uint256 rate) {
         // token to stakedtoken
         (, PoolStorage.Base storage ps) = baseData();
@@ -64,14 +73,14 @@ contract Pool {
         }
     }
 
-    function getTotalPremiumPerBlock() external view returns (uint256) {
+    function getTotalPremiumPerBlock() public view returns (uint256) {
         (, PoolStorage.Base storage ps) = baseData();
         return ps.totalPremiumPerBlock;
     }
 
-    function getStakersTVL() external view returns (uint256) {
+    function getStakersTVL() public view returns (uint256) {
         (, PoolStorage.Base storage ps) = baseData();
-        return ps.poolBalance;
+        return ps.poolBalance.add(getTotalAccruedDebt());
     }
 
     function getStakerTVL(address _staker) external view returns (uint256) {
@@ -80,7 +89,7 @@ contract Pool {
             return 0;
         }
         return
-            ps.stakeToken.balanceOf(_staker).mul(ps.poolBalance).div(
+            ps.stakeToken.balanceOf(_staker).mul(getStakersTVL()).div(
                 ps.stakeToken.totalSupply()
             );
     }

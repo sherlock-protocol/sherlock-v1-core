@@ -47,6 +47,11 @@ interface IPool {
         address _token
     ) external view returns (PoolStorage.StakeWithdraw memory);
 
+    function getTotalAccruedDebt(address _token)
+        external
+        view
+        returns (uint256);
+
     function getTotalPremiumPerBlock(address _token)
         external
         view
