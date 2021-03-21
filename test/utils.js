@@ -29,11 +29,19 @@ module.exports = {
     return (await ethers.provider.getBlock(tx.blockNumber)).timestamp;
   },
   insurance: async (owner) => {
+    const LibPool = await ethers.getContractFactory("LibPool");
+    libPool = await LibPool.deploy();
+
+    const Pool = await ethers.getContractFactory("Pool", {
+      libraries: { LibPool: libPool.address },
+    });
     facets = [
-      await ethers.getContractFactory("Pool"),
+      Pool,
       await ethers.getContractFactory("Gov"),
       await ethers.getContractFactory("View"),
-      await ethers.getContractFactory("Manager"),
+      await ethers.getContractFactory("Manager", {
+        libraries: { LibPool: libPool.address },
+      }),
     ];
 
     diamondCut = [];
@@ -49,7 +57,6 @@ module.exports = {
     extern = [];
     intern = [];
 
-    const Pool = await ethers.getContractFactory("Pool");
     const IPool = await ethers.getContractAt("IPool", constants.AddressZero);
     for (property in Pool.interface.functions) {
       const name = Pool.interface.functions[property].name;

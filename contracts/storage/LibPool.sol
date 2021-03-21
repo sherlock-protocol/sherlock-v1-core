@@ -21,6 +21,9 @@ library PoolStorage {
         mapping(address => StakeWithdraw[]) stakesWithdraw;
 
         IStake stakeToken;
+
+        mapping(bytes32 => bool) isProtocol;
+        bytes32[] protocols;
     }
 
     struct StakeWithdraw {

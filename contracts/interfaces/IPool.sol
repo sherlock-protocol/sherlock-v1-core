@@ -52,6 +52,13 @@ interface IPool {
         view
         returns (uint256);
 
+    function getAccruedDebt(bytes32 _protocol, address _token)
+        external
+        view
+        returns (uint256);
+
+    function payOffDebtAll(address _token) external;
+
     function getTotalPremiumPerBlock(address _token)
         external
         view

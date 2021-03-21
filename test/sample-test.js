@@ -95,6 +95,21 @@ describe("Greeter", function () {
       parseUnits("5", 15)
     );
   });
+  it("Read debt", async function () {
+    expect(await insure.getTotalAccruedDebt(tokenA.address)).to.eq(0);
+    expect(await insure.getTotalAccruedDebt(tokenB.address)).to.eq(0);
+  });
+  it("Read debt after 5 blocks", async function () {
+    for (i = 0; i < 5; i++) {
+      await ethers.provider.send("evm_mine", []);
+    }
+    expect(await insure.getTotalAccruedDebt(tokenA.address)).to.eq(
+      parseUnits("5", 15)
+    );
+    expect(await insure.getTotalAccruedDebt(tokenB.address)).to.eq(
+      parseUnits("25", 15)
+    );
+  });
   // it("Valid token 2", async function () {
   //   tx = await solution.stake(parseEther("500"), token2Address);
   //   tx = await tx.wait();

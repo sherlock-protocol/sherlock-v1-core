@@ -13,6 +13,8 @@ import "../storage/LibGov.sol";
 
 import "../interfaces/IStake.sol";
 
+import "./LibPool.sol";
+
 contract Pool {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
@@ -32,7 +34,20 @@ contract Pool {
         ps.protocolBalance[_protocol] = ps.protocolBalance[_protocol].add(
             _amount
         );
+
+        if (!ps.isProtocol[_protocol]) {
+            // initial deposit
+            ps.isProtocol[_protocol] = true;
+            ps.protocols.push(_protocol);
+        }
     }
+
+    // todo
+    //  function removeProtocol(
+    //     bytes32 _protocol,
+    //     uint256 _index,
+    //     bool _forceDebt
+    // ) external
 
     function withdrawProtocolBalance(
         bytes32 _protocol,
@@ -45,21 +60,14 @@ contract Pool {
         );
         require(_amount > 0, "AMOUNT");
         require(_receiver != address(0), "RECEIVER");
-        (IERC20 token, PoolStorage.Base storage ps) = baseData();
+        (IERC20 _token, PoolStorage.Base storage ps) = baseData();
 
-        token.safeTransfer(_receiver, _amount);
+        LibPool.payOffDebtAll(_token);
+
+        _token.safeTransfer(_receiver, _amount);
         ps.protocolBalance[_protocol] = ps.protocolBalance[_protocol].sub(
             _amount
         );
-    }
-
-    function getTotalAccruedDebt() public view returns (uint256) {
-        (, PoolStorage.Base storage ps) = baseData();
-
-        return
-            block.number.sub(ps.totalPremiumLastPaid).mul(
-                getTotalPremiumPerBlock()
-            );
     }
 
     function exchangeRate() external view returns (uint256 rate) {
@@ -73,14 +81,29 @@ contract Pool {
         }
     }
 
-    function getTotalPremiumPerBlock() public view returns (uint256) {
+    function getTotalAccruedDebt() external view returns (uint256) {
+        (IERC20 _token, ) = baseData();
+        return LibPool.getTotalAccruedDebt(_token);
+    }
+
+    function getAccruedDebt(bytes32 _protocol) external view returns (uint256) {
+        (IERC20 _token, ) = baseData();
+        return LibPool.accruedDebt(_protocol, _token);
+    }
+
+    function payOffDebtAll() external {
+        (IERC20 _token, ) = baseData();
+        LibPool.payOffDebtAll(_token);
+    }
+
+    function getTotalPremiumPerBlock() external view returns (uint256) {
         (, PoolStorage.Base storage ps) = baseData();
         return ps.totalPremiumPerBlock;
     }
 
     function getStakersTVL() public view returns (uint256) {
-        (, PoolStorage.Base storage ps) = baseData();
-        return ps.poolBalance.add(getTotalAccruedDebt());
+        (IERC20 _token, PoolStorage.Base storage ps) = baseData();
+        return ps.poolBalance.add(LibPool.getTotalAccruedDebt(_token));
     }
 
     function getStakerTVL(address _staker) external view returns (uint256) {

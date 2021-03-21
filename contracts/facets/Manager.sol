@@ -10,6 +10,8 @@ import "../interfaces/IManager.sol";
 import "../storage/LibPool.sol";
 import "../storage/LibGov.sol";
 
+import "./LibPool.sol";
+
 contract Manager is IManager {
     using SafeMath for uint256;
 
@@ -18,6 +20,7 @@ contract Manager is IManager {
         address[] memory _tokens,
         uint256[] memory _premiums
     ) external override {
+        // todo only manager
         GovStorage.Base storage gs = GovStorage.gs();
         require(gs.protocolsCovered[_protocol], "NOT_COVERED");
         require(_tokens.length == _premiums.length, "LENGTH");
@@ -28,7 +31,8 @@ contract Manager is IManager {
             uint256 premium = _premiums[i];
 
             // pay off debt for old premium variable
-            // TODO IPool(tokenPool).tryPayOffDebtAll();
+            LibPool.payOffDebtAll(IERC20(_tokens[i]));
+
             ps.totalPremiumPerBlock = ps
                 .totalPremiumPerBlock
                 .sub(ps.protocolPremium[_protocol])
