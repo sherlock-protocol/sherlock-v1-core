@@ -82,4 +82,12 @@ interface IPool {
         returns (uint256);
 
     function exchangeRate(address _token) external view returns (uint256);
+
+    function removeProtocol(
+        bytes32 _protocol,
+        uint256 _index,
+        bool _forceDebt,
+        address _receiver,
+        address _token
+    ) external;
 }

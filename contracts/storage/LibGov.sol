@@ -1,6 +1,8 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.7.0;
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 import "hardhat/console.sol";
 
 library GovStorage {
@@ -14,6 +16,8 @@ library GovStorage {
         uint256 withdrawClaimPeriod;
 
         mapping(bytes32 => bool) protocolsCovered;
+
+        IERC20[] tokens;
     }
 
     function gs() internal pure returns (Base storage bs) {

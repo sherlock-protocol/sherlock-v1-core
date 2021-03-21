@@ -11,6 +11,7 @@ library PoolStorage {
 
     struct Base {
         bool initialized;
+        bool deposits;
 
         uint256 poolBalance;
         mapping(bytes32 => uint256) protocolBalance;

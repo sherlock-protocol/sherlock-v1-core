@@ -24,11 +24,9 @@ contract Pool {
         external
     {
         require(_amount > 0, "AMOUNT");
-        require(
-            GovStorage.gs().protocolAgents[_protocol] != address(0),
-            "PROTOCOL"
-        );
+        require(GovStorage.gs().protocolsCovered[_protocol], "PROTOCOL");
         (IERC20 token, PoolStorage.Base storage ps) = baseData();
+        require(ps.deposits, "NO_DEPOSITS");
 
         token.safeTransferFrom(msg.sender, address(this), _amount);
         ps.protocolBalance[_protocol] = ps.protocolBalance[_protocol].add(
@@ -42,12 +40,38 @@ contract Pool {
         }
     }
 
-    // todo
-    //  function removeProtocol(
-    //     bytes32 _protocol,
-    //     uint256 _index,
-    //     bool _forceDebt
-    // ) external
+    function removeProtocol(
+        bytes32 _protocol,
+        uint256 _index,
+        bool _forceDebt,
+        address _receiver
+    ) external {
+        (IERC20 _token, PoolStorage.Base storage ps) = baseData();
+        require(ps.protocols[_index] == _protocol, "INDEX");
+
+        uint256 accrued = LibPool.accruedDebt(_protocol, _token);
+        if (accrued == 0) {
+            require(ps.protocolPremium[_protocol] == 0, "CAN_NOT_DELETE");
+        } else {
+            require(accrued > ps.protocolBalance[_protocol], "CAN_NOT_DELETE2");
+        }
+
+        if (_forceDebt && accrued > 0) {
+            ps.poolBalance = ps.poolBalance.add(ps.protocolBalance[_protocol]);
+            delete ps.protocolBalance[_protocol];
+        }
+
+        if (ps.protocolBalance[_protocol] > 0) {
+            require(_receiver != address(0), "ADDRESS");
+            _token.safeTransfer(_receiver, ps.protocolBalance[_protocol]);
+        }
+
+        // move last index to index of _protocol
+        ps.protocols[_index] = ps.protocols[ps.protocols.length - 1];
+        // remove last index
+        delete ps.protocols[ps.protocols.length - 1];
+        ps.isProtocol[_protocol] = false;
+    }
 
     function withdrawProtocolBalance(
         bytes32 _protocol,
@@ -124,6 +148,7 @@ contract Pool {
         require(_amount > 0, "AMOUNT");
         require(_receiver != address(0), "RECEIVER");
         (IERC20 token, PoolStorage.Base storage ps) = baseData();
+        require(ps.deposits, "NO_DEPOSITS");
 
         token.safeTransferFrom(msg.sender, address(this), _amount);
         ps.poolBalance = ps.poolBalance.add(_amount);
