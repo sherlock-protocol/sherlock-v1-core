@@ -8,6 +8,34 @@ import "../storage/LibPool.sol";
 import "../storage/LibGov.sol";
 
 interface IPool {
+    function getGovPool(address _token) external view returns (address);
+
+    function isInitialized(address _token) external view returns (bool);
+
+    function isDeposit(address _token) external view returns (bool);
+
+    function getProtocolBalance(bytes32 _protocol, address _token)
+        external
+        view
+        returns (uint256);
+
+    function getProtocolPremium(bytes32 _protocol, address _token)
+        external
+        view
+        returns (uint256);
+
+    function getStakeToken(address _token) external view returns (address);
+
+    function isProtocol(bytes32 _protocol, address _token)
+        external
+        view
+        returns (bool);
+
+    function getProtocols(address _token)
+        external
+        view
+        returns (address[] memory);
+
     function depositProtocolBalance(
         bytes32 _protocol,
         uint256 _amount,
@@ -63,6 +91,8 @@ interface IPool {
         external
         view
         returns (uint256);
+
+    function getPremiumLastPaid(address _token) external view returns (uint256);
 
     function getWithdrawalSize(address _staker, address _token)
         external

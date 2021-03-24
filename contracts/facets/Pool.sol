@@ -16,11 +16,67 @@ import "../interfaces/IStake.sol";
 import "./LibPool.sol";
 
 contract Pool {
-    // TODO, ability to activate assets
+    // TODO, ability to activate assets (in different facet)
 
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
     using SafeERC20 for IStake;
+
+    function getGovPool(address _token) external view returns (address) {
+        (, PoolStorage.Base storage ps) = baseData();
+        return ps.govPool;
+    }
+
+    function isInitialized(address _token) external view returns (bool) {
+        (, PoolStorage.Base storage ps) = baseData();
+        return ps.initialized;
+    }
+
+    function isDeposit(address _token) external view returns (bool) {
+        (, PoolStorage.Base storage ps) = baseData();
+        return ps.deposits;
+    }
+
+    function getProtocolBalance(bytes32 _protocol, address _token)
+        external
+        view
+        returns (uint256)
+    {
+        (, PoolStorage.Base storage ps) = baseData();
+        return ps.protocolBalance[_protocol];
+    }
+
+    function getProtocolPremium(bytes32 _protocol, address _token)
+        external
+        view
+        returns (uint256)
+    {
+        (, PoolStorage.Base storage ps) = baseData();
+        return ps.protocolPremium[_protocol];
+    }
+
+    function getStakeToken(address _token) external view returns (address) {
+        (, PoolStorage.Base storage ps) = baseData();
+        return address(ps.stakeToken);
+    }
+
+    function isProtocol(bytes32 _protocol, address _token)
+        external
+        view
+        returns (bool)
+    {
+        (, PoolStorage.Base storage ps) = baseData();
+        return ps.isProtocol[_protocol];
+    }
+
+    function getProtocols(address _token)
+        external
+        view
+        returns (bytes32[] memory)
+    {
+        (, PoolStorage.Base storage ps) = baseData();
+        return ps.protocols;
+    }
 
     function depositProtocolBalance(bytes32 _protocol, uint256 _amount)
         external
@@ -247,6 +303,11 @@ contract Pool {
     {
         (, PoolStorage.Base storage ps) = baseData();
         return ps.stakesWithdraw[_staker][_id];
+    }
+
+    function getPremiumLastPaid() external view returns (uint256) {
+        (, PoolStorage.Base storage ps) = baseData();
+        return ps.totalPremiumLastPaid;
     }
 
     function getWithdrawalSize(address _staker)
