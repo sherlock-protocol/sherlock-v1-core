@@ -87,7 +87,11 @@ contract Gov is IGov {
         delete gs.protocolAgents[_protocol];
     }
 
-    function tokenAdd(IERC20 _token, IStake _stake) external override {
+    function tokenAdd(
+        IERC20 _token,
+        IStake _stake,
+        address _govPool
+    ) external override {
         GovStorage.Base storage gs = GovStorage.gs();
         PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
 
@@ -100,6 +104,7 @@ contract Gov is IGov {
         ps.initialized = true;
         ps.deposits = true;
         ps.stakeToken = _stake;
+        ps.govPool = _govPool;
         emit TokenAdded(_token, _stake);
     }
 
@@ -127,6 +132,23 @@ contract Gov is IGov {
         gs.tokens[_index] = gs.tokens[gs.tokens.length - 1];
         // remove last index
         delete gs.tokens[gs.tokens.length - 1];
+
+        // TODO, mapping storage is kept
+        // deleting + adding a token with non-default storage can cause unexpected behaviour.
+        // todo, dont user storage poiner? Or add nonce to storage pointer
+        // or make it possible to overwrite storage? (not prefered)
+        delete ps.initialized;
+        delete ps.deposits;
+        delete ps.poolBalance;
+        //delete ps.protocolBalance;
+        //delete ps.protocolPremium;
+        delete ps.totalPremiumPerBlock;
+        delete ps.totalPremiumLastPaid;
+        //delete ps.stakesWithdraw;
+        delete ps.stakeToken;
+        //delete ps.isProtocol;
+        delete ps.protocols;
+        delete ps.govPool;
 
         _token.safeTransfer(_to, ps.poolBalance);
     }

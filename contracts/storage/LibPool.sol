@@ -10,6 +10,8 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 library PoolStorage {
 
     struct Base {
+        address govPool;
+
         bool initialized;
         bool deposits;
 

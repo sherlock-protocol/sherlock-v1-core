@@ -21,5 +21,9 @@ interface IGov {
         address _eoaManager
     ) external;
 
-    function tokenAdd(IERC20 _token, IStake _stake) external;
+    function tokenAdd(
+        IERC20 _token,
+        IStake _stake,
+        address _govPool
+    ) external;
 }

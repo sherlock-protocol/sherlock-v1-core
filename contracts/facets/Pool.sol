@@ -16,6 +16,8 @@ import "../interfaces/IStake.sol";
 import "./LibPool.sol";
 
 contract Pool {
+    // TODO, ability to activate assets
+
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
     using SafeERC20 for IStake;
@@ -47,6 +49,7 @@ contract Pool {
         address _receiver
     ) external {
         (IERC20 _token, PoolStorage.Base storage ps) = baseData();
+        require(msg.sender == ps.govPool, "SENDER");
         require(ps.protocols[_index] == _protocol, "INDEX");
 
         uint256 accrued = LibPool.accruedDebt(_protocol, _token);
