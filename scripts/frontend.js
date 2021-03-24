@@ -20,6 +20,7 @@ async function main() {
   ];
 
   insure = await insurance(owner.address);
+  await insure.setInitialGovInsurance(owner.address);
 
   // Deploying 4 tokens
   const Token = await ethers.getContractFactory("MockToken");
