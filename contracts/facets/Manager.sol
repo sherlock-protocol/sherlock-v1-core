@@ -22,7 +22,7 @@ contract Manager is IManager {
     ) external override {
         // todo only manager
         GovStorage.Base storage gs = GovStorage.gs();
-        require(gs.protocolsCovered[_protocol], "NOT_COVERED");
+        require(gs.protocolIsCovered[_protocol], "NOT_COVERED");
         require(_tokens.length == _premiums.length, "LENGTH");
 
         for (uint256 i = 0; i < _tokens.length; i++) {

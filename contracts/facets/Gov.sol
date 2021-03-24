@@ -44,14 +44,41 @@ contract Gov is IGov {
         timeLock = gs.withdrawTimeLock;
     }
 
+    function getProtocolIsCovered(bytes32 _protocol)
+        external
+        override
+        view
+        returns (bool)
+    {
+        return GovStorage.gs().protocolIsCovered[_protocol];
+    }
+
+    function getProtocolManager(bytes32 _protocol)
+        external
+        override
+        view
+        returns (address manager)
+    {
+        manager = GovStorage.gs().protocolManagers[_protocol];
+    }
+
+    function getProtocolAgent(bytes32 _protocol)
+        external
+        override
+        view
+        returns (address agent)
+    {
+        agent = GovStorage.gs().protocolAgents[_protocol];
+    }
+
     function protocolAdd(
         bytes32 _protocol,
         address _eoaProtocolAgent,
         address _eoaManager
     ) external override {
         GovStorage.Base storage gs = GovStorage.gs();
-        require(!gs.protocolsCovered[_protocol], "COVERED");
-        gs.protocolsCovered[_protocol] = true;
+        require(!gs.protocolIsCovered[_protocol], "COVERED");
+        gs.protocolIsCovered[_protocol] = true;
 
         protocolUpdate(_protocol, _eoaProtocolAgent, _eoaManager);
     }
@@ -60,19 +87,22 @@ contract Gov is IGov {
         bytes32 _protocol,
         address _eoaProtocolAgent,
         address _eoaManager
-    ) public {
+    ) public override {
         require(_protocol != bytes32(0), "ZERO");
         require(_eoaProtocolAgent != address(0), "ZERO");
         require(_eoaManager != address(0), "ZERO");
 
         GovStorage.Base storage gs = GovStorage.gs();
-        require(gs.protocolsCovered[_protocol], "NOT_COVERED");
+        require(gs.protocolIsCovered[_protocol], "NOT_COVERED");
 
         gs.protocolManagers[_protocol] = _eoaManager;
         gs.protocolAgents[_protocol] = _eoaProtocolAgent;
     }
 
-    function protocolRemove(bytes32 _protocol, address _receiver) external {
+    function protocolRemove(bytes32 _protocol, address _receiver)
+        external
+        override
+    {
         GovStorage.Base storage gs = GovStorage.gs();
         for (uint256 i; i < gs.tokens.length; i++) {
             IERC20 token = gs.tokens[i];
@@ -81,10 +111,23 @@ contract Gov is IGov {
             // basically need to check if accruedDebt > 0, but this is true in case premium > 0
             require(ps.protocolPremium[_protocol] == 0, "DEBT");
             require(!ps.isProtocol[_protocol], "IS_PROTOCOL");
+
+            if (ps.protocolBalance[_protocol] > 0) {
+                token.safeTransfer(_receiver, ps.protocolBalance[_protocol]);
+            }
         }
-        delete gs.protocolsCovered[_protocol];
+        delete gs.protocolIsCovered[_protocol];
         delete gs.protocolManagers[_protocol];
         delete gs.protocolAgents[_protocol];
+    }
+
+    function getTokens()
+        external
+        override
+        view
+        returns (IERC20[] memory tokens)
+    {
+        tokens = GovStorage.gs().tokens;
     }
 
     function tokenAdd(
@@ -108,7 +151,7 @@ contract Gov is IGov {
         emit TokenAdded(_token, _stake);
     }
 
-    function tokenDisable(IERC20 _token) external {
+    function tokenDisable(IERC20 _token) external override {
         PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
         require(ps.initialized, "NOT_INITIALIZED");
         require(ps.totalPremiumPerBlock == 0, "ACTIVE_PREMIUM");
@@ -120,7 +163,7 @@ contract Gov is IGov {
         IERC20 _token,
         uint256 _index,
         address _to
-    ) external {
+    ) external override {
         GovStorage.Base storage gs = GovStorage.gs();
         require(gs.tokens[_index] == _token, "INDEX");
 

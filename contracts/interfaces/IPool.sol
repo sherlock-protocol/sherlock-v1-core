@@ -39,7 +39,7 @@ interface IPool {
         address _token
     ) external;
 
-    function withdrawClaim(uint256 _id) external;
+    function withdrawClaim(uint256 _id, address _token) external;
 
     function getWithdrawal(
         address _staker,

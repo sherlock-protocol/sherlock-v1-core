@@ -26,7 +26,7 @@ contract Pool {
         external
     {
         require(_amount > 0, "AMOUNT");
-        require(GovStorage.gs().protocolsCovered[_protocol], "PROTOCOL");
+        require(GovStorage.gs().protocolIsCovered[_protocol], "PROTOCOL");
         (IERC20 token, PoolStorage.Base storage ps) = baseData();
         require(ps.deposits, "NO_DEPOSITS");
 
@@ -218,7 +218,7 @@ contract Pool {
 
         PoolStorage.StakeWithdraw memory withdraw = ps.stakesWithdraw[msg
             .sender][_id];
-
+        // TODO is this check needed? Does above statement not revert after delete?
         require(withdraw.blockInitiated != 0, "WITHDRAW_NOT_ACTIVE");
         // timelock is including
         require(

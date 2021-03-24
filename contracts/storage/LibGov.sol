@@ -15,7 +15,7 @@ library GovStorage {
         uint256 withdrawTimeLock;
         uint256 withdrawClaimPeriod;
 
-        mapping(bytes32 => bool) protocolsCovered;
+        mapping(bytes32 => bool) protocolIsCovered;
 
         IERC20[] tokens;
     }
