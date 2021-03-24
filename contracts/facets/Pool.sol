@@ -288,7 +288,7 @@ contract Pool {
             ) >= block.number,
             "CLAIMPERIOD_EXPIRED"
         );
-        uint256 amount = withdraw.stake.mul(ps.poolBalance).div(
+        uint256 amount = withdraw.stake.mul(getStakersTVL()).div(
             ps.stakeToken.totalSupply()
         );
         token.safeTransfer(msg.sender, amount);

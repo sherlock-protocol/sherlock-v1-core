@@ -9,6 +9,8 @@ library GovStorage {
     bytes32 constant GOV_STORAGE_POSITION = keccak256(abi.encode("diamond.sherlock.gov"));
 
     struct Base {
+        address govInsurance;
+
         mapping(bytes32 => address) protocolManagers;
         mapping(bytes32 => address) protocolAgents;
 

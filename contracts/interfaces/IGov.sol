@@ -5,6 +5,10 @@ import "../storage/LibPool.sol";
 import "../storage/LibGov.sol";
 
 interface IGov {
+    function setInitialGovInsurance(address _govInsurance) external;
+
+    function transferGovInsurance(address _govInsurance) external;
+
     function setClaimPeriod(uint256 _claimPeriod) external;
 
     function setTimeLock(uint256 _timeLock) external;
