@@ -48,10 +48,10 @@ async function main() {
   await stakeWETH.transferOwnership(insure.address);
 
   // Add actual tokens to the solution
-  await insure.tokenAdd(tokenDAI.address, stakeDAI.address);
-  await insure.tokenAdd(tokenUSDC.address, stakeUSDC.address);
-  await insure.tokenAdd(tokenAAVE.address, stakeAAVE.address);
-  await insure.tokenAdd(tokenWETH.address, stakeWETH.address);
+  await insure.tokenAdd(tokenDAI.address, stakeDAI.address, owner.address);
+  await insure.tokenAdd(tokenUSDC.address, stakeUSDC.address, owner.address);
+  await insure.tokenAdd(tokenAAVE.address, stakeAAVE.address, owner.address);
+  await insure.tokenAdd(tokenWETH.address, stakeWETH.address, owner.address);
 
   // Set withdraw variables
   await insure.setTimeLock(10);
@@ -71,7 +71,7 @@ async function main() {
   await insure.setProtocolPremiums(
     PROTOCOL_1,
     [tokenDAI.address, tokenUSDC.address],
-    [parseUnits("4", 10), parseUnits("12", 10)]
+    [parseUnits("4", 6), parseUnits("12", 10)]
   );
   await insure.setProtocolPremiums(
     PROTOCOL_2,
@@ -85,22 +85,27 @@ async function main() {
   );
 
   await tokenDAI.approve(insure.address, constants.MaxUint256);
-  await tokenUSDC.approve(insure.address, constants.MaxUint256);
-  await tokenAAVE.approve(insure.address, constants.MaxUint256);
-  await tokenWETH.approve(insure.address, constants.MaxUint256);
+  // await tokenUSDC.approve(insure.address, constants.MaxUint256);
+  // await tokenAAVE.approve(insure.address, constants.MaxUint256);
+  // await tokenWETH.approve(insure.address, constants.MaxUint256);
 
   await stakeDAI.approve(insure.address, constants.MaxUint256);
-  await stakeUSDC.approve(insure.address, constants.MaxUint256);
-  await stakeAAVE.approve(insure.address, constants.MaxUint256);
-  await stakeWETH.approve(insure.address, constants.MaxUint256);
+  // await stakeUSDC.approve(insure.address, constants.MaxUint256);
+  // await stakeAAVE.approve(insure.address, constants.MaxUint256);
+  // await stakeWETH.approve(insure.address, constants.MaxUint256);
 
   await insure.stake(parseUnits("100", 6), owner.address, tokenDAI.address);
-  await insure.stake(parseUnits("100", 8), owner.address, tokenUSDC.address);
-  await insure.stake(parseUnits("100", 18), owner.address, tokenAAVE.address);
+  // await insure.stake(parseUnits("100", 8), owner.address, tokenUSDC.address);
+  // await insure.stake(parseUnits("100", 18), owner.address, tokenAAVE.address);
 
+  await network.provider.send("evm_setAutomine", [false]);
+  await network.provider.send("evm_setIntervalMining", [13325]);
   console.log("insure", insure.address);
+  console.log("tokenDAI", tokenDAI.address);
+  console.log("tokenUSDC", tokenUSDC.address);
+  console.log("tokenAAVE", tokenAAVE.address);
+  console.log("tokenWETH", tokenWETH.address);
 }
-
 // We recommend this pattern to be able to use async/await everywhere
 // and properly handle errors.
 main()
