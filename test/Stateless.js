@@ -10,14 +10,6 @@ FacetCutAction = {
   Remove: 2,
 };
 
-function getSelectors(contract) {
-  const signatures = [];
-  for (const key of Object.keys(contract.functions)) {
-    signatures.push(utils.keccak256(utils.toUtf8Bytes(key)).substr(0, 10));
-  }
-  return signatures;
-}
-
 const PROTOCOL_X =
   "0x561ca898cce9f021c15a441ef41899706e923541cee724530075d1a1144761c7";
 
@@ -439,8 +431,44 @@ describe.only("static tests", function () {
     describe("exchangeRate()", function () {});
   });
   describe("Gov ─ State Changing", function () {
-    describe("setInitialGovInsurance()", function () {});
-    describe("transferGovInsurance()", function () {});
+    describe("setInitialGovInsurance()", function () {
+      it("Invalid sender", async function () {
+        await expect(
+          insure.connect(alice).setInitialGovInsurance(owner.address)
+        ).to.be.revertedWith("NOT_OWNER");
+      });
+      it("Invalid gov", async function () {
+        await expect(
+          insure.setInitialGovInsurance(constants.AddressZero)
+        ).to.be.revertedWith("ZERO_GOV");
+      });
+      it("Success", async function () {
+        await expect(
+          insure.setInitialGovInsurance(owner.address)
+        ).to.be.revertedWith("ALREADY_SET");
+      });
+    });
+    describe("transferGovInsurance()", function () {
+      it("Invalid sender", async function () {
+        await expect(
+          insure.connect(alice).transferGovInsurance(owner.address)
+        ).to.be.revertedWith("NOT_GOV");
+      });
+      it("Invalid gov", async function () {
+        await expect(
+          insure.transferGovInsurance(constants.AddressZero)
+        ).to.be.revertedWith("ZERO_GOV");
+      });
+      it("Invalid gov (same)", async function () {
+        await expect(
+          insure.transferGovInsurance(owner.address)
+        ).to.be.revertedWith("SAME_GOV");
+      });
+      it("Success", async function () {
+        await insure.transferGovInsurance(alice.address);
+        await insure.connect(alice).transferGovInsurance(owner.address);
+      });
+    });
     describe("setClaimPeriod()", function () {
       it("Invalid sender", async function () {
         await expect(

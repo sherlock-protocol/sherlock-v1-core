@@ -33,7 +33,7 @@ contract Manager is IManager {
 
             // pay off debt for old premium variable
             LibPool.payOffDebtAll(IERC20(_tokens[i]));
-
+            // TODO write to totalPremiumPerBlock only once
             ps.totalPremiumPerBlock = ps
                 .totalPremiumPerBlock
                 .sub(ps.protocolPremium[_protocol])

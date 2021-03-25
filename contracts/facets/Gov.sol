@@ -20,6 +20,7 @@ contract Gov is IGov {
     function setInitialGovInsurance(address _govInsurance) external override {
         GovStorage.Base storage gs = GovStorage.gs();
 
+        require(_govInsurance != address(0), "ZERO_GOV");
         require(msg.sender == LibDiamond.contractOwner(), "NOT_OWNER");
         require(gs.govInsurance == address(0), "ALREADY_SET");
 
@@ -36,6 +37,8 @@ contract Gov is IGov {
         override
         onlyGovInsurance
     {
+        require(_govInsurance != address(0), "ZERO_GOV");
+        require(GovStorage.gs().govInsurance != _govInsurance, "SAME_GOV");
         GovStorage.gs().govInsurance = _govInsurance;
     }
 
