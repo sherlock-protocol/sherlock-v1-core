@@ -34,7 +34,7 @@ interface IPool {
     function getProtocols(address _token)
         external
         view
-        returns (address[] memory);
+        returns (bytes32[] memory);
 
     function depositProtocolBalance(
         bytes32 _protocol,

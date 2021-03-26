@@ -69,6 +69,50 @@ async function main() {
 
   // set premiums
   // 4 = 10 million
+  await tokenDAI.approve(insure.address, constants.MaxUint256);
+  await tokenUSDC.approve(insure.address, constants.MaxUint256);
+  await tokenAAVE.approve(insure.address, constants.MaxUint256);
+  await tokenWETH.approve(insure.address, constants.MaxUint256);
+  await insure.depositProtocolBalance(
+    PROTOCOL_1,
+    parseEther("1"),
+    tokenDAI.address
+  );
+  await insure.depositProtocolBalance(
+    PROTOCOL_1,
+    parseEther("1"),
+    tokenUSDC.address
+  );
+  await insure.depositProtocolBalance(
+    PROTOCOL_2,
+    parseEther("1"),
+    tokenUSDC.address
+  );
+  await insure.depositProtocolBalance(
+    PROTOCOL_2,
+    parseEther("1"),
+    tokenAAVE.address
+  );
+  await insure.depositProtocolBalance(
+    PROTOCOL_3,
+    parseEther("1"),
+    tokenUSDC.address
+  );
+  await insure.depositProtocolBalance(
+    PROTOCOL_3,
+    parseEther("1"),
+    tokenAAVE.address
+  );
+  await insure.depositProtocolBalance(
+    PROTOCOL_3,
+    parseEther("1"),
+    tokenWETH.address
+  );
+  //await tokenDAI.approve(insure.address, 0);
+  await tokenUSDC.approve(insure.address, 0);
+  await tokenAAVE.approve(insure.address, 0);
+  await tokenWETH.approve(insure.address, 0);
+
   await insure.setProtocolPremiums(
     PROTOCOL_1,
     [tokenDAI.address, tokenUSDC.address],
@@ -85,7 +129,6 @@ async function main() {
     [parseUnits("0.4", 10), parseUnits("0.12", 10), parseUnits("0.06", 10)]
   );
 
-  await tokenDAI.approve(insure.address, constants.MaxUint256);
   // await tokenUSDC.approve(insure.address, constants.MaxUint256);
   // await tokenAAVE.approve(insure.address, constants.MaxUint256);
   // await tokenWETH.approve(insure.address, constants.MaxUint256);
