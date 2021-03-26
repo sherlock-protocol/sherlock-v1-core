@@ -4,12 +4,6 @@ const { parseEther, parseUnits } = require("ethers/lib/utils");
 const { constants } = require("ethers");
 const { insurance } = require("./utils.js");
 
-FacetCutAction = {
-  Add: 0,
-  Replace: 1,
-  Remove: 2,
-};
-
 const PROTOCOL_X =
   "0x561ca898cce9f021c15a441ef41899706e923541cee724530075d1a1144761c7";
 
@@ -19,7 +13,7 @@ const NON_PROTOCOL =
 const NON_PROTOCOL2 =
   "0x561ca898cce9f021c15a441ef41899706e923541cee724530075d1a1144761c9";
 
-describe.only("static tests", function () {
+describe("static tests", function () {
   before(async function () {
     [owner, alice] = await ethers.getSigners();
     [owner.address, alice.address] = [

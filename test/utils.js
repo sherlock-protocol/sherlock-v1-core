@@ -1,5 +1,7 @@
 const { utils } = require("ethers/lib");
 const { constants } = require("ethers");
+const { expect } = require("chai");
+const { parseEther } = require("ethers/lib/utils");
 
 FacetCutAction = {
   Add: 0,
@@ -15,9 +17,63 @@ function getSelectors(contract) {
   return signatures;
 }
 
+async function errorMsg(i, key, token, need, is) {
+  return (
+    i +
+    ": " +
+    key +
+    " @ " +
+    (await token.name()) +
+    ", expected " +
+    need +
+    " to eq " +
+    is
+  );
+}
+
 module.exports = {
   FacetCutAction: this.FacetCutAction,
   getSelectors: this.getSelectors,
+  erc20: async (token, data) => {
+    let i = 0;
+    for (var key in data) {
+      const val = data[key];
+      if (typeof val !== "string") {
+        throw new Error("wrong type");
+      }
+      const is = parseEther(val);
+      let need;
+      if (key == "total") {
+        need = await token.totalSupply();
+      } else {
+        need = await token.balanceOf(key);
+      }
+      if (!need.eq(is)) {
+        throw new Error(await errorMsg(i, key, token, need, is));
+      }
+      i += 1;
+    }
+  },
+  tvl: async (token, data) => {
+    let i = 0;
+    for (var key in data) {
+      const val = data[key];
+      if (typeof val !== "string") {
+        throw new Error("wrong type");
+      }
+      const is = parseEther(val);
+      let need;
+      if (key == "total") {
+        need = await insure.getStakersTVL(token.address);
+      } else {
+        need = await insure.getStakerTVL(key, token.address);
+      }
+      if (!need.eq(is)) {
+        throw new Error(await errorMsg(i, key, token, need, is));
+      }
+      i += 1;
+    }
+  },
   events: async (tx) => {
     tx = await tx;
     tx = await tx.wait();

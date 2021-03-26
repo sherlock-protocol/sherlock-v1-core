@@ -176,6 +176,7 @@ contract Gov is IGov {
         require(address(_stake) != address(0), "ZERO_STAKE");
         require(_stake.getOwner() == address(this), "OWNER");
         require(_govPool != address(0), "ZERO_GOV");
+        require(_stake.totalSupply() == 0, "SUPPLY");
 
         gs.tokens.push(_token);
         ps.initialized = true;

@@ -209,9 +209,6 @@ contract Pool {
         (IERC20 token, PoolStorage.Base storage ps) = baseData();
         require(ps.deposits, "NO_DEPOSITS");
 
-        token.safeTransferFrom(msg.sender, address(this), _amount);
-        ps.poolBalance = ps.poolBalance.add(_amount);
-
         uint256 totalStake = ps.stakeToken.totalSupply();
         if (totalStake == 0) {
             // mint initial stake
@@ -220,6 +217,9 @@ contract Pool {
             // mint stake based on funds in pool
             stake = _amount.mul(totalStake).div(ps.poolBalance);
         }
+
+        token.safeTransferFrom(msg.sender, address(this), _amount);
+        ps.poolBalance = ps.poolBalance.add(_amount);
         ps.stakeToken.mint(_receiver, stake);
     }
 
