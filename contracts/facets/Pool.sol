@@ -157,11 +157,9 @@ contract Pool {
         // token to stakedtoken
         (, PoolStorage.Base storage ps) = baseData();
         uint256 totalStake = ps.stakeToken.totalSupply();
-        if (totalStake == 0) {
-            rate = 10**18;
-        } else {
-            rate = totalStake.mul(10**18).div(ps.poolBalance);
-        }
+        require(totalStake > 0, "N0_STAKE");
+        require(ps.poolBalance > 0, "NO_FUNDS");
+        rate = totalStake.mul(10**18).div(ps.poolBalance);
     }
 
     function getTotalAccruedDebt() external view returns (uint256) {

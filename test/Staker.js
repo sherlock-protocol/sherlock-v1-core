@@ -8,7 +8,7 @@ const { TimeTraveler } = require("./utils-snapshot.js");
 const PROTOCOL_X =
   "0x561ca898cce9f021c15a441ef41899706e923541cee724530075d1a1144761c7";
 
-describe.only("Staker tests", function () {
+describe("Staker tests", function () {
   before(async function () {
     timeTraveler = new TimeTraveler(network.provider);
 
@@ -67,6 +67,9 @@ describe.only("Staker tests", function () {
       [insure.address]: "0",
       total: "0",
     });
+    await expect(insure.exchangeRate(tokenA.address)).to.be.revertedWith(
+      "N0_STAKE"
+    );
   });
   describe("stake(), example 1", function () {
     before(async function () {
@@ -95,6 +98,10 @@ describe.only("Staker tests", function () {
         [insure.address]: "0",
         total: "10",
       });
+
+      expect(await insure.exchangeRate(tokenA.address)).to.eq(
+        parseEther("0.1")
+      );
     });
     it("Owner stake 20 for Alice", async function () {
       expect(
@@ -119,6 +126,10 @@ describe.only("Staker tests", function () {
         [insure.address]: "0",
         total: "30",
       });
+
+      expect(await insure.exchangeRate(tokenA.address)).to.eq(
+        parseEther("0.1")
+      );
     });
     it("Owner stake 10 again", async function () {
       expect(
@@ -143,6 +154,10 @@ describe.only("Staker tests", function () {
         [insure.address]: "0",
         total: "40",
       });
+
+      expect(await insure.exchangeRate(tokenA.address)).to.eq(
+        parseEther("0.1")
+      );
     });
     it("Alice stake 40", async function () {
       expect(
@@ -169,6 +184,10 @@ describe.only("Staker tests", function () {
         [insure.address]: "0",
         total: "80",
       });
+
+      expect(await insure.exchangeRate(tokenA.address)).to.eq(
+        parseEther("0.1")
+      );
     });
   });
   describe("stake(), example 2", function () {
@@ -198,6 +217,10 @@ describe.only("Staker tests", function () {
         [insure.address]: "0",
         total: "100",
       });
+
+      expect(await insure.exchangeRate(tokenA.address)).to.eq(
+        parseEther("0.01")
+      );
     });
     it("Owner stake 200 for Alice", async function () {
       expect(
@@ -222,6 +245,10 @@ describe.only("Staker tests", function () {
         [insure.address]: "0",
         total: "300",
       });
+
+      expect(await insure.exchangeRate(tokenA.address)).to.eq(
+        parseEther("0.01")
+      );
     });
   });
 });
