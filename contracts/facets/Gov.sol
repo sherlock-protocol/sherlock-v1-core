@@ -206,12 +206,14 @@ contract Gov is IGov {
         // move last index to index of _token
         gs.tokens[_index] = gs.tokens[gs.tokens.length - 1];
         // remove last index
-        delete gs.tokens[gs.tokens.length - 1];
+        gs.tokens.pop();
 
         // TODO, mapping storage is kept
         // deleting + adding a token with non-default storage can cause unexpected behaviour.
         // todo, dont user storage poiner? Or add nonce to storage pointer
         // or make it possible to overwrite storage? (not prefered)
+        // 27/3, I think it is cool, as balance+premium+isProtocol will be reset (as all protocols need to be deleted)
+        // stakeWithdraw is kept, only results in withdraws potentially having index > 0
         delete ps.initialized;
         delete ps.deposits;
         delete ps.poolBalance;

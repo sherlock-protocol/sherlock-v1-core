@@ -1,13 +1,3 @@
-// transferGovInsurance
-// setClaimPeriod
-// setTimeLock
-// protocolAdd
-// protocolUpdate
-// protocolRemove
-// tokenAdd
-// tokenDisable
-// tokenRemove
-
 const { expect } = require("chai");
 const { utils } = require("ethers/lib");
 const { parseEther, parseUnits } = require("ethers/lib/utils");
@@ -46,6 +36,9 @@ describe("Gov Insurance tests", function () {
     await tokenA.approve(insure.address, constants.MaxUint256);
     await tokenB.approve(insure.address, constants.MaxUint256);
     await tokenC.approve(insure.address, constants.MaxUint256);
+    await stakeA.transferOwnership(insure.address);
+    await stakeB.transferOwnership(insure.address);
+    await stakeC.transferOwnership(insure.address);
 
     await timeTraveler.snapshot();
   });
@@ -136,7 +129,6 @@ describe("Gov Insurance tests", function () {
   describe("protocolRemove(), debt", function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
-      await stakeA.transferOwnership(insure.address);
       await insure.protocolAdd(PROTOCOL_X, owner.address, owner.address);
       await insure.tokenAdd(tokenA.address, stakeA.address, owner.address);
       await insure.depositProtocolBalance(
@@ -186,6 +178,58 @@ describe("Gov Insurance tests", function () {
       );
       expect(await insure.getProtocolAgent(PROTOCOL_X)).to.eq(
         constants.AddressZero
+      );
+    });
+  });
+  describe("tokenAdd()", function () {
+    before(async function () {
+      await timeTraveler.revertSnapshot();
+    });
+    it("Add", async function () {
+      await insure.tokenAdd(tokenA.address, stakeA.address, owner.address);
+
+      tokens = await insure.getTokens();
+      expect(tokens.length).to.eq(1);
+      expect(tokens[0]).to.eq(tokenA.address);
+
+      expect(await insure.isInitialized(tokenA.address)).to.eq(true);
+      expect(await insure.isDeposit(tokenA.address)).to.eq(true);
+      expect(await insure.getGovPool(tokenA.address)).to.eq(owner.address);
+      expect(await insure.getStakeToken(tokenA.address)).to.eq(stakeA.address);
+    });
+  });
+  describe("tokenDisable()", function () {
+    before(async function () {
+      await timeTraveler.revertSnapshot();
+      await insure.tokenAdd(tokenA.address, stakeA.address, owner.address);
+    });
+    it("Disable", async function () {
+      await insure.tokenDisable(tokenA.address);
+
+      tokens = await insure.getTokens();
+      expect(tokens.length).to.eq(1);
+      expect(tokens[0]).to.eq(tokenA.address);
+
+      expect(await insure.isInitialized(tokenA.address)).to.eq(true);
+      expect(await insure.isDeposit(tokenA.address)).to.eq(false);
+      expect(await insure.getGovPool(tokenA.address)).to.eq(owner.address);
+      expect(await insure.getStakeToken(tokenA.address)).to.eq(stakeA.address);
+    });
+  });
+  describe("tokenRemove()", function () {
+    before(async function () {
+      await timeTraveler.revertSnapshot();
+      await insure.tokenAdd(tokenA.address, stakeA.address, owner.address);
+      await insure.tokenDisable(tokenA.address);
+    });
+    it("Remove", async function () {
+      await insure.tokenRemove(tokenA.address, 0, alice.address);
+
+      tokens = await insure.getTokens();
+      expect(tokens.length).to.eq(0);
+
+      await expect(insure.isInitialized(tokenA.address)).to.be.revertedWith(
+        "INVALID_TOKEN"
       );
     });
   });
