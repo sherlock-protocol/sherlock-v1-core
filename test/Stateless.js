@@ -417,6 +417,7 @@ describe("static tests", function () {
     describe("getTotalAccruedDebt()", function () {});
     describe("getWithdrawal()", function () {});
     describe("getTotalPremiumPerBlock()", function () {});
+    describe("getFirstMoneyOut()", function () {});
     describe("getPremiumLastPaid()", function () {});
     describe("getWithdrawalSize()", function () {});
     describe("getWithrawalInitialIndex()", function () {});
@@ -425,6 +426,7 @@ describe("static tests", function () {
     describe("exchangeRate()", function () {});
   });
   describe("Gov ─ State Changing", function () {
+    describe("setExitFee()", function () {});
     describe("setInitialGovInsurance()", function () {
       it("Invalid sender", async function () {
         await expect(
@@ -566,9 +568,9 @@ describe("static tests", function () {
         ).to.be.revertedWith("NOT_GOV");
       });
       it("Invalid protocol", async function () {
-        await expect(
-          insure.protocolRemove(NON_PROTOCOL2)
-        ).to.be.revertedWith("NOT_COVERED");
+        await expect(insure.protocolRemove(NON_PROTOCOL2)).to.be.revertedWith(
+          "NOT_COVERED"
+        );
       });
       it("Invalid protocol (zero)", async function () {
         await expect(
@@ -661,6 +663,8 @@ describe("static tests", function () {
     });
   });
   describe("Gov ─ View Methods", function () {
+    describe("getGovInsurance()", function () {});
+    describe("getExitFee()", function () {});
     describe("getClaimPeriod()", function () {});
     describe("getTimeLock()", function () {});
     describe("getTokens()", function () {});

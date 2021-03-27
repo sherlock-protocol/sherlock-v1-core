@@ -5,6 +5,10 @@ import "../storage/LibPool.sol";
 import "../storage/LibGov.sol";
 
 interface IGov {
+    function setExitFee(uint256 _fee) external;
+
+    function getExitFee() external view returns (uint256);
+
     function setInitialGovInsurance(address _govInsurance) external;
 
     function transferGovInsurance(address _govInsurance) external;

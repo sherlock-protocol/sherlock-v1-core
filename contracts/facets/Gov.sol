@@ -19,6 +19,16 @@ contract Gov is IGov {
         return GovStorage.gs().govInsurance;
     }
 
+    function setExitFee(uint256 _fee) external override onlyGovInsurance {
+        require(_fee <= 10**18, "MAX_VALUE");
+        GovStorage.Base storage gs = GovStorage.gs();
+        gs.exitFee = _fee;
+    }
+
+    function getExitFee() external override view returns (uint256) {
+        return GovStorage.gs().exitFee;
+    }
+
     function setInitialGovInsurance(address _govInsurance) external override {
         GovStorage.Base storage gs = GovStorage.gs();
 

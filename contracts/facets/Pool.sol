@@ -183,6 +183,11 @@ contract Pool {
         return ps.totalPremiumPerBlock;
     }
 
+    function getFirstMoneyOut() external view returns (uint256) {
+        (, PoolStorage.Base storage ps) = baseData();
+        return ps.firstMoneyOut;
+    }
+
     function getStakersTVL() public view returns (uint256) {
         (IERC20 _token, PoolStorage.Base storage ps) = baseData();
         return ps.poolBalance.add(LibPool.getTotalAccruedDebt(_token));
@@ -226,10 +231,25 @@ contract Pool {
         require(_amount > 0, "AMOUNT");
         (IERC20 token, PoolStorage.Base storage ps) = baseData();
         ps.stakeToken.safeTransferFrom(msg.sender, address(this), _amount);
+
+        GovStorage.Base storage gs = GovStorage.gs();
+        uint256 stakeTokenExitFee = _amount.mul(gs.exitFee).div(10**18);
+        if (stakeTokenExitFee > 0) {
+            // stake of user gets burned
+            // representative amount token get added to first money out pool
+            uint256 tokenAmount = stakeTokenExitFee.mul(getStakersTVL()).div(
+                ps.stakeToken.totalSupply()
+            );
+            ps.poolBalance = ps.poolBalance.sub(tokenAmount);
+            ps.firstMoneyOut = ps.firstMoneyOut.add(tokenAmount);
+
+            ps.stakeToken.burn(address(this), stakeTokenExitFee);
+        }
+
         ps.stakesWithdraw[msg.sender].push(
             PoolStorage.StakeWithdraw(
                 block.number,
-                _amount /* sub exit fee */
+                _amount.sub(stakeTokenExitFee)
             )
         );
         // TODO burn 1% of stake tokens for exit fee

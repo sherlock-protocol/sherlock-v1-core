@@ -16,6 +16,7 @@ library PoolStorage {
         bool deposits;
 
         uint256 poolBalance;
+        uint256 firstMoneyOut;
         mapping(bytes32 => uint256) protocolBalance;
         mapping(bytes32 => uint256) protocolPremium;
         uint256 totalPremiumPerBlock;

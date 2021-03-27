@@ -20,6 +20,8 @@ library GovStorage {
         mapping(bytes32 => bool) protocolIsCovered;
 
         IERC20[] tokens;
+
+        uint256 exitFee;
     }
 
     function gs() internal pure returns (Base storage bs) {
