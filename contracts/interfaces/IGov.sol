@@ -9,6 +9,8 @@ interface IGov {
 
     function transferGovInsurance(address _govInsurance) external;
 
+    function getGovInsurance() external view returns (address);
+
     function setClaimPeriod(uint256 _claimPeriod) external;
 
     function setTimeLock(uint256 _timeLock) external;
@@ -48,7 +50,7 @@ interface IGov {
         address _eoaManager
     ) external;
 
-    function protocolRemove(bytes32 _protocol, address _receiver) external;
+    function protocolRemove(bytes32 _protocol) external;
 
     function tokenAdd(
         IERC20 _token,

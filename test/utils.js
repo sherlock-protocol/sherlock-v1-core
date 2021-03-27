@@ -2,6 +2,7 @@ const { utils } = require("ethers/lib");
 const { constants } = require("ethers");
 const { expect } = require("chai");
 const { parseEther } = require("ethers/lib/utils");
+const { BigNumber } = require("ethers");
 
 FacetCutAction = {
   Add: 0,
@@ -78,6 +79,11 @@ module.exports = {
     tx = await tx;
     tx = await tx.wait();
     return tx.events;
+  },
+  blockNumber: async (tx) => {
+    tx = await tx;
+    tx = await tx.wait();
+    return BigNumber.from(tx.blockNumber);
   },
   timestamp: async (tx) => {
     tx = await tx;

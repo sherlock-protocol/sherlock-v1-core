@@ -11,11 +11,13 @@ import "diamond-2/contracts/libraries/LibDiamond.sol";
 
 import "../interfaces/IGov.sol";
 
-// todo pause / unpausable
-
 contract Gov is IGov {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
+
+    function getGovInsurance() external override view returns (address) {
+        return GovStorage.gs().govInsurance;
+    }
 
     function setInitialGovInsurance(address _govInsurance) external override {
         GovStorage.Base storage gs = GovStorage.gs();
@@ -62,13 +64,11 @@ contract Gov is IGov {
         view
         returns (uint256 claimPeriod)
     {
-        // TODO only gov
         GovStorage.Base storage gs = GovStorage.gs();
         claimPeriod = gs.withdrawClaimPeriod;
     }
 
     function getTimeLock() external override view returns (uint256 timeLock) {
-        // TODO only gov
         GovStorage.Base storage gs = GovStorage.gs();
         timeLock = gs.withdrawTimeLock;
     }
@@ -128,12 +128,11 @@ contract Gov is IGov {
         gs.protocolAgents[_protocol] = _eoaProtocolAgent;
     }
 
-    function protocolRemove(bytes32 _protocol, address _receiver)
+    function protocolRemove(bytes32 _protocol)
         external
         override
         onlyGovInsurance
     {
-        require(_receiver != address(0), "ZERO_RECEIVER");
         GovStorage.Base storage gs = GovStorage.gs();
         require(gs.protocolIsCovered[_protocol], "NOT_COVERED");
 
@@ -144,10 +143,6 @@ contract Gov is IGov {
             // basically need to check if accruedDebt > 0, but this is true in case premium > 0
             require(ps.protocolPremium[_protocol] == 0, "DEBT");
             require(!ps.isProtocol[_protocol], "NOT_PROTOCOL");
-
-            if (ps.protocolBalance[_protocol] > 0) {
-                token.safeTransfer(_receiver, ps.protocolBalance[_protocol]);
-            }
         }
         delete gs.protocolIsCovered[_protocol];
         delete gs.protocolManagers[_protocol];

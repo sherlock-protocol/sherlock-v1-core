@@ -104,8 +104,9 @@ contract Pool {
         bool _forceDebt,
         address _receiver
     ) external {
+        require(msg.sender == GovStorage.gs().govInsurance, "NOT_GOV");
+
         (IERC20 _token, PoolStorage.Base storage ps) = baseData();
-        require(msg.sender == ps.govPool, "SENDER");
         require(ps.protocols[_index] == _protocol, "INDEX");
 
         uint256 accrued = LibPool.accruedDebt(_protocol, _token);

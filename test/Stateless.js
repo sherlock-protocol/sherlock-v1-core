@@ -182,7 +182,7 @@ describe("static tests", function () {
           insure
             .connect(alice)
             .removeProtocol(PROTOCOL_X, 0, false, owner.address, tokenA.address)
-        ).to.be.revertedWith("SENDER");
+        ).to.be.revertedWith("NOT_GOV");
       });
       it("Invalid protocol", async function () {
         await expect(
@@ -562,26 +562,21 @@ describe("static tests", function () {
     describe("protocolRemove()", function () {
       it("Invalid sender", async function () {
         await expect(
-          insure.connect(alice).protocolRemove(PROTOCOL_X, owner.address)
+          insure.connect(alice).protocolRemove(PROTOCOL_X)
         ).to.be.revertedWith("NOT_GOV");
       });
       it("Invalid protocol", async function () {
         await expect(
-          insure.protocolRemove(NON_PROTOCOL2, owner.address)
+          insure.protocolRemove(NON_PROTOCOL2)
         ).to.be.revertedWith("NOT_COVERED");
       });
       it("Invalid protocol (zero)", async function () {
         await expect(
-          insure.protocolRemove(constants.HashZero, owner.address)
+          insure.protocolRemove(constants.HashZero)
         ).to.be.revertedWith("NOT_COVERED");
       });
-      it("Invalid receiver (zero)", async function () {
-        await expect(
-          insure.protocolRemove(PROTOCOL_X, constants.AddressZero)
-        ).to.be.revertedWith("ZERO_RECEIVER");
-      });
       it("Success", async function () {
-        await insure.protocolRemove(NON_PROTOCOL, owner.address);
+        await insure.protocolRemove(NON_PROTOCOL);
       });
     });
     describe("tokenAdd()", function () {
