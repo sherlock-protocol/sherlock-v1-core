@@ -10,6 +10,7 @@ const PROTOCOL_X =
 
 const onePercent = ethers.BigNumber.from("10").pow(16);
 
+// TODO NO_DEPOSITS
 describe("Staker tests", function () {
   before(async function () {
     timeTraveler = new TimeTraveler(network.provider);

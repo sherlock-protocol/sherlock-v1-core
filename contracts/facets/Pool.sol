@@ -148,6 +148,10 @@ contract Pool {
 
         LibPool.payOffDebtAll(_token);
 
+        if (_amount == uint256(-1)) {
+            _amount = ps.protocolBalance[_protocol];
+        }
+
         _token.safeTransfer(_receiver, _amount);
         ps.protocolBalance[_protocol] = ps.protocolBalance[_protocol].sub(
             _amount
