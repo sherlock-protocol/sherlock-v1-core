@@ -262,8 +262,10 @@ contract Pool {
 
         PoolStorage.StakeWithdraw memory withdraw = ps.stakesWithdraw[msg
             .sender][_id];
+        require(withdraw.blockInitiated != 0, "WITHDRAW_NOT_ACTIVE");
+
         require(
-            withdraw.blockInitiated.add(gs.withdrawTimeLock) > block.number,
+            withdraw.blockInitiated.add(gs.withdrawTimeLock) >= block.number,
             "TIMELOCK_EXPIRED"
         );
         ps.stakeToken.safeTransfer(msg.sender, withdraw.stake);
@@ -276,6 +278,7 @@ contract Pool {
 
         PoolStorage.StakeWithdraw memory withdraw = ps
             .stakesWithdraw[_account][_id];
+        require(withdraw.blockInitiated != 0, "WITHDRAW_NOT_ACTIVE");
 
         require(
             withdraw.blockInitiated.add(gs.withdrawTimeLock).add(
@@ -293,23 +296,23 @@ contract Pool {
 
         PoolStorage.StakeWithdraw memory withdraw = ps.stakesWithdraw[msg
             .sender][_id];
-        // TODO is this check needed? Does above statement not revert after delete?
         require(withdraw.blockInitiated != 0, "WITHDRAW_NOT_ACTIVE");
         // timelock is including
         require(
-            withdraw.blockInitiated.add(gs.withdrawTimeLock) <= block.number,
+            withdraw.blockInitiated.add(gs.withdrawTimeLock) < block.number,
             "TIMELOCK_ACTIVE"
         );
         // claim period is including
         require(
             withdraw.blockInitiated.add(gs.withdrawTimeLock).add(
                 gs.withdrawClaimPeriod
-            ) >= block.number,
+            ) > block.number,
             "CLAIMPERIOD_EXPIRED"
         );
         uint256 amount = withdraw.stake.mul(getStakersTVL()).div(
             ps.stakeToken.totalSupply()
         );
+        ps.poolBalance = ps.poolBalance.sub(amount);
         token.safeTransfer(msg.sender, amount);
         ps.stakeToken.burn(address(this), withdraw.stake);
         delete ps.stakesWithdraw[msg.sender][_id];
