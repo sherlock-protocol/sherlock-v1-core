@@ -10,7 +10,6 @@ const PROTOCOL_X =
 
 const onePercent = ethers.BigNumber.from("10").pow(16);
 
-// TODO NO_DEPOSITS
 describe("Staker tests", function () {
   before(async function () {
     timeTraveler = new TimeTraveler(network.provider);
@@ -74,6 +73,17 @@ describe("Staker tests", function () {
       "N0_STAKE"
     );
     expect(await insure.getFirstMoneyOut(tokenA.address)).to.eq(0);
+  });
+  describe("stake(), disabled", function () {
+    before(async function () {
+      await timeTraveler.revertSnapshot();
+    });
+    it("Token disabled", async function () {
+      await insure.tokenDisable(tokenA.address);
+      await expect(
+        insure.stake(parseEther("10"), owner.address, tokenA.address)
+      ).to.be.revertedWith("NO_DEPOSITS");
+    });
   });
   describe("stake(), scenario 1", function () {
     before(async function () {
