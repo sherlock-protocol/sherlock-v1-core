@@ -374,9 +374,7 @@ describe("static tests", function () {
         ).to.be.revertedWith("INVALID_TOKEN");
       });
       it("Success", async function () {
-        await expect(
-          insure.withdrawPurge(owner.address, 0, tokenA.address)
-        ).to.be.revertedWith("CLAIMPERIOD_NOT_EXPIRED");
+        await insure.withdrawPurge(owner.address, 0, tokenA.address);
       });
     });
     describe("withdrawClaim()", function () {
@@ -400,7 +398,7 @@ describe("static tests", function () {
       it("Success", async function () {
         await expect(
           insure.withdrawClaim(0, tokenA.address)
-        ).to.be.revertedWith("CLAIMPERIOD_EXPIRED");
+        ).to.be.revertedWith("WITHDRAW_NOT_ACTIVE");
       });
     });
   });

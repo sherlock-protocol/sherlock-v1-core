@@ -2,7 +2,7 @@ const { expect } = require("chai");
 const { utils } = require("ethers/lib");
 const { parseEther, parseUnits } = require("ethers/lib/utils");
 const { constants } = require("ethers");
-const { insurance, erc20, tvl, blockNumber } = require("./utils.js");
+const { insurance, erc20, tvl, blockNumber, mine } = require("./utils.js");
 const { TimeTraveler } = require("./utils-snapshot.js");
 
 const PROTOCOL_X =
@@ -79,9 +79,7 @@ describe("Staker tests", function () {
       await timeTraveler.revertSnapshot();
     });
     it("Owner stake 10", async function () {
-      expect(
-        await insure.stake(parseEther("10"), owner.address, tokenA.address)
-      );
+      await insure.stake(parseEther("10"), owner.address, tokenA.address);
 
       await erc20(tokenA, {
         [owner.address]: "890",
@@ -107,9 +105,7 @@ describe("Staker tests", function () {
       );
     });
     it("Owner stake 20 for Alice", async function () {
-      expect(
-        await insure.stake(parseEther("20"), alice.address, tokenA.address)
-      );
+      await insure.stake(parseEther("20"), alice.address, tokenA.address);
 
       await erc20(tokenA, {
         [owner.address]: "870",
@@ -135,9 +131,7 @@ describe("Staker tests", function () {
       );
     });
     it("Owner stake 10 again", async function () {
-      expect(
-        await insure.stake(parseEther("10"), owner.address, tokenA.address)
-      );
+      await insure.stake(parseEther("10"), owner.address, tokenA.address);
 
       await erc20(tokenA, {
         [owner.address]: "860",
@@ -199,9 +193,7 @@ describe("Staker tests", function () {
       await timeTraveler.revertSnapshot();
     });
     it("Owner stake 100", async function () {
-      expect(
-        await insure.stake(parseEther("100"), owner.address, tokenA.address)
-      );
+      await insure.stake(parseEther("100"), owner.address, tokenA.address);
 
       await erc20(tokenA, {
         [owner.address]: "800",
@@ -227,9 +219,7 @@ describe("Staker tests", function () {
       );
     });
     it("Owner stake 200 for Alice", async function () {
-      expect(
-        await insure.stake(parseEther("200"), alice.address, tokenA.address)
-      );
+      await insure.stake(parseEther("200"), alice.address, tokenA.address);
 
       await erc20(tokenA, {
         [owner.address]: "600",
@@ -258,10 +248,7 @@ describe("Staker tests", function () {
   describe("withdrawStake(), no fee", function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
-
-      expect(
-        await insure.stake(parseEther("10"), owner.address, tokenA.address)
-      );
+      await insure.stake(parseEther("10"), owner.address, tokenA.address);
     });
     it("Initial state", async function () {
       expect(
@@ -325,9 +312,7 @@ describe("Staker tests", function () {
       await timeTraveler.revertSnapshot();
 
       await insure.setExitFee(onePercent.mul(40));
-      expect(
-        await insure.stake(parseEther("10"), owner.address, tokenA.address)
-      );
+      await insure.stake(parseEther("10"), owner.address, tokenA.address);
     });
     it("Initial state", async function () {
       expect(
@@ -404,32 +389,249 @@ describe("Staker tests", function () {
     });
   });
   describe("withdrawCancel()", function () {
+    beforeEach(async function () {
+      await timeTraveler.revertSnapshot();
+
+      await insure.stake(parseEther("10"), owner.address, tokenA.address);
+      await insure.setTimeLock(4);
+      await insure.withdrawStake(parseEther("0.5"), tokenA.address);
+      // withdraw
+    });
+    it("Expired", async function () {
+      await mine(4);
+      await expect(insure.withdrawCancel(0, tokenA.address)).to.be.revertedWith(
+        "TIMELOCK_EXPIRED"
+      );
+    });
+    it("Cancel", async function () {
+      await insure.withdrawCancel(0, tokenA.address);
+
+      expect(
+        await insure.getWithdrawalSize(owner.address, tokenA.address)
+      ).to.eq(1);
+      expect(
+        await insure.getWithrawalInitialIndex(owner.address, tokenA.address)
+      ).to.eq(1);
+      [block, amount] = await insure.getWithdrawal(
+        owner.address,
+        0,
+        tokenA.address
+      );
+      expect(block).to.eq(0);
+      expect(amount).to.eq(0);
+
+      // same state as on deposit
+      await erc20(tokenA, {
+        [owner.address]: "890",
+        [alice.address]: "100",
+        [insure.address]: "10",
+        total: "1000",
+      });
+      await erc20(stakeA, {
+        [owner.address]: "1",
+        [alice.address]: "0",
+        [insure.address]: "0",
+        total: "1",
+      });
+      await tvl(tokenA, {
+        [owner.address]: "10",
+        [alice.address]: "0",
+        [insure.address]: "0",
+        total: "10",
+      });
+      expect(await insure.exchangeRate(tokenA.address)).to.eq(
+        parseEther("0.1")
+      );
+      expect(await insure.getFirstMoneyOut(tokenA.address)).to.eq(0);
+    });
+  });
+  describe("withdrawCancel(), with 20% fee", function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
 
-      expect(
-        await insure.stake(parseEther("10"), owner.address, tokenA.address)
-      );
+      await insure.setExitFee(onePercent.mul(20));
+      await insure.stake(parseEther("10"), owner.address, tokenA.address);
+      await insure.setTimeLock(4);
+      await insure.withdrawStake(parseEther("0.5"), tokenA.address);
       // withdraw
+    });
+    it("Cancel", async function () {
+      await insure.withdrawCancel(0, tokenA.address);
+
+      expect(
+        await insure.getWithdrawalSize(owner.address, tokenA.address)
+      ).to.eq(1);
+      expect(
+        await insure.getWithrawalInitialIndex(owner.address, tokenA.address)
+      ).to.eq(1);
+      [block, amount] = await insure.getWithdrawal(
+        owner.address,
+        0,
+        tokenA.address
+      );
+      expect(block).to.eq(0);
+      expect(amount).to.eq(0);
+
+      // 1 token transferred to first money out pool
+      await erc20(tokenA, {
+        [owner.address]: "890",
+        [alice.address]: "100",
+        [insure.address]: "10",
+        total: "1000",
+      });
+      await erc20(stakeA, {
+        [owner.address]: "0.9",
+        [alice.address]: "0",
+        [insure.address]: "0",
+        total: "0.9",
+      });
+      await tvl(tokenA, {
+        [owner.address]: "9",
+        [alice.address]: "0",
+        [insure.address]: "0",
+        total: "9",
+      });
+      expect(await insure.exchangeRate(tokenA.address)).to.eq(
+        parseEther("0.1")
+      );
+      expect(await insure.getFirstMoneyOut(tokenA.address)).to.eq(
+        parseEther("1")
+      );
     });
   });
   describe("withdrawPurge()", function () {
+    beforeEach(async function () {
+      await timeTraveler.revertSnapshot();
+
+      await insure.stake(parseEther("10"), owner.address, tokenA.address);
+      await insure.setTimeLock(2);
+      await insure.setClaimPeriod(3);
+      await insure.withdrawStake(parseEther("0.5"), tokenA.address);
+      // withdraw
+    });
+    it("Not expired, t=0", async function () {
+      await expect(
+        insure.withdrawPurge(owner.address, 0, tokenA.address)
+      ).to.be.revertedWith("CLAIMPERIOD_NOT_EXPIRED");
+    });
+    it("Not expired, t=2", async function () {
+      await mine(2);
+      await expect(
+        insure.withdrawPurge(owner.address, 0, tokenA.address)
+      ).to.be.revertedWith("CLAIMPERIOD_NOT_EXPIRED");
+    });
+    it("Not expired, t=3", async function () {
+      await mine(3);
+      await expect(
+        insure.withdrawPurge(owner.address, 0, tokenA.address)
+      ).to.be.revertedWith("CLAIMPERIOD_NOT_EXPIRED");
+    });
+    it("Not expired, t=4", async function () {
+      await mine(4);
+      await expect(
+        insure.withdrawPurge(owner.address, 0, tokenA.address)
+      ).to.be.revertedWith("CLAIMPERIOD_NOT_EXPIRED");
+    });
+    it("Purge success, t=5", async function () {
+      await mine(5);
+      await insure.withdrawPurge(owner.address, 0, tokenA.address);
+
+      expect(
+        await insure.getWithdrawalSize(owner.address, tokenA.address)
+      ).to.eq(1);
+      expect(
+        await insure.getWithrawalInitialIndex(owner.address, tokenA.address)
+      ).to.eq(1);
+      [block, amount] = await insure.getWithdrawal(
+        owner.address,
+        0,
+        tokenA.address
+      );
+      expect(block).to.eq(0);
+      expect(amount).to.eq(0);
+
+      // same state as on deposit
+      await erc20(tokenA, {
+        [owner.address]: "890",
+        [alice.address]: "100",
+        [insure.address]: "10",
+        total: "1000",
+      });
+      await erc20(stakeA, {
+        [owner.address]: "1",
+        [alice.address]: "0",
+        [insure.address]: "0",
+        total: "1",
+      });
+      await tvl(tokenA, {
+        [owner.address]: "10",
+        [alice.address]: "0",
+        [insure.address]: "0",
+        total: "10",
+      });
+      expect(await insure.exchangeRate(tokenA.address)).to.eq(
+        parseEther("0.1")
+      );
+      expect(await insure.getFirstMoneyOut(tokenA.address)).to.eq(0);
+    });
+  });
+  describe("withdrawPurge(), 20% fee", function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
 
+      await insure.setExitFee(onePercent.mul(20));
+      await insure.stake(parseEther("10"), owner.address, tokenA.address);
+      await insure.withdrawStake(parseEther("0.5"), tokenA.address);
+    });
+    it("Purge", async function () {
+      await insure.withdrawPurge(owner.address, 0, tokenA.address);
+
       expect(
-        await insure.stake(parseEther("10"), owner.address, tokenA.address)
+        await insure.getWithdrawalSize(owner.address, tokenA.address)
+      ).to.eq(1);
+      expect(
+        await insure.getWithrawalInitialIndex(owner.address, tokenA.address)
+      ).to.eq(1);
+      [block, amount] = await insure.getWithdrawal(
+        owner.address,
+        0,
+        tokenA.address
       );
-      // withdraw + skip time
+      expect(block).to.eq(0);
+      expect(amount).to.eq(0);
+
+      // 1 token transferred to first money out pool
+      await erc20(tokenA, {
+        [owner.address]: "890",
+        [alice.address]: "100",
+        [insure.address]: "10",
+        total: "1000",
+      });
+      await erc20(stakeA, {
+        [owner.address]: "0.9",
+        [alice.address]: "0",
+        [insure.address]: "0",
+        total: "0.9",
+      });
+      await tvl(tokenA, {
+        [owner.address]: "9",
+        [alice.address]: "0",
+        [insure.address]: "0",
+        total: "9",
+      });
+      expect(await insure.exchangeRate(tokenA.address)).to.eq(
+        parseEther("0.1")
+      );
+      expect(await insure.getFirstMoneyOut(tokenA.address)).to.eq(
+        parseEther("1")
+      );
     });
   });
   describe("withdrawClaim()", function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
 
-      expect(
-        await insure.stake(parseEther("10"), owner.address, tokenA.address)
-      );
+      await insure.stake(parseEther("10"), owner.address, tokenA.address);
       await insure.withdrawStake(parseEther("0.5"), tokenA.address);
       // withdraw + skip some time
     });

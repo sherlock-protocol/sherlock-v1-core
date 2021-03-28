@@ -280,7 +280,7 @@ contract Pool {
         require(
             withdraw.blockInitiated.add(gs.withdrawTimeLock).add(
                 gs.withdrawClaimPeriod
-            ) > block.number,
+            ) < block.number,
             "CLAIMPERIOD_NOT_EXPIRED"
         );
         ps.stakeToken.safeTransfer(_account, withdraw.stake);

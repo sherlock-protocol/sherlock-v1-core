@@ -35,6 +35,11 @@ async function errorMsg(i, key, token, need, is) {
 module.exports = {
   FacetCutAction: this.FacetCutAction,
   getSelectors: this.getSelectors,
+  mine: async (blocks) => {
+    for (let i = 0; i < blocks; i++) {
+      await ethers.provider.send("evm_mine");
+    }
+  },
   erc20: async (token, data) => {
     let i = 0;
     for (var key in data) {
