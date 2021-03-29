@@ -351,10 +351,20 @@ contract Pool {
         returns (uint256)
     {
         (, PoolStorage.Base storage ps) = baseData();
+        GovStorage.Base storage gs = GovStorage.gs();
         for (uint256 i = 0; i < ps.stakesWithdraw[_staker].length; i++) {
-            if (ps.stakesWithdraw[_staker][i].blockInitiated > 0) {
-                return i;
+            if (ps.stakesWithdraw[_staker][i].blockInitiated == 0) {
+                continue;
             }
+            if (
+                ps.stakesWithdraw[_staker][i]
+                    .blockInitiated
+                    .add(gs.withdrawTimeLock)
+                    .add(gs.withdrawClaimPeriod) <= block.number
+            ) {
+                continue;
+            }
+            return i;
         }
         return ps.stakesWithdraw[_staker].length;
     }

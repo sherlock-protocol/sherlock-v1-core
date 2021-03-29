@@ -284,7 +284,7 @@ describe("Staker tests", function () {
       ).to.eq(1);
       expect(
         await insure.getWithrawalInitialIndex(owner.address, tokenA.address)
-      ).to.eq(0);
+      ).to.eq(1); // immediately expired, as both periods are 0
       [block, amount] = await insure.getWithdrawal(
         owner.address,
         0,
@@ -363,7 +363,7 @@ describe("Staker tests", function () {
       ).to.eq(1);
       expect(
         await insure.getWithrawalInitialIndex(owner.address, tokenA.address)
-      ).to.eq(0);
+      ).to.eq(1); // immediately expired, as both periods are 0
       [block, amount] = await insure.getWithdrawal(
         owner.address,
         0,
@@ -789,6 +789,79 @@ describe("Staker tests", function () {
       expect(await insure.getFirstMoneyOut(tokenA.address)).to.eq(
         parseEther("1")
       );
+    });
+  });
+  describe("withdraw initial index", function () {
+    beforeEach(async function () {
+      await timeTraveler.revertSnapshot();
+
+      await insure.setExitFee(onePercent.mul(20));
+      await insure.stake(parseEther("10"), owner.address, tokenA.address);
+      await insure.setTimeLock(2);
+      await insure.setClaimPeriod(3);
+      await insure.withdrawStake(parseEther("0.5"), tokenA.address);
+    });
+    it("Initial", async function () {
+      expect(
+        await insure.getWithrawalInitialIndex(owner.address, tokenA.address)
+      ).to.eq(0);
+    });
+    it("t=3", async function () {
+      await mine(2);
+      expect(
+        await insure.getWithrawalInitialIndex(owner.address, tokenA.address)
+      ).to.eq(0);
+    });
+    it("t=5", async function () {
+      await mine(4);
+      expect(
+        await insure.getWithrawalInitialIndex(owner.address, tokenA.address)
+      ).to.eq(0);
+    });
+    it("t=6", async function () {
+      await mine(5);
+      expect(
+        await insure.getWithrawalInitialIndex(owner.address, tokenA.address)
+      ).to.eq(1);
+    });
+    it("Multiple, single expired", async function () {
+      await mine(5);
+      await insure.withdrawStake(parseEther("0.5"), tokenA.address);
+      expect(
+        await insure.getWithrawalInitialIndex(owner.address, tokenA.address)
+      ).to.eq(1);
+    });
+    it("Multiple, both expired", async function () {
+      await insure.withdrawStake(parseEther("0.5"), tokenA.address);
+      await mine(5);
+      expect(
+        await insure.getWithrawalInitialIndex(owner.address, tokenA.address)
+      ).to.eq(2);
+    });
+    it("Multiple, single claimed", async function () {
+      await mine(2);
+      await insure.withdrawClaim(0, tokenA.address);
+      await insure.withdrawStake(parseEther("0.5"), tokenA.address);
+
+      expect(
+        await insure.getWithrawalInitialIndex(owner.address, tokenA.address)
+      ).to.eq(1);
+    });
+    it("Multiple, cancel second", async function () {
+      await insure.withdrawStake(parseEther("0.5"), tokenA.address);
+      await insure.withdrawCancel(1, tokenA.address);
+
+      expect(
+        await insure.getWithrawalInitialIndex(owner.address, tokenA.address)
+      ).to.eq(0);
+    });
+    it("Multiple, cancel second", async function () {
+      await insure.withdrawStake(parseEther("0.5"), tokenA.address);
+      await insure.withdrawCancel(0, tokenA.address);
+
+      expect(
+        await insure.getWithrawalInitialIndex(owner.address, tokenA.address)
+      ).to.eq(1);
     });
   });
 });
