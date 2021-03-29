@@ -791,7 +791,7 @@ describe("Staker tests", function () {
       );
     });
   });
-  describe("withdraw initial index", function () {
+  describe("getWithrawalInitialIndex()", function () {
     beforeEach(async function () {
       await timeTraveler.revertSnapshot();
 
@@ -855,9 +855,27 @@ describe("Staker tests", function () {
         await insure.getWithrawalInitialIndex(owner.address, tokenA.address)
       ).to.eq(0);
     });
-    it("Multiple, cancel second", async function () {
+    it("Multiple, cancel first", async function () {
       await insure.withdrawStake(parseEther("0.5"), tokenA.address);
       await insure.withdrawCancel(0, tokenA.address);
+
+      expect(
+        await insure.getWithrawalInitialIndex(owner.address, tokenA.address)
+      ).to.eq(1);
+    });
+    it("Multiple, claim second", async function () {
+      await insure.withdrawStake(parseEther("0.5"), tokenA.address);
+      await mine(2);
+      await insure.withdrawClaim(1, tokenA.address);
+
+      expect(
+        await insure.getWithrawalInitialIndex(owner.address, tokenA.address)
+      ).to.eq(0);
+    });
+    it("Multiple, claim first", async function () {
+      await insure.withdrawStake(parseEther("0.5"), tokenA.address);
+      await mine(2);
+      await insure.withdrawClaim(0, tokenA.address);
 
       expect(
         await insure.getWithrawalInitialIndex(owner.address, tokenA.address)
