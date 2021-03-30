@@ -158,6 +158,18 @@ contract Pool {
         );
     }
 
+    function stakeToToken(uint256 _amount)
+        external
+        view
+        returns (uint256 amount)
+    {
+        (, PoolStorage.Base storage ps) = baseData();
+        uint256 totalStake = ps.stakeToken.totalSupply();
+        require(totalStake > 0, "N0_STAKE");
+        require(ps.poolBalance > 0, "NO_FUNDS");
+        amount = _amount.mul(getStakersTVL()).div(totalStake);
+    }
+
     function exchangeRate() external view returns (uint256 rate) {
         // token to stakedtoken
         (, PoolStorage.Base storage ps) = baseData();

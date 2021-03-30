@@ -113,6 +113,11 @@ interface IPool {
         view
         returns (uint256);
 
+    function stakeToToken(uint256 _amount, address _token)
+        external
+        view
+        returns (uint256);
+
     function exchangeRate(address _token) external view returns (uint256);
 
     function removeProtocol(
