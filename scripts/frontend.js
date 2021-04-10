@@ -121,12 +121,12 @@ async function main() {
   await insure.setProtocolPremiums(
     PROTOCOL_2,
     [tokenUSDC.address, tokenAAVE.address],
-    [parseUnits("0.4", 10), parseUnits("0.12", 10)]
+    [parseUnits("0.4", 10), parseUnits("10.12", 16)]
   );
   await insure.setProtocolPremiums(
     PROTOCOL_3,
     [tokenUSDC.address, tokenAAVE.address, tokenWETH.address],
-    [parseUnits("0.4", 10), parseUnits("0.12", 10), parseUnits("0.06", 10)]
+    [parseUnits("0.4", 10), parseUnits("18.12", 16), parseUnits("10.06", 16)]
   );
 
   // await tokenUSDC.approve(insure.address, constants.MaxUint256);
