@@ -35,6 +35,8 @@ contract Fee is IFee {
         external
         override
     {
+        address underlying = IStake(_token).underyling();
+        LibPool.payOffDebtAll(IERC20(underlying));
         for (uint256 i; i < _users.length; i++) {
             doYield(_token, _users[i], _users[i], 0);
         }

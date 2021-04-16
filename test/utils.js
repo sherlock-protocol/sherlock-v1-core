@@ -109,7 +109,7 @@ module.exports = {
       await ethers.getContractFactory("ERC20Facet"),
       await ethers.getContractFactory("Fee", {
         libraries: {
-          //LibPool: libPool.address,
+          LibPool: libPool.address,
           LibFee: libFee.address,
         },
       }),

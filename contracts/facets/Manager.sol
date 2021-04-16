@@ -30,6 +30,8 @@ contract Manager is IManager {
         GovStorage.Base storage gs = GovStorage.gs();
         PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
         FeeStorage.Base storage fs = FeeStorage.fs();
+
+        LibPool.payOffDebtAll(IERC20(_token));
         if (fs.feeLastAccrued == 0) {
             fs.feeLastAccrued = block.number;
         }
@@ -38,12 +40,18 @@ contract Manager is IManager {
         require(gs.protocolIsCovered[_protocol], "NOT_COVERED");
         require(gs.protocolManagers[_protocol] == msg.sender, "NOT_MANAGER");
 
+        fs.totalUsdPool = fs.totalUsdPool.add(
+            block.number.sub(fs.lastPremiumChange).mul(fs.totalBlockIncrement)
+        );
+        fs.lastPremiumChange = block.number;
+
         uint256 minusFeePerBlock = 0;
 
         console.log("ps.feePool", ps.feePool);
         console.log("fs.totalBlockIncrement", fs.totalBlockIncrement);
         console.log("fs.totalUsdPool", fs.totalUsdPool);
         console.log("-----------------");
+        LibFee.accrueFeeToken();
         if (fs.totalUsdPool > 0) {
             minusFeePerBlock = ps.feePool.mul(fs.totalBlockIncrement).div(
                 fs.totalUsdPool
@@ -70,9 +78,8 @@ contract Manager is IManager {
         // update price
         fs.tokenUSD[_token] = _price;
 
-        LibFee.accrueFeeToken();
         // payoffDebt (+ add exra pool balance with new price)
-        LibPool.payOffDebtAll(IERC20(_token));
+
         ps.totalPremiumPerBlock = ps
             .totalPremiumPerBlock
             .sub(ps.protocolPremium[_protocol])
@@ -89,9 +96,7 @@ contract Manager is IManager {
             console.log("fs.totalBlockIncrement", fs.totalBlockIncrement);
             console.log("fs.totalUsdPool", fs.totalUsdPool);
 
-            // x = 1 - 0 + 5 * 1000 / 5000
-            // x =
-
+            // 1 + (7 * 2) / 13
             fs.feePerBlock = fs.feePerBlock.sub(minusFeePerBlock).add(
                 ps.feePool.mul(fs.totalBlockIncrement).div(fs.totalUsdPool)
                 // fs.totalUsdPool needs to include all update premiums, why not use totalBlockIncrement for that
