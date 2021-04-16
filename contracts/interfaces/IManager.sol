@@ -5,9 +5,16 @@ import "../storage/LibPool.sol";
 import "../storage/LibGov.sol";
 
 interface IManager {
-    function setProtocolPremiums(
+    // function setProtocolPremiums(
+    //     bytes32 _protocol,
+    //     address[] memory _tokens,
+    //     uint256[] memory _premiums
+    // ) external;
+
+    function setProtocolPremium(
         bytes32 _protocol,
-        address[] memory _tokens,
-        uint256[] memory _premiums
+        IERC20 _token,
+        uint256 _premium,
+        uint256 _price
     ) external;
 }

@@ -98,16 +98,25 @@ module.exports = {
   insurance: async (owner) => {
     const LibPool = await ethers.getContractFactory("LibPool");
     libPool = await LibPool.deploy();
+    const LibFee = await ethers.getContractFactory("LibFee");
+    libFee = await LibFee.deploy();
 
     const Pool = await ethers.getContractFactory("Pool", {
       libraries: { LibPool: libPool.address },
     });
     facets = [
       Pool,
+      await ethers.getContractFactory("ERC20Facet"),
+      await ethers.getContractFactory("Fee", {
+        libraries: {
+          //LibPool: libPool.address,
+          LibFee: libFee.address,
+        },
+      }),
       await ethers.getContractFactory("Gov"),
       await ethers.getContractFactory("View"),
       await ethers.getContractFactory("Manager", {
-        libraries: { LibPool: libPool.address },
+        libraries: { LibPool: libPool.address, LibFee: libFee.address },
       }),
     ];
 

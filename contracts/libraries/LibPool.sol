@@ -2,6 +2,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "../storage/LibPool.sol";
+import "../storage/LibFee.sol";
 
 library LibPool {
     using SafeMath for uint256;
@@ -11,8 +12,17 @@ library LibPool {
         for (uint256 i = 0; i < ps.protocols.length; i++) {
             payOffDebt(ps.protocols[i], _token);
         }
-        // move funds to the staker pool
-        ps.poolBalance = ps.poolBalance.add(getTotalAccruedDebt(_token));
+
+        uint256 totalAccruedDebt = getTotalAccruedDebt(_token);
+        // move funds to the fee pool
+        ps.underlyingForFee = ps.underlyingForFee.add(totalAccruedDebt);
+
+        FeeStorage.Base storage fs = FeeStorage.fs();
+        // changes the fs.totalUsdPool
+        // fs.totalUsdPool = fs.totalUsdPool.add(
+        //     totalAccruedDebt.mul(fs.tokenUSD[_token]).div(10**18)
+        // );
+
         ps.totalPremiumLastPaid = block.number;
     }
 

@@ -13,7 +13,7 @@ import "../storage/LibGov.sol";
 
 import "../interfaces/IStake.sol";
 
-import "./LibPool.sol";
+import "../libraries/LibPool.sol";
 
 contract Pool {
     // TODO, ability to activate assets (in different facet)
@@ -58,6 +58,11 @@ contract Pool {
     function getStakeToken(address _token) external view returns (address) {
         (, PoolStorage.Base storage ps) = baseData();
         return address(ps.stakeToken);
+    }
+
+    function getFeePool() external view returns (uint256) {
+        (, PoolStorage.Base storage ps) = baseData();
+        return ps.feePool;
     }
 
     function isProtocol(bytes32 _protocol, address _token)
@@ -158,18 +163,6 @@ contract Pool {
         );
     }
 
-    function stakeToToken(uint256 _amount)
-        external
-        view
-        returns (uint256 amount)
-    {
-        (, PoolStorage.Base storage ps) = baseData();
-        uint256 totalStake = ps.stakeToken.totalSupply();
-        require(totalStake > 0, "N0_STAKE");
-        require(ps.poolBalance > 0, "NO_FUNDS");
-        amount = _amount.mul(getStakersTVL()).div(totalStake);
-    }
-
     function exchangeRate() external view returns (uint256 rate) {
         // token to stakedtoken
         (, PoolStorage.Base storage ps) = baseData();
@@ -206,7 +199,7 @@ contract Pool {
 
     function getStakersTVL() public view returns (uint256) {
         (IERC20 _token, PoolStorage.Base storage ps) = baseData();
-        return ps.poolBalance.add(LibPool.getTotalAccruedDebt(_token));
+        return ps.poolBalance;
     }
 
     function getStakerTVL(address _staker) external view returns (uint256) {
@@ -249,11 +242,12 @@ contract Pool {
         ps.stakeToken.safeTransferFrom(msg.sender, address(this), _amount);
 
         GovStorage.Base storage gs = GovStorage.gs();
+        // TODO move calc inside if
         uint256 stakeTokenExitFee = _amount.mul(gs.exitFee).div(10**18);
         if (stakeTokenExitFee > 0) {
             // stake of user gets burned
             // representative amount token get added to first money out pool
-            uint256 tokenAmount = stakeTokenExitFee.mul(getStakersTVL()).div(
+            uint256 tokenAmount = stakeTokenExitFee.mul(ps.poolBalance).div(
                 ps.stakeToken.totalSupply()
             );
             ps.poolBalance = ps.poolBalance.sub(tokenAmount);
@@ -325,12 +319,14 @@ contract Pool {
             ) > block.number,
             "CLAIMPERIOD_EXPIRED"
         );
-        uint256 amount = withdraw.stake.mul(getStakersTVL()).div(
+        uint256 amount = withdraw.stake.mul(ps.poolBalance).div(
             ps.stakeToken.totalSupply()
         );
         ps.poolBalance = ps.poolBalance.sub(amount);
         token.safeTransfer(msg.sender, amount);
         ps.stakeToken.burn(address(this), withdraw.stake);
+
+        // TODO send fee tokens
         delete ps.stakesWithdraw[msg.sender][_id];
     }
 
