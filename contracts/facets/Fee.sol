@@ -75,8 +75,8 @@ contract Fee is IFee {
         }
     }
 
-    function calcUnderylingInStoredUSD()
-        external
+    function calcUnderylingInStoredUSDFor(address _user)
+        public
         override
         view
         returns (uint256 usd)
@@ -90,16 +90,24 @@ contract Fee is IFee {
             IERC20 token = gs.tokens[i];
             //LibPool.payOffDebtAll(token);
 
+            // TODO callstack
             PoolStorage.Base storage ps = PoolStorage.ps(address(token));
-            usd = usd.add(
-                ps
-                    .underlyingForFee
-                    .mul(es.balances[msg.sender])
-                    .mul(fs.tokenUSD[token])
-                    .div(es.totalSupply)
-                    .div(10**18)
+            uint256 _temp = ps.underlyingForFee.mul(es.balances[_user]).mul(
+                fs.tokenUSD[token]
             );
+            _temp = _temp.div(10**18).div(es.totalSupply);
+
+            usd = usd.add(_temp);
         }
+    }
+
+    function calcUnderylingInStoredUSD()
+        external
+        override
+        view
+        returns (uint256 usd)
+    {
+        usd = calcUnderylingInStoredUSDFor(msg.sender);
     }
 
     function calcUnderyling()

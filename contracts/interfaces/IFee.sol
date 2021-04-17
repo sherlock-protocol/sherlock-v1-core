@@ -36,4 +36,9 @@ interface IFee {
         returns (IERC20[] memory tokens, uint256[] memory amounts);
 
     function calcUnderylingInStoredUSD() external view returns (uint256 usd);
+
+    function calcUnderylingInStoredUSDFor(address _user)
+        external
+        view
+        returns (uint256 usd);
 }

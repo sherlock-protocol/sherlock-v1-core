@@ -14,10 +14,11 @@ describe.only("Fee tests", function () {
   before(async function () {
     timeTraveler = new TimeTraveler(network.provider);
 
-    [owner, alice] = await ethers.getSigners();
-    [owner.address, alice.address] = [
+    [owner, alice, bob] = await ethers.getSigners();
+    [owner.address, alice.address, bob.address] = [
       await owner.getAddress(),
       await alice.getAddress(),
+      await bob.getAddress(),
     ];
 
     insure = await insurance(owner.address);
@@ -30,9 +31,11 @@ describe.only("Fee tests", function () {
       await Token.deploy("TokenC", "C", parseEther("1000")),
     ];
     await tokenA.transfer(alice.address, parseEther("100"));
+    await tokenA.transfer(bob.address, parseEther("100"));
     await tokenA.approve(insure.address, constants.MaxUint256);
     await tokenB.approve(insure.address, constants.MaxUint256);
     await tokenA.connect(alice).approve(insure.address, constants.MaxUint256);
+    await tokenA.connect(bob).approve(insure.address, constants.MaxUint256);
 
     const Stake = await ethers.getContractFactory("Stake");
     [stakeA, stakeB, stakeC] = [
@@ -56,32 +59,8 @@ describe.only("Fee tests", function () {
     beforeEach(async function () {
       await timeTraveler.revertSnapshot();
     });
-    it("Owner stake 10", async function () {
-      await insure.stake(parseEther("10"), owner.address, tokenA.address);
 
-      await erc20(tokenA, {
-        [owner.address]: "890",
-        [alice.address]: "100",
-        [insure.address]: "10",
-        total: "1000",
-      });
-      await erc20(stakeA, {
-        [owner.address]: "1",
-        [alice.address]: "0",
-        [insure.address]: "0",
-        total: "1",
-      });
-      await tvl(tokenA, {
-        [owner.address]: "10",
-        [alice.address]: "0",
-        [insure.address]: "0",
-        total: "10",
-      });
-
-      expect(await insure.exchangeRate(tokenA.address)).to.eq(
-        parseEther("0.1")
-      );
-    });
+    
     it("Scenario 1", async function () {
       // initial setup
       await insure.setWeights([tokenA.address], [parseEther("1")]);
@@ -637,13 +616,11 @@ describe.only("Fee tests", function () {
 
       const BpremiumPerBlock = parseEther("5");
       const BusdPerPremium = parseEther("200");
-      const b2 = await blockNumber(
-        insure.setProtocolPremiums(
-          PROTOCOL_X,
-          [tokenA.address, tokenB.address],
-          [ApremiumPerBlock, BpremiumPerBlock],
-          [AusdPerPremium, BusdPerPremium]
-        )
+      await insure.setProtocolPremiums(
+        PROTOCOL_X,
+        [tokenA.address, tokenB.address],
+        [ApremiumPerBlock, BpremiumPerBlock],
+        [AusdPerPremium, BusdPerPremium]
       );
 
       // stake
@@ -683,21 +660,17 @@ describe.only("Fee tests", function () {
         [AusdPerPremium, BusdPerPremium.div(4)]
       );
 
-      const b = await blockNumber(
-        await insure
-          .connect(alice)
-          .stake(parseEther("10"), alice.address, tokenA.address)
-      );
+      await insure
+        .connect(alice)
+        .stake(parseEther("10"), alice.address, tokenA.address);
 
       await mine(4);
 
       // harvest
-      const b1 = await blockNumber(
-        insure.harvestForMultipleMulti(
-          [stakeA.address],
-          [owner.address, alice.address],
-          [stakeB.address]
-        )
+      await insure.harvestForMultipleMulti(
+        [stakeA.address],
+        [owner.address, alice.address],
+        [stakeB.address]
       );
 
       expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("15.6"));
@@ -723,6 +696,341 @@ describe.only("Fee tests", function () {
       );
       expect((await insure.connect(alice).calcUnderyling()).amounts[1]).to.eq(
         parseEther("38.461538461538461538")
+      );
+    });
+    it("Multis, scenario 4", async function () {
+      // initial setup
+      await insure.setWeights(
+        [tokenA.address, tokenB.address],
+        [parseEther("1"), parseEther("0")]
+      );
+      const ApremiumPerBlock = parseEther("1000");
+      const AusdPerPremium = parseEther("1");
+
+      const BpremiumPerBlock = parseEther("5");
+      const BusdPerPremium = parseEther("200");
+      await insure.setProtocolPremiums(
+        PROTOCOL_X,
+        [tokenA.address, tokenB.address],
+        [ApremiumPerBlock, BpremiumPerBlock],
+        [AusdPerPremium, BusdPerPremium]
+      );
+
+      // stake
+      await insure.stake(parseEther("10"), owner.address, tokenA.address);
+
+      expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("1"));
+      expect(await insure.balanceOf(owner.address)).to.eq(0);
+      expect(await insure.balanceOf(alice.address)).to.eq(0);
+
+      await mine(3);
+
+      // harvest
+      await insure.harvestForMultipleMulti(
+        [stakeA.address],
+        [owner.address, alice.address],
+        [stakeB.address]
+      );
+
+      expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("5"));
+      expect(await insure.balanceOf(owner.address)).to.eq(parseEther("5"));
+      expect(await insure.balanceOf(alice.address)).to.eq(parseEther("0"));
+
+      expect(await insure.calcUnderylingInStoredUSD()).to.eq(
+        parseEther("10000")
+      );
+      expect((await insure.calcUnderyling()).amounts[0]).to.eq(
+        parseEther("5000")
+      );
+      expect((await insure.calcUnderyling()).amounts[1]).to.eq(
+        parseEther("25")
+      );
+
+      await insure.setProtocolPremiums(
+        PROTOCOL_X,
+        [tokenA.address, tokenB.address],
+        [ApremiumPerBlock, BpremiumPerBlock.mul(2)],
+        [AusdPerPremium, BusdPerPremium]
+      );
+
+      await insure
+        .connect(alice)
+        .stake(parseEther("10"), alice.address, tokenA.address);
+
+      await mine(4);
+
+      // harvest
+      await insure.harvestForMultipleMulti(
+        [stakeA.address],
+        [owner.address, alice.address],
+        [stakeB.address]
+      );
+
+      expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("15"));
+      expect(await insure.balanceOf(owner.address)).to.eq(parseEther("11.25"));
+      expect(await insure.balanceOf(alice.address)).to.eq(parseEther("3.75"));
+
+      expect(await insure.calcUnderylingInStoredUSD()).to.eq(
+        parseEther("22500")
+      );
+
+      // 3000pb, 5 blocks = 15k / 2 = 7.5k
+      expect(await insure.connect(alice).calcUnderylingInStoredUSD()).to.eq(
+        parseEther("7500")
+      );
+    });
+    it("Multis, scenario 5", async function () {
+      // initial setup
+      await insure.setWeights(
+        [tokenA.address, tokenB.address],
+        [parseEther("1"), parseEther("0")]
+      );
+      const ApremiumPerBlock = parseEther("1000");
+      const AusdPerPremium = parseEther("1");
+
+      const BpremiumPerBlock = parseEther("5");
+      const BusdPerPremium = parseEther("200");
+      await insure.setProtocolPremiums(
+        PROTOCOL_X,
+        [tokenA.address, tokenB.address],
+        [ApremiumPerBlock, BpremiumPerBlock],
+        [AusdPerPremium, BusdPerPremium]
+      );
+
+      // stake
+      await insure.stake(parseEther("10"), owner.address, tokenA.address);
+
+      expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("1"));
+      expect(await insure.balanceOf(owner.address)).to.eq(0);
+      expect(await insure.balanceOf(alice.address)).to.eq(0);
+
+      await mine(3);
+
+      // harvest
+      await insure.harvestForMultipleMulti(
+        [stakeA.address],
+        [owner.address, alice.address],
+        [stakeB.address]
+      );
+
+      expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("5"));
+      expect(await insure.balanceOf(owner.address)).to.eq(parseEther("5"));
+      expect(await insure.balanceOf(alice.address)).to.eq(parseEther("0"));
+
+      expect(await insure.calcUnderylingInStoredUSD()).to.eq(
+        parseEther("10000")
+      );
+      expect((await insure.calcUnderyling()).amounts[0]).to.eq(
+        parseEther("5000")
+      );
+      expect((await insure.calcUnderyling()).amounts[1]).to.eq(
+        parseEther("25")
+      );
+
+      await insure.setProtocolPremiums(
+        PROTOCOL_X,
+        [tokenA.address, tokenB.address],
+        [ApremiumPerBlock, BpremiumPerBlock.mul(2)],
+        [AusdPerPremium, BusdPerPremium.mul(150).div(100)]
+      );
+
+      await insure
+        .connect(alice)
+        .stake(parseEther("10"), alice.address, tokenA.address);
+
+      await mine(4);
+
+      // harvest
+      await insure.harvestForMultipleMulti(
+        [stakeA.address],
+        [owner.address, alice.address],
+        [stakeB.address]
+      );
+
+      expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("15.6"));
+      expect(await insure.balanceOf(owner.address)).to.eq(parseEther("11.6"));
+      expect(await insure.balanceOf(alice.address)).to.eq(parseEther("4"));
+
+      // 6 blocks * 5 = 30 ETH + 6kDAI
+      // 30 eth, 6k$ -> 9k$
+      // 15k$
+      // 1 block = 4k$ extra (1k DAI, 10 ETH)
+      // 15k + 4k + 10k
+      expect(await insure.calcUnderylingInStoredUSD()).to.eq(
+        parseEther("29000").sub(1)
+      );
+
+      // 4000pb, 5 blocks = 20k / 2 = 10k
+      expect(await insure.connect(alice).calcUnderylingInStoredUSD()).to.eq(
+        parseEther("10000").sub(1)
+      );
+    });
+    it("Multis, scenario 6", async function () {
+      // initial setup
+      await insure.setWeights(
+        [tokenA.address, tokenB.address],
+        [parseEther("1"), parseEther("0")]
+      );
+      const ApremiumPerBlock = parseEther("1000");
+      const AusdPerPremium = parseEther("1");
+
+      const BpremiumPerBlock = parseEther("5");
+      const BusdPerPremium = parseEther("200");
+      await insure.setProtocolPremiums(
+        PROTOCOL_X,
+        [tokenA.address, tokenB.address],
+        [ApremiumPerBlock, BpremiumPerBlock],
+        [AusdPerPremium, BusdPerPremium]
+      );
+
+      // stake
+      await insure.stake(parseEther("10"), owner.address, tokenA.address);
+
+      expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("1"));
+      expect(await insure.balanceOf(owner.address)).to.eq(0);
+      expect(await insure.balanceOf(alice.address)).to.eq(0);
+
+      await mine(3);
+
+      // harvest
+      await insure.harvestForMultipleMulti(
+        [stakeA.address],
+        [owner.address, alice.address],
+        [stakeB.address]
+      );
+
+      expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("5"));
+      expect(await insure.balanceOf(owner.address)).to.eq(parseEther("5"));
+      expect(await insure.balanceOf(alice.address)).to.eq(parseEther("0"));
+
+      expect(await insure.calcUnderylingInStoredUSD()).to.eq(
+        parseEther("10000")
+      );
+      expect((await insure.calcUnderyling()).amounts[0]).to.eq(
+        parseEther("5000")
+      );
+      expect((await insure.calcUnderyling()).amounts[1]).to.eq(
+        parseEther("25")
+      );
+
+      await insure.setProtocolPremiums(
+        PROTOCOL_X,
+        [tokenA.address, tokenB.address],
+        [ApremiumPerBlock, BpremiumPerBlock.mul(2)],
+        [AusdPerPremium, BusdPerPremium.mul(150).div(100)]
+      );
+
+      await insure
+        .connect(alice)
+        .stake(parseEther("10"), alice.address, tokenA.address);
+      await insure.withdrawStake(parseEther("0.5"), tokenA.address);
+
+      await mine(3);
+
+      // harvest
+      await insure.harvestForMultipleMulti(
+        [stakeA.address],
+        [owner.address, alice.address, insure.address],
+        [stakeB.address]
+      );
+
+      expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("15.6"));
+      expect(await insure.balanceOf(owner.address)).to.eq(parseEther("10"));
+      expect(await insure.balanceOf(alice.address)).to.eq(parseEther("4"));
+      expect(await insure.balanceOf(insure.address)).to.eq(parseEther("1.6"));
+
+      expect(await insure.calcUnderylingInStoredUSD()).to.eq(
+        parseEther("25000").sub(1)
+      );
+
+      // 4000pb, 5 blocks = 20k / 2 = 10k
+      expect(await insure.connect(alice).calcUnderylingInStoredUSD()).to.eq(
+        parseEther("10000").sub(1)
+      );
+    });
+    it("Multis, scenario 9", async function () {
+      // initial setup
+      await insure.setWeights(
+        [tokenA.address, tokenB.address],
+        [parseEther("1"), parseEther("0")]
+      );
+      const ApremiumPerBlock = parseEther("1000");
+      const AusdPerPremium = parseEther("1");
+
+      const BpremiumPerBlock = parseEther("5");
+      const BusdPerPremium = parseEther("200");
+      await insure.setProtocolPremiums(
+        PROTOCOL_X,
+        [tokenA.address, tokenB.address],
+        [ApremiumPerBlock, BpremiumPerBlock],
+        [AusdPerPremium, BusdPerPremium]
+      );
+
+      // stake
+      await insure.stake(parseEther("10"), owner.address, tokenA.address);
+      await insure
+        .connect(alice)
+        .stake(parseEther("10"), alice.address, tokenA.address);
+      await insure
+        .connect(bob)
+        .stake(parseEther("10"), bob.address, tokenA.address);
+
+      await mine(2);
+
+      await insure.setProtocolPremiums(
+        PROTOCOL_X,
+        [tokenA.address, tokenB.address],
+        [ApremiumPerBlock, BpremiumPerBlock.mul(2)],
+        [AusdPerPremium, BusdPerPremium.div(2)]
+      );
+
+      await mine(4);
+
+      await insure.setProtocolPremiums(
+        PROTOCOL_X,
+        [tokenA.address, tokenB.address],
+        [ApremiumPerBlock, BpremiumPerBlock.mul(3)],
+        [AusdPerPremium, BusdPerPremium.div(4)]
+      );
+
+      await insure.withdrawStake(parseEther("0.1"), tokenA.address);
+
+      await mine(3);
+
+      // harvest
+      await insure.harvestForMultipleMulti(
+        [stakeA.address],
+        [owner.address, alice.address, bob.address, insure.address],
+        [stakeB.address]
+      );
+
+      expect(await insure.getFeePool(tokenA.address)).to.eq(
+        parseEther("20.055555555555555550")
+      );
+      expect(await insure.balanceOf(owner.address)).to.eq(
+        parseEther("7.988148148148148146")
+      );
+      expect(await insure.balanceOf(alice.address)).to.eq(
+        parseEther("6.185185185185185183")
+      );
+      expect(await insure.balanceOf(bob.address)).to.eq(
+        parseEther("5.685185185185185183")
+      );
+      expect(await insure.balanceOf(insure.address)).to.eq(
+        parseEther("0.197037037037037037")
+      );
+
+      expect(await insure.calcUnderylingInStoredUSD()).to.eq(
+        parseEther("9459.649122807017544407")
+      );
+      expect(await insure.connect(alice).calcUnderylingInStoredUSD()).to.eq(
+        parseEther("7324.561403508771929630")
+      );
+      expect(await insure.connect(bob).calcUnderylingInStoredUSD()).to.eq(
+        parseEther("6732.456140350877192595")
+      );
+      expect(await insure.calcUnderylingInStoredUSDFor(insure.address)).to.eq(
+        parseEther("233.333333333333333365")
       );
     });
   });
