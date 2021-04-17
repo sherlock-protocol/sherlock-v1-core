@@ -31,8 +31,22 @@ contract Fee is IFee {
         doYield(_token, _user, _user, 0);
     }
 
+    function harvestForMultipleMulti(
+        address[] memory _token,
+        address[] memory _users,
+        address[] memory _debtTokens
+    ) external override {
+        for (uint256 i; i < _token.length; i++) {
+            harvestForMultiple(_token[i], _users);
+        }
+        for (uint256 i; i < _debtTokens.length; i++) {
+            address underlying = IStake(_debtTokens[i]).underyling();
+            LibPool.payOffDebtAll(IERC20(underlying));
+        }
+    }
+
     function harvestForMultiple(address _token, address[] memory _users)
-        external
+        public
         override
     {
         address underlying = IStake(_token).underyling();

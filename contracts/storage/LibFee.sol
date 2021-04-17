@@ -20,6 +20,7 @@ library FeeStorage {
         uint256 feeLastAccrued;
 
         uint256 lastPremiumChange;
+        uint256 totalFeePool;
     }
 
     function fs() internal pure returns (Base storage fs) {

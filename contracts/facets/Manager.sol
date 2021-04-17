@@ -21,12 +21,24 @@ contract Manager is IManager {
     // split updating
     // prices, premiums (and make it easy to do both)
 
+    function setProtocolPremiums(
+        bytes32 _protocol,
+        IERC20[] memory _token,
+        uint256[] memory _premium,
+        uint256[] memory _price
+    ) external override {
+        for (uint256 i; i < _token.length; i++) {
+            setProtocolPremium(_protocol, _token[i], _premium[i], _price[i]);
+        }
+        // todo gas optimize
+    }
+
     function setProtocolPremium(
         bytes32 _protocol,
         IERC20 _token,
         uint256 _premium,
         uint256 _price
-    ) external override {
+    ) public override {
         GovStorage.Base storage gs = GovStorage.gs();
         PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
         FeeStorage.Base storage fs = FeeStorage.fs();
@@ -45,18 +57,11 @@ contract Manager is IManager {
         );
         fs.lastPremiumChange = block.number;
 
-        uint256 minusFeePerBlock = 0;
-
         console.log("ps.feePool", ps.feePool);
         console.log("fs.totalBlockIncrement", fs.totalBlockIncrement);
         console.log("fs.totalUsdPool", fs.totalUsdPool);
         console.log("-----------------");
         LibFee.accrueFeeToken();
-        if (fs.totalUsdPool > 0) {
-            minusFeePerBlock = ps.feePool.mul(fs.totalBlockIncrement).div(
-                fs.totalUsdPool
-            );
-        }
         uint256 curUsd = fs.tokenUSD[_token];
         // sub old premium in usd, add new premium in usdd
         // TODO optimize, writing to times to storage
@@ -88,20 +93,16 @@ contract Manager is IManager {
 
         if (fs.feePerBlock == 0) {
             fs.feePerBlock = 10**18;
-        } else {
+        } else if (fs.totalUsdPool > 0) {
             // TODO validate when fs.totalUsdPool
             console.log("fs.feePerBlock", fs.feePerBlock);
-            console.log("minusFeePerBlock", minusFeePerBlock);
             console.log("ps.feePool", ps.feePool);
+            console.log("ps.underlyingForFee", ps.underlyingForFee);
             console.log("fs.totalBlockIncrement", fs.totalBlockIncrement);
             console.log("fs.totalUsdPool", fs.totalUsdPool);
 
-            // 1 + (7 * 2) / 13
-            fs.feePerBlock = fs.feePerBlock.sub(minusFeePerBlock).add(
-                ps.feePool.mul(fs.totalBlockIncrement).div(fs.totalUsdPool)
-                // fs.totalUsdPool needs to include all update premiums, why not use totalBlockIncrement for that
-                // need something like this fs.totalUsdPool.add(fs.totalBlockIncrement.mul(blocks))
-                // to get the totalUsdPool without looping and recalculating
+            fs.feePerBlock = fs.totalFeePool.mul(fs.totalBlockIncrement).div(
+                fs.totalUsdPool
             );
             console.log("new", fs.feePerBlock);
         }

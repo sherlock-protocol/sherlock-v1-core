@@ -18,6 +18,12 @@ interface IFee {
 
     function harvestFor(address _token, address _user) external;
 
+    function harvestForMultipleMulti(
+        address[] memory _token,
+        address[] memory _users,
+        address[] memory _debtTokens
+    ) external;
+
     function harvestForMultiple(address _token, address[] memory _users)
         external;
 
