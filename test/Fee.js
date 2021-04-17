@@ -60,7 +60,6 @@ describe.only("Fee tests", function () {
       await timeTraveler.revertSnapshot();
     });
 
-    
     it("Scenario 1", async function () {
       // initial setup
       await insure.setWeights([tokenA.address], [parseEther("1")]);
@@ -948,7 +947,7 @@ describe.only("Fee tests", function () {
         parseEther("10000").sub(1)
       );
     });
-    it("Multis, scenario 9", async function () {
+    it("Single, verify pre premium", async function () {
       // initial setup
       await insure.setWeights(
         [tokenA.address, tokenB.address],
@@ -959,14 +958,7 @@ describe.only("Fee tests", function () {
 
       const BpremiumPerBlock = parseEther("5");
       const BusdPerPremium = parseEther("200");
-      await insure.setProtocolPremiums(
-        PROTOCOL_X,
-        [tokenA.address, tokenB.address],
-        [ApremiumPerBlock, BpremiumPerBlock],
-        [AusdPerPremium, BusdPerPremium]
-      );
 
-      // stake
       await insure.stake(parseEther("10"), owner.address, tokenA.address);
       await insure
         .connect(alice)
@@ -975,62 +967,122 @@ describe.only("Fee tests", function () {
         .connect(bob)
         .stake(parseEther("10"), bob.address, tokenA.address);
 
+      const b0 = await blockNumber(
+        insure.setProtocolPremiums(
+          PROTOCOL_X,
+          [tokenA.address, tokenB.address],
+          [ApremiumPerBlock, BpremiumPerBlock],
+          [AusdPerPremium, BusdPerPremium]
+        )
+      );
       await mine(2);
 
-      await insure.setProtocolPremiums(
-        PROTOCOL_X,
-        [tokenA.address, tokenB.address],
-        [ApremiumPerBlock, BpremiumPerBlock.mul(2)],
-        [AusdPerPremium, BusdPerPremium.div(2)]
-      );
-
-      await mine(4);
-
-      await insure.setProtocolPremiums(
-        PROTOCOL_X,
-        [tokenA.address, tokenB.address],
-        [ApremiumPerBlock, BpremiumPerBlock.mul(3)],
-        [AusdPerPremium, BusdPerPremium.div(4)]
-      );
-
-      await insure.withdrawStake(parseEther("0.1"), tokenA.address);
-
-      await mine(3);
-
-      // harvest
       await insure.harvestForMultipleMulti(
         [stakeA.address],
         [owner.address, alice.address, bob.address, insure.address],
         [stakeB.address]
       );
 
-      expect(await insure.getFeePool(tokenA.address)).to.eq(
-        parseEther("20.055555555555555550")
-      );
-      expect(await insure.balanceOf(owner.address)).to.eq(
-        parseEther("7.988148148148148146")
-      );
-      expect(await insure.balanceOf(alice.address)).to.eq(
-        parseEther("6.185185185185185183")
-      );
-      expect(await insure.balanceOf(bob.address)).to.eq(
-        parseEther("5.685185185185185183")
-      );
-      expect(await insure.balanceOf(insure.address)).to.eq(
-        parseEther("0.197037037037037037")
-      );
-
       expect(await insure.calcUnderylingInStoredUSD()).to.eq(
-        parseEther("9459.649122807017544407")
+        parseEther("2000")
       );
       expect(await insure.connect(alice).calcUnderylingInStoredUSD()).to.eq(
-        parseEther("7324.561403508771929630")
+        parseEther("2000")
       );
       expect(await insure.connect(bob).calcUnderylingInStoredUSD()).to.eq(
-        parseEther("6732.456140350877192595")
+        parseEther("2000")
       );
       expect(await insure.calcUnderylingInStoredUSDFor(insure.address)).to.eq(
-        parseEther("233.333333333333333365")
+        parseEther("0")
+      );
+    });
+    it.only("Single, verify pre premium", async function () {
+      // initial setup
+      await insure.setWeights(
+        [tokenA.address, tokenB.address],
+        [parseEther("1"), parseEther("0")]
+      );
+
+      const BpremiumPerBlock = parseEther("5");
+      const BusdPerPremium = parseEther("200");
+
+      await insure.stake(parseEther("10"), owner.address, tokenA.address);
+      await insure
+        .connect(alice)
+        .stake(parseEther("10"), alice.address, tokenA.address);
+      await insure
+        .connect(bob)
+        .stake(parseEther("10"), bob.address, tokenA.address);
+
+      // t = 0
+      b0 = await blockNumber(
+        insure.setProtocolPremiums(
+          PROTOCOL_X,
+          [tokenB.address],
+          [BpremiumPerBlock],
+          [BusdPerPremium]
+        )
+      );
+      await mine(9);
+
+      // t = 10
+      await insure.setProtocolPremiums(
+        PROTOCOL_X,
+        [tokenB.address],
+        [BpremiumPerBlock.mul(2)],
+        [BusdPerPremium.div(2)]
+      );
+
+      await mine(8);
+
+      const b = await blockNumber(
+        insure.withdrawStake(parseEther("1"), tokenA.address)
+      );
+
+      // t = 20
+      await insure.setProtocolPremiums(
+        PROTOCOL_X,
+        [tokenB.address],
+        [BpremiumPerBlock.mul(3)],
+        [BusdPerPremium.div(4)]
+      );
+
+      await mine(9);
+
+      // t = 30
+      await insure.harvestForMultipleMulti(
+        [stakeA.address],
+        [owner.address, alice.address, bob.address, insure.address],
+        [stakeB.address]
+      );
+      console.log(b0.toString(), b.toString());
+      // total 300 eth
+      // 19 blocks in
+      // 11 blocks out
+      // TODO calc right amounts for owner / isnsure
+      expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("60"));
+      expect(await insure.balanceOf(owner.address)).to.eq(
+        parseEther("9.333333333333333333")
+      );
+      expect(await insure.balanceOf(alice.address)).to.eq(parseEther("20"));
+      expect(await insure.balanceOf(bob.address)).to.eq(parseEther("20"));
+      expect(await insure.balanceOf(insure.address)).to.eq(
+        parseEther("10.666666666666666667")
+      );
+      // 140 ETH * 50 = 7k / 3 = 2.3333
+      expect(await insure.calcUnderylingInStoredUSD()).to.eq(
+        parseEther("2333.33333333333333325")
+      );
+      // 300 ETH * 50 = 15k / 3 = 5k
+      expect(await insure.connect(alice).calcUnderylingInStoredUSD()).to.eq(
+        parseEther("5000")
+      );
+      expect(await insure.connect(bob).calcUnderylingInStoredUSD()).to.eq(
+        parseEther("5000")
+      );
+      // 160 ETH * 50 = 8k / 3 = 2.6667
+      expect(await insure.calcUnderylingInStoredUSDFor(insure.address)).to.eq(
+        parseEther("2666.66666666666666675")
       );
     });
   });
