@@ -26,9 +26,9 @@ describe("Gov Insurance tests", function () {
 
     const Stake = await ethers.getContractFactory("Stake");
     [stakeA, stakeB, stakeC] = [
-      await Stake.deploy("Stake TokenA", "stkA"),
-      await Stake.deploy("Stake TokenB", "stkB"),
-      await Stake.deploy("Stake TokenC", "stkC"),
+      await Stake.deploy("Stake TokenA", "stkA", tokenA.address),
+      await Stake.deploy("Stake TokenB", "stkB", tokenA.address),
+      await Stake.deploy("Stake TokenC", "stkC", tokenA.address),
     ];
 
     insure = await insurance(owner.address);
@@ -140,6 +140,7 @@ describe("Gov Insurance tests", function () {
         insure.setProtocolPremiums(
           PROTOCOL_X,
           [tokenA.address],
+          [parseEther("1")],
           [parseEther("1")]
         )
       );
@@ -151,7 +152,7 @@ describe("Gov Insurance tests", function () {
     });
     it("Remove fail, poolManager did not remove", async function () {
       blockNumberEnd = await blockNumber(
-        insure.setProtocolPremiums(PROTOCOL_X, [tokenA.address], [0])
+        insure.setProtocolPremiums(PROTOCOL_X, [tokenA.address], [0], [0])
       );
       await expect(insure.protocolRemove(PROTOCOL_X)).to.be.revertedWith(
         "NOT_PROTOCOL"

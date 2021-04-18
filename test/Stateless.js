@@ -34,9 +34,9 @@ describe("static tests", function () {
 
     const Stake = await ethers.getContractFactory("Stake");
     [stakeA, stakeB, stakeC] = [
-      await Stake.deploy("Stake TokenA", "stkA"),
-      await Stake.deploy("Stake TokenB", "stkB"),
-      await Stake.deploy("Stake TokenC", "stkC"),
+      await Stake.deploy("Stake TokenA", "stkA", tokenA.address),
+      await Stake.deploy("Stake TokenB", "stkB", tokenB.address),
+      await Stake.deploy("Stake TokenC", "stkC", tokenC.address),
     ];
     await stakeA.approve(insure.address, constants.MaxUint256);
     await stakeA.transferOwnership(insure.address);
@@ -301,7 +301,7 @@ describe("static tests", function () {
       it("Invalid sender", async function () {
         await expect(
           insure.connect(alice).withdrawStake(parseEther("0.5"), tokenA.address)
-        ).to.be.revertedWith("ERC20: transfer amount exceeds balance");
+        ).to.be.reverted
       });
       it("Invalid amount (zero)", async function () {
         await expect(
@@ -676,26 +676,31 @@ describe("static tests", function () {
         await expect(
           insure
             .connect(alice)
-            .setProtocolPremiums(PROTOCOL_X, [tokenA.address], [5])
+            .setProtocolPremiums(PROTOCOL_X, [tokenA.address], [5], [1])
         ).to.be.revertedWith("NOT_MANAGER");
       });
       it("Invalid protocol", async function () {
         await expect(
-          insure.setProtocolPremiums(NON_PROTOCOL, [tokenA.address], [5])
+          insure.setProtocolPremiums(NON_PROTOCOL, [tokenA.address], [5], [1])
         ).to.be.revertedWith("NOT_COVERED");
       });
       it("Invalid lengths", async function () {
         await expect(
-          insure.setProtocolPremiums(PROTOCOL_X, [tokenA.address], [5, 4])
+          insure.setProtocolPremiums(PROTOCOL_X, [tokenA.address], [5, 4], [1])
         ).to.be.revertedWith("LENGTH");
       });
       it("Invalid token", async function () {
         await expect(
-          insure.setProtocolPremiums(PROTOCOL_X, [NON_TOKEN], [5])
+          insure.setProtocolPremiums(PROTOCOL_X, [NON_TOKEN], [5], [1])
         ).to.be.revertedWith("WHITELIST");
       });
       it("Success", async function () {
-        await insure.setProtocolPremiums(PROTOCOL_X, [tokenA.address], [5]);
+        await insure.setProtocolPremiums(
+          PROTOCOL_X,
+          [tokenA.address],
+          [5],
+          [1]
+        );
       });
     });
   });

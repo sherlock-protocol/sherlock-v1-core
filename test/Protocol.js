@@ -32,9 +32,9 @@ describe("Protocol tests", function () {
 
     const Stake = await ethers.getContractFactory("Stake");
     [stakeA, stakeB, stakeC] = [
-      await Stake.deploy("Stake TokenA", "stkA"),
-      await Stake.deploy("Stake TokenB", "stkB"),
-      await Stake.deploy("Stake TokenC", "stkC"),
+      await Stake.deploy("Stake TokenA", "stkA", tokenA.address),
+      await Stake.deploy("Stake TokenB", "stkB", tokenB.address),
+      await Stake.deploy("Stake TokenC", "stkC", tokenC.address),
     ];
     await stakeA.approve(insure.address, constants.MaxUint256);
     await stakeA.transferOwnership(insure.address);
@@ -120,7 +120,8 @@ describe("Protocol tests", function () {
         insure.setProtocolPremiums(
           PROTOCOL_X,
           [tokenA.address],
-          [parseEther("5")]
+          [parseEther("5")],
+          [parseEther("1")]
         )
       );
     });

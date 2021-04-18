@@ -10,7 +10,7 @@ const PROTOCOL_X =
 
 const hundredPercent = ethers.BigNumber.from("10").pow(18);
 
-describe.only("Fee tests", function () {
+describe("Fee tests", function () {
   before(async function () {
     timeTraveler = new TimeTraveler(network.provider);
 
@@ -996,7 +996,7 @@ describe.only("Fee tests", function () {
         parseEther("0")
       );
     });
-    it.only("Single, verify pre premium", async function () {
+    it("Single, verify pre premium", async function () {
       // initial setup
       await insure.setWeights(
         [tokenA.address, tokenB.address],

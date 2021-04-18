@@ -27,6 +27,8 @@ contract Manager is IManager {
         uint256[] memory _premium,
         uint256[] memory _price
     ) external override {
+        require(_token.length == _premium.length, "LENGTH");
+        require(_token.length == _price.length, "LENGTH");
         for (uint256 i; i < _token.length; i++) {
             setProtocolPremium(_protocol, _token[i], _premium[i], _price[i]);
         }

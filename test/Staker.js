@@ -35,9 +35,9 @@ describe("Staker tests", function () {
 
     const Stake = await ethers.getContractFactory("Stake");
     [stakeA, stakeB, stakeC] = [
-      await Stake.deploy("Stake TokenA", "stkA"),
-      await Stake.deploy("Stake TokenB", "stkB"),
-      await Stake.deploy("Stake TokenC", "stkC"),
+      await Stake.deploy("Stake TokenA", "stkA", tokenA.address),
+      await Stake.deploy("Stake TokenB", "stkB", tokenB.address),
+      await Stake.deploy("Stake TokenC", "stkC", tokenC.address),
     ];
     await stakeA.approve(insure.address, constants.MaxUint256);
     await stakeA.transferOwnership(insure.address);
@@ -273,7 +273,7 @@ describe("Staker tests", function () {
     it("Withdraw too much stake", async function () {
       await expect(
         insure.withdrawStake(parseEther("1.1"), tokenA.address)
-      ).to.be.revertedWith("revert ERC20: transfer amount exceeds balance");
+      ).to.be.reverted;
     });
     it("Withdraw 0.5 stake", async function () {
       const blocknumber = await blockNumber(
