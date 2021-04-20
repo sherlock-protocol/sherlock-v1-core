@@ -30,15 +30,27 @@ interface IFee {
     function setWeights(address[] memory _tokens, uint256[] memory _weights)
         external;
 
-    function calcUnderyling()
+    function calcUnderlying()
         external
         view
         returns (IERC20[] memory tokens, uint256[] memory amounts);
 
-    function calcUnderylingInStoredUSD() external view returns (uint256 usd);
+    function calcUnderlyingInStoredUSD() external view returns (uint256 usd);
 
-    function calcUnderylingInStoredUSDFor(address _user)
+    function calcUnderlyingInStoredUSDFor(address _user)
         external
         view
         returns (uint256 usd);
+
+    function calcUnderlying(uint256 _amount)
+        external
+        view
+        returns (IERC20[] memory tokens, uint256[] memory amounts);
+
+    function calcUnderlying(address _user)
+        external
+        view
+        returns (IERC20[] memory tokens, uint256[] memory amounts);
+
+    function redeem(uint256 _amount) external;
 }

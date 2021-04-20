@@ -21,6 +21,14 @@ library LibFee {
     // TODO accureFeeToken(address token), to just accrue for a certain token
     // do accrueFeeToken() to loop over all if updating weights
 
+    function accrueUSDPool() external {
+        FeeStorage.Base storage fs = FeeStorage.fs();
+        fs.totalUsdPool = fs.totalUsdPool.add(
+            block.number.sub(fs.lastPremiumChange).mul(fs.totalBlockIncrement)
+        );
+        fs.lastPremiumChange = block.number;
+    }
+
     function accrueFeeToken() external {
         // loop over pools, increase the pool + pool_weight based on the distribution weights
 

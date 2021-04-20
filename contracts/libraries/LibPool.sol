@@ -1,3 +1,5 @@
+import "hardhat/console.sol";
+
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -30,6 +32,7 @@ library LibPool {
         PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
         // todo optimize by forwarding  block.number.sub(protocolPremiumLastPaid) instead of calculating every loop
         uint256 debt = accruedDebt(_protocol, _token);
+        console.log("pb", ps.protocolBalance[_protocol], debt);
         ps.protocolBalance[_protocol] = ps.protocolBalance[_protocol].sub(debt);
     }
 

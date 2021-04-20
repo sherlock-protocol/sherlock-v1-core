@@ -115,6 +115,7 @@ module.exports = {
       }),
       await ethers.getContractFactory("Gov"),
       await ethers.getContractFactory("View"),
+      await ethers.getContractFactory("TimelockFacet"),
       await ethers.getContractFactory("Manager", {
         libraries: { LibPool: libPool.address, LibFee: libFee.address },
       }),

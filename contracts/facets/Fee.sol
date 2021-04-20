@@ -21,6 +21,7 @@ import "../libraries/LibTimelock.sol";
 
 contract Fee is IFee {
     using SafeMath for uint256;
+    using SafeERC20 for IERC20;
 
     // todo harvest(address[]), loop over all tokens user holds and redeem fees
 
@@ -76,7 +77,7 @@ contract Fee is IFee {
         }
     }
 
-    function calcUnderylingInStoredUSDFor(address _user)
+    function calcUnderlyingInStoredUSDFor(address _user)
         public
         override
         view
@@ -102,17 +103,41 @@ contract Fee is IFee {
         }
     }
 
-    function calcUnderylingInStoredUSD()
+    function calcUnderlyingInStoredUSD()
         external
         override
         view
         returns (uint256 usd)
     {
-        usd = calcUnderylingInStoredUSDFor(msg.sender);
+        usd = calcUnderlyingInStoredUSDFor(msg.sender);
     }
 
-    function calcUnderyling()
+    function calcUnderlying()
         external
+        override
+        view
+        returns (IERC20[] memory tokens, uint256[] memory amounts)
+    {
+        LibERC20Storage.ERC20Storage storage es = LibERC20Storage
+            .erc20Storage();
+
+        calcUnderlying(es.balances[msg.sender]);
+    }
+
+    function calcUnderlying(address _user)
+        external
+        override
+        view
+        returns (IERC20[] memory tokens, uint256[] memory amounts)
+    {
+        LibERC20Storage.ERC20Storage storage es = LibERC20Storage
+            .erc20Storage();
+
+        calcUnderlying(es.balances[_user]);
+    }
+
+    function calcUnderlying(uint256 _amount)
+        public
         override
         view
         returns (IERC20[] memory tokens, uint256[] memory amounts)
@@ -131,13 +156,44 @@ contract Fee is IFee {
             PoolStorage.Base storage ps = PoolStorage.ps(address(token));
             // todo include debt
             tokens[i] = token;
-            amounts[i] = ps.underlyingForFee.mul(es.balances[msg.sender]).div(
-                es.totalSupply
-            );
+            amounts[i] = ps.underlyingForFee.mul(_amount).div(es.totalSupply);
         }
     }
 
-    // TODO redeem()
+    function redeem(uint256 _amount) external override {
+        FeeStorage.Base storage fs = FeeStorage.fs();
+        LibERC20Storage.ERC20Storage storage es = LibERC20Storage
+            .erc20Storage();
+
+        LibFee.accrueUSDPool();
+        LibERC20.burn(msg.sender, _amount);
+
+        fs.totalFeePool = fs.totalFeePool.sub(_amount);
+        (IERC20[] memory tokens, uint256[] memory amounts) = calcUnderlying(
+            _amount
+        );
+
+        for (uint256 i; i < tokens.length; i++) {
+            PoolStorage.Base storage ps = PoolStorage.ps(address(tokens[i]));
+            ps.underlyingForFee = ps.underlyingForFee.sub(amounts[i]);
+
+            LibPool.payOffDebtAll(tokens[i]);
+            // TODO, deduct?
+            // ps.feeWeight
+            // ps.feePool
+            console.log(
+                "total",
+                fs.totalUsdPool,
+                amounts[i],
+                fs.tokenUSD[tokens[i]]
+            );
+            fs.totalUsdPool = fs.totalUsdPool.sub(
+                amounts[i].mul(fs.tokenUSD[tokens[i]]).div(10**18)
+            );
+
+            tokens[i].safeTransfer(msg.sender, amounts[i]);
+        }
+    }
 
     function _beforeTokenTransfer(
         address from,

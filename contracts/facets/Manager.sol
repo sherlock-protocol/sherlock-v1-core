@@ -45,6 +45,8 @@ contract Manager is IManager {
         PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
         FeeStorage.Base storage fs = FeeStorage.fs();
 
+        require(ps.initialized, "initialized");
+
         LibPool.payOffDebtAll(IERC20(_token));
         if (fs.feeLastAccrued == 0) {
             fs.feeLastAccrued = block.number;
@@ -54,10 +56,7 @@ contract Manager is IManager {
         require(gs.protocolIsCovered[_protocol], "NOT_COVERED");
         require(gs.protocolManagers[_protocol] == msg.sender, "NOT_MANAGER");
 
-        fs.totalUsdPool = fs.totalUsdPool.add(
-            block.number.sub(fs.lastPremiumChange).mul(fs.totalBlockIncrement)
-        );
-        fs.lastPremiumChange = block.number;
+        LibFee.accrueUSDPool();
 
         console.log("ps.feePool", ps.feePool);
         console.log("fs.totalBlockIncrement", fs.totalBlockIncrement);
