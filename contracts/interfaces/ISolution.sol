@@ -8,6 +8,7 @@ import "./IGov.sol";
 import "./IManager.sol";
 import "./IPool.sol";
 import "./IFee.sol";
+import "./ITimelock.sol";
 
 pragma solidity ^0.7.4;
 pragma experimental ABIEncoderV2;
@@ -21,5 +22,6 @@ interface ISolution is
     IGov,
     IManager,
     IPool,
-    IFee
+    IFee,
+    ITimelock
 {}

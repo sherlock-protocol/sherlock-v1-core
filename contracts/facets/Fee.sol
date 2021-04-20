@@ -17,6 +17,7 @@ import "../interfaces/IStake.sol";
 import "../libraries/LibPool.sol";
 import "../libraries/LibFee.sol";
 import "../libraries/LibERC20.sol";
+import "../libraries/LibTimelock.sol";
 
 contract Fee is IFee {
     using SafeMath for uint256;
@@ -179,8 +180,12 @@ contract Fee is IFee {
                     .add(withdrawable_amount)
                     .sub(ineglible_yield_amount);
 
-                //ps.feePool = ps.feePool.sub(withdrawable_amount);
-                LibERC20.mint(from, withdrawable_amount);
+                if (from == address(this)) {
+                    // withdrawable_amount will only be >0 if we hold the FEE token for the user
+                    // TO discuss, transfer to first money out pool?
+                } else {
+                    LibTimelock.lock(from, withdrawable_amount);
+                }
             } else {
                 ps.feeWithdrawn[from] = ps.feeWithdrawn[from].sub(
                     ineglible_yield_amount
