@@ -58,7 +58,6 @@ contract Manager is IManager {
 
         LibFee.accrueUSDPool();
 
-        console.log("ps.feePool", ps.feePool);
         console.log("fs.totalBlockIncrement", fs.totalBlockIncrement);
         console.log("fs.totalUsdPool", fs.totalUsdPool);
         console.log("-----------------");
@@ -97,7 +96,6 @@ contract Manager is IManager {
         } else if (fs.totalUsdPool > 0) {
             // TODO validate when fs.totalUsdPool
             console.log("fs.feePerBlock", fs.feePerBlock);
-            console.log("ps.feePool", ps.feePool);
             console.log("ps.underlyingForFee", ps.underlyingForFee);
             console.log("fs.totalBlockIncrement", fs.totalBlockIncrement);
             console.log("fs.totalUsdPool", fs.totalUsdPool);

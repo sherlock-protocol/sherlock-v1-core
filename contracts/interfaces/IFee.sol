@@ -52,5 +52,5 @@ interface IFee {
         view
         returns (IERC20[] memory tokens, uint256[] memory amounts);
 
-    function redeem(uint256 _amount) external;
+    function redeem(uint256 _amount, address _receiver) external;
 }

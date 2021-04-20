@@ -106,8 +106,6 @@ interface IPool {
         view
         returns (uint256);
 
-    function getFeePool(address _token) external view returns (uint256);
-
     function getStakersTVL(address _token) external view returns (uint256);
 
     function getStakerTVL(address _staker, address _token)

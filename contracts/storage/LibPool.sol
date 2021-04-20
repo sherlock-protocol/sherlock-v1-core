@@ -25,8 +25,6 @@ library PoolStorage {
         // how much token (this) is available for fee holders
         uint256 underlyingForFee;
 
-        // how much fee is in the pool
-        uint256 feePool;
         // non-native variables
         mapping(address => uint256) feeWithdrawn;
         uint256 feeTotalWithdrawn;

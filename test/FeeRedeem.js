@@ -10,15 +10,16 @@ const PROTOCOL_X =
 
 const hundredPercent = ethers.BigNumber.from("10").pow(18);
 
-describe("Fee tests", function () {
+describe.only("Fee tests", function () {
   before(async function () {
     timeTraveler = new TimeTraveler(network.provider);
 
-    [owner, alice, bob] = await ethers.getSigners();
-    [owner.address, alice.address, bob.address] = [
+    [owner, alice, bob, carol] = await ethers.getSigners();
+    [owner.address, alice.address, bob.address, carol.address] = [
       await owner.getAddress(),
       await alice.getAddress(),
       await bob.getAddress(),
+      await carol.getAddress(),
     ];
 
     insure = await insurance(owner.address);
@@ -31,11 +32,11 @@ describe("Fee tests", function () {
       await Token.deploy("TokenC", "C", parseEther("1000000")),
     ];
     await tokenA.transfer(alice.address, parseEther("100"));
-    await tokenA.transfer(bob.address, parseEther("100"));
+    await tokenA.transfer(carol.address, parseEther("10"));
     await tokenA.approve(insure.address, constants.MaxUint256);
     await tokenB.approve(insure.address, constants.MaxUint256);
     await tokenA.connect(alice).approve(insure.address, constants.MaxUint256);
-    await tokenA.connect(bob).approve(insure.address, constants.MaxUint256);
+    await tokenA.connect(carol).approve(insure.address, constants.MaxUint256);
 
     const Stake = await ethers.getContractFactory("Stake");
     [stakeA, stakeB, stakeC] = [
@@ -44,6 +45,7 @@ describe("Fee tests", function () {
       await Stake.deploy("Stake TokenC", "stkC", tokenC.address),
     ];
     await stakeA.approve(insure.address, constants.MaxUint256);
+    await stakeA.connect(carol).approve(insure.address, constants.MaxUint256);
     await stakeB.approve(insure.address, constants.MaxUint256);
     await stakeA.transferOwnership(insure.address);
     await stakeB.transferOwnership(insure.address);
@@ -67,11 +69,11 @@ describe("Fee tests", function () {
     await timeTraveler.snapshot();
   });
   describe("stake(), multi", function () {
-    beforeEach(async function () {
+    before(async function () {
       await timeTraveler.revertSnapshot();
       //await insure.tokenAdd(tokenB.address, stakeB.address, owner.address);
     });
-    it.only("Multis stale", async function () {
+    it("Multis stale", async function () {
       // initial setup
       await insure.setWeights([tokenA.address], [parseEther("1")]);
       const ApremiumPerBlock = parseEther("1000");
@@ -102,16 +104,50 @@ describe("Fee tests", function () {
       );
       await insure.claimAllForMulti([owner.address, alice.address]);
 
-      expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("24"));
+      expect(await insure.totalSupply()).to.eq(parseEther("24"));
       expect(await insure.balanceOf(owner.address)).to.eq(parseEther("12"));
       expect(await insure.balanceOf(alice.address)).to.eq(parseEther("12"));
 
-      await insure.redeem(parseEther("6"));
+      await insure.redeem(parseEther("6"), bob.address);
 
       expect(await insure.totalSupply()).to.eq(parseEther("18"));
-      //expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("18"));
       expect(await insure.balanceOf(owner.address)).to.eq(parseEther("6"));
       expect(await insure.balanceOf(alice.address)).to.eq(parseEther("12"));
+
+      // 24* 1000 DAI = 24k / 4 = 6k
+      expect(await tokenA.balanceOf(bob.address)).to.eq(parseEther("6000"));
+      // 24* 5 ETH = 120 / 4 = 30
+      expect(await tokenB.balanceOf(bob.address)).to.eq(parseEther("30"));
+    });
+    it("Multis weight", async function () {
+      // initial setup
+      await mine(10);
+
+      await insure
+        .connect(carol)
+        .stake(parseEther("10"), carol.address, tokenA.address);
+
+      await mine(2);
+
+      await insure.harvestForMultipleMulti(
+        [stakeA.address],
+        [owner.address, alice.address, carol.address],
+        [stakeB.address]
+      );
+      await insure.claimAllForMulti([
+        owner.address,
+        alice.address,
+        carol.address,
+      ]);
+
+      const fee = await insure.balanceOf(carol.address);
+      console.log("fee", fee.toString());
+      await insure.connect(carol).redeem(fee, carol.address);
+
+      // 24* 1000 DAI = 24k / 4 = 6k
+      expect(await tokenA.balanceOf(carol.address)).to.eq(parseEther("1000"));
+      // 24* 5 ETH = 120 / 4 = 30
+      expect(await tokenB.balanceOf(carol.address)).to.eq(parseEther("5"));
     });
   });
 });

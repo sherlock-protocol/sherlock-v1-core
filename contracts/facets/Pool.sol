@@ -60,11 +60,6 @@ contract Pool {
         return address(ps.stakeToken);
     }
 
-    function getFeePool() external view returns (uint256) {
-        (, PoolStorage.Base storage ps) = baseData();
-        return ps.feePool;
-    }
-
     function isProtocol(bytes32 _protocol, address _token)
         external
         view

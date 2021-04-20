@@ -160,13 +160,17 @@ contract Fee is IFee {
         }
     }
 
-    function redeem(uint256 _amount) external override {
+    function redeem(uint256 _amount, address _receiver) external override {
         FeeStorage.Base storage fs = FeeStorage.fs();
         LibERC20Storage.ERC20Storage storage es = LibERC20Storage
             .erc20Storage();
+        // TODO, update latest fee token amount total supply
+        // by doing currentSupply + feeTokenPerBlock * block diff
 
+        // latest total supply is needed right? Other user gets more underlying then rewarded
+        // todo test by
+        // joining with different amount (or later moments) and redeeming
         LibFee.accrueUSDPool();
-        LibERC20.burn(msg.sender, _amount);
 
         fs.totalFeePool = fs.totalFeePool.sub(_amount);
         (IERC20[] memory tokens, uint256[] memory amounts) = calcUnderlying(
@@ -180,7 +184,6 @@ contract Fee is IFee {
             LibPool.payOffDebtAll(tokens[i]);
             // TODO, deduct?
             // ps.feeWeight
-            // ps.feePool
             console.log(
                 "total",
                 fs.totalUsdPool,
@@ -191,8 +194,10 @@ contract Fee is IFee {
                 amounts[i].mul(fs.tokenUSD[tokens[i]]).div(10**18)
             );
 
-            tokens[i].safeTransfer(msg.sender, amounts[i]);
+            tokens[i].safeTransfer(_receiver, amounts[i]);
         }
+
+        LibERC20.burn(msg.sender, _amount);
     }
 
     function _beforeTokenTransfer(
