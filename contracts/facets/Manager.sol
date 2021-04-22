@@ -45,13 +45,12 @@ contract Manager is IManager {
         PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
         FeeStorage.Base storage fs = FeeStorage.fs();
 
-        require(ps.initialized, "initialized");
+        require(ps.initialized, "WHITELIST");
 
         LibPool.payOffDebtAll(IERC20(_token));
         if (fs.feeLastAccrued == 0) {
             fs.feeLastAccrued = block.number;
         }
-        require(ps.initialized, "WHITELIST");
 
         require(gs.protocolIsCovered[_protocol], "NOT_COVERED");
         require(gs.protocolManagers[_protocol] == msg.sender, "NOT_MANAGER");

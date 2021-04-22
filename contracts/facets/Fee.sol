@@ -156,7 +156,7 @@ contract Fee is IFee {
             PoolStorage.Base storage ps = PoolStorage.ps(address(token));
             // todo include debt
             tokens[i] = token;
-            amounts[i] = ps.underlyingForFee.mul(_amount).div(es.totalSupply);
+            amounts[i] = ps.underlyingForFee.mul(_amount).div(fs.totalFeePool);
         }
     }
 
@@ -172,7 +172,6 @@ contract Fee is IFee {
         // joining with different amount (or later moments) and redeeming
         LibFee.accrueUSDPool();
 
-        fs.totalFeePool = fs.totalFeePool.sub(_amount);
         (IERC20[] memory tokens, uint256[] memory amounts) = calcUnderlying(
             _amount
         );
@@ -196,7 +195,7 @@ contract Fee is IFee {
 
             tokens[i].safeTransfer(_receiver, amounts[i]);
         }
-
+        fs.totalFeePool = fs.totalFeePool.sub(_amount);
         LibERC20.burn(msg.sender, _amount);
     }
 
@@ -236,10 +235,6 @@ contract Fee is IFee {
             if (withdrawable_amount > 0) {
                 // store the data in a single calc
                 ps.feeWithdrawn[from] = raw_amount.sub(ineglible_yield_amount);
-                ps.feeTotalWithdrawn = ps
-                    .feeTotalWithdrawn
-                    .add(withdrawable_amount)
-                    .sub(ineglible_yield_amount);
 
                 if (from == address(this)) {
                     // withdrawable_amount will only be >0 if we hold the FEE token for the user
@@ -251,9 +246,6 @@ contract Fee is IFee {
                 ps.feeWithdrawn[from] = ps.feeWithdrawn[from].sub(
                     ineglible_yield_amount
                 );
-                ps.feeTotalWithdrawn = ps.feeTotalWithdrawn.sub(
-                    ineglible_yield_amount
-                );
             }
         } else {
             ps.feeWeight = ps.feeWeight.add(ineglible_yield_amount);
@@ -261,9 +253,6 @@ contract Fee is IFee {
 
         if (to != address(0)) {
             ps.feeWithdrawn[to] = ps.feeWithdrawn[to].add(
-                ineglible_yield_amount
-            );
-            ps.feeTotalWithdrawn = ps.feeTotalWithdrawn.add(
                 ineglible_yield_amount
             );
         } else {

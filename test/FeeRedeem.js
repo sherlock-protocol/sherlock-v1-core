@@ -10,7 +10,7 @@ const PROTOCOL_X =
 
 const hundredPercent = ethers.BigNumber.from("10").pow(18);
 
-describe.only("Fee tests", function () {
+describe("Fee tests", function () {
   before(async function () {
     timeTraveler = new TimeTraveler(network.provider);
 
@@ -148,6 +148,66 @@ describe.only("Fee tests", function () {
       expect(await tokenA.balanceOf(carol.address)).to.eq(parseEther("1000"));
       // 24* 5 ETH = 120 / 4 = 30
       expect(await tokenB.balanceOf(carol.address)).to.eq(parseEther("5"));
+    });
+  });
+  describe("stake(), multi", function () {
+    before(async function () {
+      await timeTraveler.revertSnapshot();
+      //await insure.tokenAdd(tokenB.address, stakeB.address, owner.address);
+    });
+    it("Multis stale", async function () {
+      // initial setup
+      await insure.setWeights([tokenA.address], [parseEther("1")]);
+      const ApremiumPerBlock = parseEther("1000");
+      const AusdPerPremium = parseEther("1");
+
+      const BpremiumPerBlock = parseEther("5");
+      const BusdPerPremium = parseEther("200");
+
+      // stake
+      await insure.stake(parseEther("10"), owner.address, tokenA.address);
+      await insure
+        .connect(alice)
+        .stake(parseEther("10"), alice.address, tokenA.address);
+
+      await insure.setProtocolPremiums(
+        PROTOCOL_X,
+        [tokenA.address, tokenB.address],
+        [ApremiumPerBlock, BpremiumPerBlock],
+        [AusdPerPremium, BusdPerPremium]
+      );
+
+      await mine(10);
+      // harvest
+      await insure.harvestForMultipleMulti(
+        [stakeA.address],
+        [alice.address],
+        [stakeB.address]
+      );
+
+      await mine(12);
+
+      await insure.harvestForMultipleMulti(
+        [stakeA.address],
+        [owner.address],
+        [stakeB.address]
+      );
+      await insure.claimAllForMulti([owner.address, alice.address]);
+
+      expect(await insure.totalSupply()).to.eq(parseEther("17.5"));
+      expect(await insure.balanceOf(owner.address)).to.eq(parseEther("12"));
+      expect(await insure.balanceOf(alice.address)).to.eq(parseEther("5.5"));
+
+      await insure.redeem(parseEther("6"), bob.address);
+
+      expect(await insure.totalSupply()).to.eq(parseEther("11.5"));
+      expect(await insure.balanceOf(owner.address)).to.eq(parseEther("6"));
+      expect(await insure.balanceOf(alice.address)).to.eq(parseEther("5.5"));
+
+      // 24* 1000 DAI = 24k / 4 = 6k
+      expect(await tokenA.balanceOf(bob.address)).to.eq(parseEther("6000"));
+      // 24* 5 ETH = 120 / 4 = 30
+      expect(await tokenB.balanceOf(bob.address)).to.eq(parseEther("30"));
     });
   });
 });
