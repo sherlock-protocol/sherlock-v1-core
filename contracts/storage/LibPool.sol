@@ -27,7 +27,6 @@ library PoolStorage {
 
         // non-native variables
         mapping(address => uint256) feeWithdrawn;
-
         uint256 feeWeight;
         uint256 totalFeePoolWeight;
 

@@ -15,7 +15,6 @@ import "../storage/LibTimelock.sol";
 import "../interfaces/ITimelock.sol";
 
 import "../libraries/LibPool.sol";
-
 import "../libraries/LibERC20.sol";
 
 contract TimelockFacet is ITimelock {
@@ -41,6 +40,7 @@ contract TimelockFacet is ITimelock {
             claimAllFor(_users[i]);
         }
     }
+    // todo  (in timelock lib)
 
     // todo claim and swap
     // todo claim() for msg sender

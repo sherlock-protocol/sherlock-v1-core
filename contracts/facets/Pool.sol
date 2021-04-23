@@ -317,6 +317,7 @@ contract Pool {
         uint256 amount = withdraw.stake.mul(ps.poolBalance).div(
             ps.stakeToken.totalSupply()
         );
+        // TODO get fee tokens from timelock (and swap for native) (in timelock lib)
         ps.poolBalance = ps.poolBalance.sub(amount);
         token.safeTransfer(msg.sender, amount);
         ps.stakeToken.burn(address(this), withdraw.stake);

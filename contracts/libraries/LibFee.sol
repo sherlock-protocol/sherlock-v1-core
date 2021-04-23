@@ -50,9 +50,9 @@ library LibFee {
 
             uint256 fee = amount.mul(ps.totalFeePoolWeight).div(10**18);
             ps.feeWeight = ps.feeWeight.add(fee);
-            fs.totalFeePool = fs.totalFeePool.add(fee);
         }
 
+        fs.totalFeePool = fs.totalFeePool.add(amount);
         fs.feeLastAccrued = block.number;
     }
 }

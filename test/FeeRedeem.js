@@ -155,7 +155,7 @@ describe("Fee tests", function () {
       await timeTraveler.revertSnapshot();
       //await insure.tokenAdd(tokenB.address, stakeB.address, owner.address);
     });
-    it("Multis stale", async function () {
+    it("Multis stale, non synchronous calls", async function () {
       // initial setup
       await insure.setWeights([tokenA.address], [parseEther("1")]);
       const ApremiumPerBlock = parseEther("1000");

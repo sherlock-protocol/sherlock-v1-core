@@ -240,4 +240,17 @@ contract Gov is IGov {
             _token.safeTransfer(_to, ps.poolBalance);
         }
     }
+
+    // todo payout
+    // loop over every pool
+    // deduct pool balance
+    // deduct yield amount in pool
+    // deduct yield amount in timelock
+
+    // we want to take fee from pools (still need to be timelocked) and fee from timelock (that did not expire yet)
+    // sell it for ETH on uni, or redeem for underlying
+
+    // to think; voor pool balance doen we natuurlijk bij withdraw bij de amount pakken, kan dat niet bij fee?
+    // nee want fee amount staat vast
+
 }
