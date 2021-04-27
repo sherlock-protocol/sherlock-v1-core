@@ -8,6 +8,8 @@ import "../storage/LibPool.sol";
 import "../storage/LibGov.sol";
 
 interface IFee {
+    function getTotalFeePool() external view returns (uint256);
+
     function _beforeTokenTransfer(
         address from,
         address to,

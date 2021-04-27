@@ -50,10 +50,12 @@ library LibFee {
             PoolStorage.Base storage ps = PoolStorage.ps(address(token));
 
             uint256 fee = amount.mul(ps.totalFeePoolWeight).div(10**18);
-            // if token == FEE
-            // ps.poolBalance.add()
-            // else
-            ps.feeWeight = ps.feeWeight.add(fee);
+            if (address(token) == address(this)) {
+                // native fees
+                ps.poolBalance = ps.poolBalance.add(fee);
+            } else {
+                ps.feeWeight = ps.feeWeight.add(fee);
+            }
         }
 
         fs.totalFeePool = fs.totalFeePool.add(amount);

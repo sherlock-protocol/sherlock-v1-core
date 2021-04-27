@@ -25,6 +25,13 @@ contract Fee is IFee {
     using SafeERC20 for IERC20;
 
     // todo harvest(address[]), loop over all tokens user holds and redeem fees
+    function getTotalFeePool() external override view returns (uint256) {
+        FeeStorage.Base storage fs = FeeStorage.fs();
+        return
+            fs.totalFeePool.add(
+                block.number.sub(fs.feeLastAccrued).mul(fs.feePerBlock)
+            );
+    }
 
     function harvest(address _token) external override {
         harvestFor(_token, msg.sender);
