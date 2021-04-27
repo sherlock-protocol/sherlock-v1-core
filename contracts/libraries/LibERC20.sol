@@ -30,4 +30,13 @@ library LibERC20 {
         es.totalSupply = es.totalSupply.sub(_amount);
         emit Transfer(_from, address(0), _amount);
     }
+
+    function approve(
+        address _from,
+        address _to,
+        uint256 _amount
+    ) internal returns (bool) {
+        LibERC20Storage.erc20Storage().allowances[_from][_to] = _amount;
+        return true;
+    }
 }

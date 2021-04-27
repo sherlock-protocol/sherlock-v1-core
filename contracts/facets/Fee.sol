@@ -13,6 +13,7 @@ import "../storage/LibERC20Storage.sol";
 
 import "../interfaces/IFee.sol";
 import "../interfaces/IStake.sol";
+import "../interfaces/IStakeToken.sol";
 
 import "../libraries/LibPool.sol";
 import "../libraries/LibFee.sol";
@@ -42,7 +43,7 @@ contract Fee is IFee {
             harvestForMultiple(_token[i], _users);
         }
         for (uint256 i; i < _debtTokens.length; i++) {
-            address underlying = IStake(_debtTokens[i]).underyling();
+            address underlying = IStakeToken(_debtTokens[i]).underyling();
             LibPool.payOffDebtAll(IERC20(underlying));
         }
     }
@@ -51,7 +52,7 @@ contract Fee is IFee {
         public
         override
     {
-        address underlying = IStake(_token).underyling();
+        address underlying = IStakeToken(_token).underyling();
         LibPool.payOffDebtAll(IERC20(underlying));
         for (uint256 i; i < _users.length; i++) {
             doYield(_token, _users[i], _users[i], 0);
@@ -77,7 +78,7 @@ contract Fee is IFee {
         }
     }
 
-    function calcUnderlyingInStoredUSDFor(address _user)
+    function calcUnderlyingInStoredUSDFor(uint256 _amount)
         public
         override
         view
@@ -94,7 +95,7 @@ contract Fee is IFee {
 
             // TODO callstack
             PoolStorage.Base storage ps = PoolStorage.ps(address(token));
-            uint256 _temp = ps.underlyingForFee.mul(es.balances[_user]).mul(
+            uint256 _temp = ps.underlyingForFee.mul(_amount).mul(
                 fs.tokenUSD[token]
             );
             _temp = _temp.div(10**18).div(es.totalSupply);
@@ -109,7 +110,9 @@ contract Fee is IFee {
         view
         returns (uint256 usd)
     {
-        usd = calcUnderlyingInStoredUSDFor(msg.sender);
+        LibERC20Storage.ERC20Storage storage es = LibERC20Storage
+            .erc20Storage();
+        usd = calcUnderlyingInStoredUSDFor(es.balances[msg.sender]);
     }
 
     function calcUnderlying()
@@ -121,7 +124,7 @@ contract Fee is IFee {
         LibERC20Storage.ERC20Storage storage es = LibERC20Storage
             .erc20Storage();
 
-        calcUnderlying(es.balances[msg.sender]);
+        return calcUnderlying(es.balances[msg.sender]);
     }
 
     function calcUnderlying(address _user)
@@ -133,7 +136,7 @@ contract Fee is IFee {
         LibERC20Storage.ERC20Storage storage es = LibERC20Storage
             .erc20Storage();
 
-        calcUnderlying(es.balances[_user]);
+        return calcUnderlying(es.balances[_user]);
     }
 
     function calcUnderlying(uint256 _amount)
@@ -162,14 +165,6 @@ contract Fee is IFee {
 
     function redeem(uint256 _amount, address _receiver) external override {
         FeeStorage.Base storage fs = FeeStorage.fs();
-        LibERC20Storage.ERC20Storage storage es = LibERC20Storage
-            .erc20Storage();
-        // TODO, update latest fee token amount total supply
-        // by doing currentSupply + feeTokenPerBlock * block diff
-
-        // latest total supply is needed right? Other user gets more underlying then rewarded
-        // todo test by
-        // joining with different amount (or later moments) and redeeming
         LibFee.accrueUSDPool();
 
         (IERC20[] memory tokens, uint256[] memory amounts) = calcUnderlying(
@@ -183,12 +178,6 @@ contract Fee is IFee {
             LibPool.payOffDebtAll(tokens[i]);
             // TODO, deduct?
             // ps.feeWeight
-            console.log(
-                "total",
-                fs.totalUsdPool,
-                amounts[i],
-                fs.tokenUSD[tokens[i]]
-            );
             fs.totalUsdPool = fs.totalUsdPool.sub(
                 amounts[i].mul(fs.tokenUSD[tokens[i]]).div(10**18)
             );
@@ -207,13 +196,36 @@ contract Fee is IFee {
         doYield(msg.sender, from, to, amount);
     }
 
+    function handleFeeMint(
+        PoolStorage.Base storage psFee,
+        address from,
+        address to,
+        uint256 withdrawable_amount
+    ) private {
+        if (to != address(this)) {
+            // not a withdraw
+            LibPool.stake(psFee, withdrawable_amount, from);
+        } else {
+            // stake user fees with this as receipent of the stake token
+            uint256 stake = LibPool.stake(
+                psFee,
+                withdrawable_amount,
+                address(this)
+            );
+            // approve stakeToken to this, so a withdrawal can happen
+            psFee.stakeToken.approve(address(this), stake);
+            // withdraw with user as receipent of the withdrawal
+            LibPool.withdraw(psFee, stake, address(this), from);
+        }
+    }
+
     function doYield(
         address token,
         address from,
         address to,
         uint256 amount
     ) private {
-        address underlying = IStake(token).underyling();
+        address underlying = IStakeToken(token).underyling();
         PoolStorage.Base storage ps = PoolStorage.ps(underlying);
         require(address(ps.stakeToken) == token, "Unexpected sender");
         // mint / transfer FEE tokens, triggered by withdraw + transfer
@@ -236,11 +248,15 @@ contract Fee is IFee {
                 // store the data in a single calc
                 ps.feeWithdrawn[from] = raw_amount.sub(ineglible_yield_amount);
 
+                LibERC20.mint(address(this), withdrawable_amount);
+                PoolStorage.Base storage psFee = PoolStorage.ps(address(this));
                 if (from == address(this)) {
-                    // withdrawable_amount will only be >0 if we hold the FEE token for the user
-                    // TO discuss, transfer to first money out pool?
+                    // add fee harvested by the pool itself to first money out pool.
+                    psFee.firstMoneyOut = psFee.firstMoneyOut.add(
+                        withdrawable_amount
+                    );
                 } else {
-                    LibTimelock.lock(from, withdrawable_amount);
+                    handleFeeMint(psFee, from, to, withdrawable_amount);
                 }
             } else {
                 ps.feeWithdrawn[from] = ps.feeWithdrawn[from].sub(

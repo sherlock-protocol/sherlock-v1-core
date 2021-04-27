@@ -301,7 +301,7 @@ describe("static tests", function () {
       it("Invalid sender", async function () {
         await expect(
           insure.connect(alice).withdrawStake(parseEther("0.5"), tokenA.address)
-        ).to.be.reverted
+        ).to.be.reverted;
       });
       it("Invalid amount (zero)", async function () {
         await expect(
@@ -424,7 +424,7 @@ describe("static tests", function () {
     describe("exchangeRate()", function () {});
   });
   describe("Gov ─ State Changing", function () {
-    describe("setExitFee()", function () {});
+    //describe("setExitFee()", function () {});
     describe("setInitialGovInsurance()", function () {
       it("Invalid sender", async function () {
         await expect(
@@ -662,7 +662,7 @@ describe("static tests", function () {
   });
   describe("Gov ─ View Methods", function () {
     describe("getGovInsurance()", function () {});
-    describe("getExitFee()", function () {});
+    //describe("getExitFee()", function () {});
     describe("getClaimPeriod()", function () {});
     describe("getTimeLock()", function () {});
     describe("getTokens()", function () {});

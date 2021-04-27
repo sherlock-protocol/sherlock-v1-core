@@ -1,3 +1,5 @@
+// TODO rewrite tests at later stage
+
 // const { expect } = require("chai");
 // const { utils } = require("ethers/lib");
 // const { parseEther, parseUnits } = require("ethers/lib/utils");
@@ -38,11 +40,15 @@
 //     await tokenA.connect(bob).approve(insure.address, constants.MaxUint256);
 
 //     const Stake = await ethers.getContractFactory("Stake");
+//     const StakeFee = await ethers.getContractFactory("StakeFee");
 //     [stakeA, stakeB, stakeC] = [
 //       await Stake.deploy("Stake TokenA", "stkA", tokenA.address),
 //       await Stake.deploy("Stake TokenB", "stkB", tokenB.address),
 //       await Stake.deploy("Stake TokenC", "stkC", tokenC.address),
 //     ];
+//     stakeFee = await StakeFee.deploy("Stake Fee", "stkFEE");
+//     await stakeFee.transferOwnership(insure.address);
+
 //     await stakeA.approve(insure.address, constants.MaxUint256);
 //     await stakeB.approve(insure.address, constants.MaxUint256);
 //     await stakeA.transferOwnership(insure.address);
@@ -50,6 +56,7 @@
 //     await stakeC.transferOwnership(insure.address);
 
 //     await insure.tokenAdd(tokenA.address, stakeA.address, owner.address);
+//     await insure.tokenAdd(insure.address, stakeFee.address, owner.address);
 //     // await insure.tokenAdd(tokenB.address, stakeB.address, owner.address);
 //     await insure.protocolAdd(PROTOCOL_X, owner.address, owner.address);
 
@@ -76,25 +83,32 @@
 
 //       // stake
 //       await insure.stake(parseEther("10"), owner.address, tokenA.address);
-//       expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("1"));
+//       expect(await insure.totalSupply()).to.eq(0);
 //       expect(await insure.balanceOf(owner.address)).to.eq(0);
 
 //       await mine(3);
 
 //       // transfer
 //       await insure.harvest(stakeA.address);
-//       expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("5"));
-//       expect(await insure.balanceOf(owner.address)).to.eq(parseEther("5"));
+//       expect(await insure.totalSupply()).to.eq(parseEther("5"));
+//       expect(await stakeFee.balanceOf(owner.address)).to.eq(parseEther("1"));
+//       expect(await insure.exchangeRate(insure.address)).to.eq(parseEther("5"));
 
 //       const t2 = await blockNumber(insure.payOffDebtAll(tokenA.address));
-//       const underlying = await insure.calcUnderyling();
-//       const underlyingUSD = await insure.calcUnderylingInStoredUSD();
+//       // returns 0 value for user as the user doesn't hold any fee (it is deposited into the pool)
+//       const underlying = await insure["calcUnderlying(uint256)"](
+//         parseEther("5") // amount of FEE deposited for user
+//       );
+//       const underlyingUSD = await insure.calcUnderlyingInStoredUSDFor(
+//         parseEther("5")
+//       );
+
 //       expect(t2.sub(t1).mul(premiumPerBlock)).to.eq(underlying.amounts[0]);
 //       expect(
 //         t2.sub(t1).mul(premiumPerBlock).mul(usdPerPremium).div(hundredPercent)
 //       ).to.eq(underlyingUSD);
 //     });
-//     it("Scenario stale", async function () {
+//     it.only("Scenario stale", async function () {
 //       // initial setup
 //       await insure.setWeights([tokenA.address], [parseEther("1")]);
 //       const premiumPerBlock = parseEther("1000");
@@ -112,7 +126,6 @@
 //         .connect(alice)
 //         .stake(parseEther("10"), alice.address, tokenA.address);
 
-//       expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("2"));
 //       expect(await insure.balanceOf(owner.address)).to.eq(0);
 //       expect(await insure.balanceOf(alice.address)).to.eq(0);
 
@@ -125,21 +138,25 @@
 //       ]);
 //       //await insure.payOffDebtAll(tokenA.address);
 //       // there was already 2 in the pool, this get distributed to owner, the other 3 get divided.
-//       expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("5"));
-//       expect(await insure.balanceOf(owner.address)).to.eq(parseEther("3.5"));
-//       expect(await insure.balanceOf(alice.address)).to.eq(parseEther("1.5"));
-
-//       expect(await insure.calcUnderylingInStoredUSD()).to.eq(
-//         parseEther("3500")
+//       expect(await stakeFee.balanceOf(owner.address)).to.eq(parseEther("1"));
+//       expect(await stakeFee.balanceOf(alice.address)).to.eq(
+//         parseEther("0.428571428571428571")
 //       );
-//       expect((await insure.calcUnderyling()).amounts[0]).to.eq(
-//         parseEther("3500")
+//       expect(await insure.exchangeRate(insure.address)).to.eq(
+//         parseEther("3.5").add(1)
 //       );
 
-//       expect(await insure.connect(alice).calcUnderylingInStoredUSD()).to.eq(
+//       expect(await insure.calcUnderlyingInStoredUSD()).to.eq(
+//         parseEther("3500")
+//       );
+//       expect((await insure.calcUnderlying()).amounts[0]).to.eq(
+//         parseEther("3500")
+//       );
+
+//       expect(await insure.connect(alice).calcUnderlyingInStoredUSD()).to.eq(
 //         parseEther("1500")
 //       );
-//       expect((await insure.connect(alice).calcUnderyling()).amounts[0]).to.eq(
+//       expect((await insure.connect(alice).calcUnderlying()).amounts[0]).to.eq(
 //         parseEther("1500")
 //       );
 
@@ -158,21 +175,20 @@
 //         alice.address,
 //       ]);
 
-//       expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("12"));
 //       expect(await insure.balanceOf(owner.address)).to.eq(parseEther("7"));
 //       expect(await insure.balanceOf(alice.address)).to.eq(parseEther("5"));
 
-//       expect(await insure.calcUnderylingInStoredUSD()).to.eq(
+//       expect(await insure.calcUnderlyingInStoredUSD()).to.eq(
 //         parseEther("7000")
 //       );
-//       expect((await insure.calcUnderyling()).amounts[0]).to.eq(
+//       expect((await insure.calcUnderlying()).amounts[0]).to.eq(
 //         parseEther("7000")
 //       );
 
-//       expect(await insure.connect(alice).calcUnderylingInStoredUSD()).to.eq(
+//       expect(await insure.connect(alice).calcUnderlyingInStoredUSD()).to.eq(
 //         parseEther("5000")
 //       );
-//       expect((await insure.connect(alice).calcUnderyling()).amounts[0]).to.eq(
+//       expect((await insure.connect(alice).calcUnderlying()).amounts[0]).to.eq(
 //         parseEther("5000")
 //       );
 //     });
@@ -191,7 +207,6 @@
 //       // stake
 //       await insure.stake(parseEther("10"), owner.address, tokenA.address);
 
-//       expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("1"));
 //       expect(await insure.balanceOf(owner.address)).to.eq(0);
 //       expect(await insure.balanceOf(alice.address)).to.eq(0);
 
@@ -204,14 +219,13 @@
 //       ]);
 //       //await insure.payOffDebtAll(tokenA.address);
 //       // there was already 2 in the pool, this get distributed to owner, the other 3 get divided.
-//       expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("5"));
 //       expect(await insure.balanceOf(owner.address)).to.eq(parseEther("5"));
 //       expect(await insure.balanceOf(alice.address)).to.eq(parseEther("0"));
 
-//       expect(await insure.calcUnderylingInStoredUSD()).to.eq(
+//       expect(await insure.calcUnderlyingInStoredUSD()).to.eq(
 //         parseEther("5000")
 //       );
-//       expect((await insure.calcUnderyling()).amounts[0]).to.eq(
+//       expect((await insure.calcUnderlying()).amounts[0]).to.eq(
 //         parseEther("5000")
 //       );
 
@@ -234,21 +248,20 @@
 //         alice.address,
 //       ]);
 
-//       expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("12"));
 //       expect(await insure.balanceOf(owner.address)).to.eq(parseEther("9.5"));
 //       expect(await insure.balanceOf(alice.address)).to.eq(parseEther("2.5"));
 
-//       expect(await insure.calcUnderylingInStoredUSD()).to.eq(
+//       expect(await insure.calcUnderlyingInStoredUSD()).to.eq(
 //         parseEther("9500")
 //       );
-//       expect((await insure.calcUnderyling()).amounts[0]).to.eq(
+//       expect((await insure.calcUnderlying()).amounts[0]).to.eq(
 //         parseEther("9500")
 //       );
 
-//       expect(await insure.connect(alice).calcUnderylingInStoredUSD()).to.eq(
+//       expect(await insure.connect(alice).calcUnderlyingInStoredUSD()).to.eq(
 //         parseEther("2500")
 //       );
-//       expect((await insure.connect(alice).calcUnderyling()).amounts[0]).to.eq(
+//       expect((await insure.connect(alice).calcUnderlying()).amounts[0]).to.eq(
 //         parseEther("2500")
 //       );
 //     });
@@ -270,7 +283,6 @@
 //         .connect(alice)
 //         .stake(parseEther("10"), alice.address, tokenA.address);
 
-//       expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("2"));
 //       expect(await insure.balanceOf(owner.address)).to.eq(0);
 //       expect(await insure.balanceOf(alice.address)).to.eq(0);
 
@@ -282,21 +294,20 @@
 //         alice.address,
 //       ]);
 //       // there was already 2 in the pool, this get distributed to owner, the other 3 get divided.
-//       expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("5"));
 //       expect(await insure.balanceOf(owner.address)).to.eq(parseEther("3.5"));
 //       expect(await insure.balanceOf(alice.address)).to.eq(parseEther("1.5"));
 
-//       expect(await insure.calcUnderylingInStoredUSD()).to.eq(
+//       expect(await insure.calcUnderlyingInStoredUSD()).to.eq(
 //         parseEther("3500")
 //       );
-//       expect((await insure.calcUnderyling()).amounts[0]).to.eq(
+//       expect((await insure.calcUnderlying()).amounts[0]).to.eq(
 //         parseEther("3500")
 //       );
 
-//       expect(await insure.connect(alice).calcUnderylingInStoredUSD()).to.eq(
+//       expect(await insure.connect(alice).calcUnderlyingInStoredUSD()).to.eq(
 //         parseEther("1500")
 //       );
-//       expect((await insure.connect(alice).calcUnderyling()).amounts[0]).to.eq(
+//       expect((await insure.connect(alice).calcUnderlying()).amounts[0]).to.eq(
 //         parseEther("1500")
 //       );
 
@@ -315,21 +326,20 @@
 //         alice.address,
 //       ]);
 
-//       expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("12"));
 //       expect(await insure.balanceOf(owner.address)).to.eq(parseEther("7"));
 //       expect(await insure.balanceOf(alice.address)).to.eq(parseEther("5"));
 
-//       expect(await insure.calcUnderylingInStoredUSD()).to.eq(
+//       expect(await insure.calcUnderlyingInStoredUSD()).to.eq(
 //         parseEther("7000").mul(2)
 //       );
-//       expect((await insure.calcUnderyling()).amounts[0]).to.eq(
+//       expect((await insure.calcUnderlying()).amounts[0]).to.eq(
 //         parseEther("7000")
 //       );
 
-//       expect(await insure.connect(alice).calcUnderylingInStoredUSD()).to.eq(
+//       expect(await insure.connect(alice).calcUnderlyingInStoredUSD()).to.eq(
 //         parseEther("5000").mul(2)
 //       );
-//       expect((await insure.connect(alice).calcUnderyling()).amounts[0]).to.eq(
+//       expect((await insure.connect(alice).calcUnderlying()).amounts[0]).to.eq(
 //         parseEther("5000")
 //       );
 //     });
@@ -351,7 +361,6 @@
 //         .connect(alice)
 //         .stake(parseEther("10"), alice.address, tokenA.address);
 
-//       expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("2"));
 //       expect(await insure.balanceOf(owner.address)).to.eq(0);
 //       expect(await insure.balanceOf(alice.address)).to.eq(0);
 
@@ -363,21 +372,20 @@
 //         alice.address,
 //       ]);
 //       // there was already 2 in the pool, this get distributed to owner, the other 3 get divided.
-//       expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("5"));
 //       expect(await insure.balanceOf(owner.address)).to.eq(parseEther("3.5"));
 //       expect(await insure.balanceOf(alice.address)).to.eq(parseEther("1.5"));
 
-//       expect(await insure.calcUnderylingInStoredUSD()).to.eq(
+//       expect(await insure.calcUnderlyingInStoredUSD()).to.eq(
 //         parseEther("3500")
 //       );
-//       expect((await insure.calcUnderyling()).amounts[0]).to.eq(
+//       expect((await insure.calcUnderlying()).amounts[0]).to.eq(
 //         parseEther("3500")
 //       );
 
-//       expect(await insure.connect(alice).calcUnderylingInStoredUSD()).to.eq(
+//       expect(await insure.connect(alice).calcUnderlyingInStoredUSD()).to.eq(
 //         parseEther("1500")
 //       );
-//       expect((await insure.connect(alice).calcUnderyling()).amounts[0]).to.eq(
+//       expect((await insure.connect(alice).calcUnderlying()).amounts[0]).to.eq(
 //         parseEther("1500")
 //       );
 
@@ -395,22 +403,21 @@
 //         owner.address,
 //         alice.address,
 //       ]);
-//       expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("18"));
 //       expect(await insure.balanceOf(owner.address)).to.eq(parseEther("10"));
 //       expect(await insure.balanceOf(alice.address)).to.eq(parseEther("8"));
 
-//       expect(await insure.calcUnderylingInStoredUSD()).to.eq(
+//       expect(await insure.calcUnderlyingInStoredUSD()).to.eq(
 //         // 3500 + 500 (another block) + 3000 (6 blocks * 500) with multiplier
 //         parseEther("4000").add(parseEther("3000").mul(2))
 //       );
-//       expect((await insure.calcUnderyling()).amounts[0]).to.eq(
+//       expect((await insure.calcUnderlying()).amounts[0]).to.eq(
 //         parseEther("4000").add(parseEther("3000").mul(2))
 //       );
 
-//       expect(await insure.connect(alice).calcUnderylingInStoredUSD()).to.eq(
+//       expect(await insure.connect(alice).calcUnderlyingInStoredUSD()).to.eq(
 //         parseEther("2000").add(parseEther("3000").mul(2))
 //       );
-//       expect((await insure.connect(alice).calcUnderyling()).amounts[0]).to.eq(
+//       expect((await insure.connect(alice).calcUnderlying()).amounts[0]).to.eq(
 //         parseEther("2000").add(parseEther("3000").mul(2))
 //       );
 //     });
@@ -432,7 +439,6 @@
 //         .connect(alice)
 //         .stake(parseEther("10"), alice.address, tokenA.address);
 
-//       expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("2"));
 //       expect(await insure.balanceOf(owner.address)).to.eq(0);
 //       expect(await insure.balanceOf(alice.address)).to.eq(0);
 
@@ -444,21 +450,20 @@
 //         alice.address,
 //       ]);
 //       // there was already 2 in the pool, this get distributed to owner, the other 3 get divided.
-//       expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("5"));
 //       expect(await insure.balanceOf(owner.address)).to.eq(parseEther("3.5"));
 //       expect(await insure.balanceOf(alice.address)).to.eq(parseEther("1.5"));
 
-//       expect(await insure.calcUnderylingInStoredUSD()).to.eq(
+//       expect(await insure.calcUnderlyingInStoredUSD()).to.eq(
 //         parseEther("3500")
 //       );
-//       expect((await insure.calcUnderyling()).amounts[0]).to.eq(
+//       expect((await insure.calcUnderlying()).amounts[0]).to.eq(
 //         parseEther("3500")
 //       );
 
-//       expect(await insure.connect(alice).calcUnderylingInStoredUSD()).to.eq(
+//       expect(await insure.connect(alice).calcUnderlyingInStoredUSD()).to.eq(
 //         parseEther("1500")
 //       );
-//       expect((await insure.connect(alice).calcUnderyling()).amounts[0]).to.eq(
+//       expect((await insure.connect(alice).calcUnderlying()).amounts[0]).to.eq(
 //         parseEther("1500")
 //       );
 
@@ -476,26 +481,21 @@
 //         owner.address,
 //         alice.address,
 //       ]);
-//       expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("18"));
 //       expect(await insure.balanceOf(owner.address)).to.eq(parseEther("10"));
 //       expect(await insure.balanceOf(alice.address)).to.eq(parseEther("8"));
 
-//       console.log((await insure.calcUnderylingInStoredUSD()).toString());
-//       console.log(
-//         (await insure.connect(alice).calcUnderylingInStoredUSD()).toString()
-//       );
-//       expect(await insure.calcUnderylingInStoredUSD()).to.eq(
+//       expect(await insure.calcUnderlyingInStoredUSD()).to.eq(
 //         // og value of 4k was divided by 2, 500 was added for 6 blocks
 //         parseEther("4000").div(2).add(parseEther("3000"))
 //       );
-//       expect((await insure.calcUnderyling()).amounts[0]).to.eq(
+//       expect((await insure.calcUnderlying()).amounts[0]).to.eq(
 //         parseEther("4000").add(parseEther("3000").mul(2))
 //       );
 
-//       expect(await insure.connect(alice).calcUnderylingInStoredUSD()).to.eq(
+//       expect(await insure.connect(alice).calcUnderlyingInStoredUSD()).to.eq(
 //         parseEther("2000").div(2).add(parseEther("3000"))
 //       );
-//       expect((await insure.connect(alice).calcUnderyling()).amounts[0]).to.eq(
+//       expect((await insure.connect(alice).calcUnderlying()).amounts[0]).to.eq(
 //         parseEther("2000").add(parseEther("3000").mul(2))
 //       );
 //     });
@@ -526,7 +526,6 @@
 //         .connect(alice)
 //         .stake(parseEther("10"), alice.address, tokenA.address);
 
-//       expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("2"));
 //       expect(await insure.balanceOf(owner.address)).to.eq(0);
 //       expect(await insure.balanceOf(alice.address)).to.eq(0);
 
@@ -540,27 +539,26 @@
 //       );
 //       //await insure.payOffDebtAll(tokenA.address);
 //       // there was already 2 in the pool, this get distributed to owner, the other 3 get divided.
-//       expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("5"));
 //       expect(await insure.balanceOf(owner.address)).to.eq(parseEther("3.5"));
 //       expect(await insure.balanceOf(alice.address)).to.eq(parseEther("1.5"));
 
-//       expect(await insure.calcUnderylingInStoredUSD()).to.eq(
+//       expect(await insure.calcUnderlyingInStoredUSD()).to.eq(
 //         parseEther("7000")
 //       );
-//       expect((await insure.calcUnderyling()).amounts[0]).to.eq(
+//       expect((await insure.calcUnderlying()).amounts[0]).to.eq(
 //         parseEther("3500")
 //       );
-//       expect((await insure.calcUnderyling()).amounts[1]).to.eq(
+//       expect((await insure.calcUnderlying()).amounts[1]).to.eq(
 //         parseEther("17.5")
 //       );
 
-//       expect(await insure.connect(alice).calcUnderylingInStoredUSD()).to.eq(
+//       expect(await insure.connect(alice).calcUnderlyingInStoredUSD()).to.eq(
 //         parseEther("3000")
 //       );
-//       expect((await insure.connect(alice).calcUnderyling()).amounts[0]).to.eq(
+//       expect((await insure.connect(alice).calcUnderlying()).amounts[0]).to.eq(
 //         parseEther("1500")
 //       );
-//       expect((await insure.connect(alice).calcUnderyling()).amounts[1]).to.eq(
+//       expect((await insure.connect(alice).calcUnderlying()).amounts[1]).to.eq(
 //         parseEther("7.5")
 //       );
 
@@ -580,27 +578,26 @@
 //         [stakeB.address]
 //       );
 
-//       expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("12"));
 //       expect(await insure.balanceOf(owner.address)).to.eq(parseEther("7"));
 //       expect(await insure.balanceOf(alice.address)).to.eq(parseEther("5"));
 
-//       expect(await insure.calcUnderylingInStoredUSD()).to.eq(
+//       expect(await insure.calcUnderlyingInStoredUSD()).to.eq(
 //         parseEther("14000")
 //       );
-//       expect((await insure.calcUnderyling()).amounts[0]).to.eq(
+//       expect((await insure.calcUnderlying()).amounts[0]).to.eq(
 //         parseEther("7000")
 //       );
-//       expect((await insure.calcUnderyling()).amounts[1]).to.eq(
+//       expect((await insure.calcUnderlying()).amounts[1]).to.eq(
 //         parseEther("35")
 //       );
 
-//       expect(await insure.connect(alice).calcUnderylingInStoredUSD()).to.eq(
+//       expect(await insure.connect(alice).calcUnderlyingInStoredUSD()).to.eq(
 //         parseEther("10000")
 //       );
-//       expect((await insure.connect(alice).calcUnderyling()).amounts[0]).to.eq(
+//       expect((await insure.connect(alice).calcUnderlying()).amounts[0]).to.eq(
 //         parseEther("5000")
 //       );
-//       expect((await insure.connect(alice).calcUnderyling()).amounts[1]).to.eq(
+//       expect((await insure.connect(alice).calcUnderlying()).amounts[1]).to.eq(
 //         parseEther("25")
 //       );
 //     });
@@ -625,7 +622,6 @@
 //       // stake
 //       await insure.stake(parseEther("10"), owner.address, tokenA.address);
 
-//       expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("1"));
 //       expect(await insure.balanceOf(owner.address)).to.eq(0);
 //       expect(await insure.balanceOf(alice.address)).to.eq(0);
 
@@ -638,17 +634,16 @@
 //         [stakeB.address]
 //       );
 
-//       expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("5"));
 //       expect(await insure.balanceOf(owner.address)).to.eq(parseEther("5"));
 //       expect(await insure.balanceOf(alice.address)).to.eq(parseEther("0"));
 
-//       expect(await insure.calcUnderylingInStoredUSD()).to.eq(
+//       expect(await insure.calcUnderlyingInStoredUSD()).to.eq(
 //         parseEther("10000")
 //       );
-//       expect((await insure.calcUnderyling()).amounts[0]).to.eq(
+//       expect((await insure.calcUnderlying()).amounts[0]).to.eq(
 //         parseEther("5000")
 //       );
-//       expect((await insure.calcUnderyling()).amounts[1]).to.eq(
+//       expect((await insure.calcUnderlying()).amounts[1]).to.eq(
 //         parseEther("25")
 //       );
 
@@ -672,28 +667,27 @@
 //         [stakeB.address]
 //       );
 
-//       expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("15.6"));
 //       expect(await insure.balanceOf(owner.address)).to.eq(parseEther("11.6"));
 //       expect(await insure.balanceOf(alice.address)).to.eq(parseEther("4"));
 
 //       // total ETH 150: 30 (6*5) + 120 (6*20)
-//       expect(await insure.calcUnderylingInStoredUSD()).to.eq(
+//       expect(await insure.calcUnderlyingInStoredUSD()).to.eq(
 //         parseEther("14500").sub(1)
 //       );
-//       expect((await insure.calcUnderyling()).amounts[0]).to.eq(
+//       expect((await insure.calcUnderlying()).amounts[0]).to.eq(
 //         parseEther("8923.076923076923076923")
 //       );
-//       expect((await insure.calcUnderyling()).amounts[1]).to.eq(
+//       expect((await insure.calcUnderlying()).amounts[1]).to.eq(
 //         parseEther("111.538461538461538461")
 //       );
 
-//       expect(await insure.connect(alice).calcUnderylingInStoredUSD()).to.eq(
+//       expect(await insure.connect(alice).calcUnderlyingInStoredUSD()).to.eq(
 //         parseEther("5000").sub(1)
 //       );
-//       expect((await insure.connect(alice).calcUnderyling()).amounts[0]).to.eq(
+//       expect((await insure.connect(alice).calcUnderlying()).amounts[0]).to.eq(
 //         parseEther("3076.923076923076923076")
 //       );
-//       expect((await insure.connect(alice).calcUnderyling()).amounts[1]).to.eq(
+//       expect((await insure.connect(alice).calcUnderlying()).amounts[1]).to.eq(
 //         parseEther("38.461538461538461538")
 //       );
 //     });
@@ -718,7 +712,6 @@
 //       // stake
 //       await insure.stake(parseEther("10"), owner.address, tokenA.address);
 
-//       expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("1"));
 //       expect(await insure.balanceOf(owner.address)).to.eq(0);
 //       expect(await insure.balanceOf(alice.address)).to.eq(0);
 
@@ -731,17 +724,16 @@
 //         [stakeB.address]
 //       );
 
-//       expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("5"));
 //       expect(await insure.balanceOf(owner.address)).to.eq(parseEther("5"));
 //       expect(await insure.balanceOf(alice.address)).to.eq(parseEther("0"));
 
-//       expect(await insure.calcUnderylingInStoredUSD()).to.eq(
+//       expect(await insure.calcUnderlyingInStoredUSD()).to.eq(
 //         parseEther("10000")
 //       );
-//       expect((await insure.calcUnderyling()).amounts[0]).to.eq(
+//       expect((await insure.calcUnderlying()).amounts[0]).to.eq(
 //         parseEther("5000")
 //       );
-//       expect((await insure.calcUnderyling()).amounts[1]).to.eq(
+//       expect((await insure.calcUnderlying()).amounts[1]).to.eq(
 //         parseEther("25")
 //       );
 
@@ -765,16 +757,15 @@
 //         [stakeB.address]
 //       );
 
-//       expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("15"));
 //       expect(await insure.balanceOf(owner.address)).to.eq(parseEther("11.25"));
 //       expect(await insure.balanceOf(alice.address)).to.eq(parseEther("3.75"));
 
-//       expect(await insure.calcUnderylingInStoredUSD()).to.eq(
+//       expect(await insure.calcUnderlyingInStoredUSD()).to.eq(
 //         parseEther("22500")
 //       );
 
 //       // 3000pb, 5 blocks = 15k / 2 = 7.5k
-//       expect(await insure.connect(alice).calcUnderylingInStoredUSD()).to.eq(
+//       expect(await insure.connect(alice).calcUnderlyingInStoredUSD()).to.eq(
 //         parseEther("7500")
 //       );
 //     });
@@ -799,7 +790,6 @@
 //       // stake
 //       await insure.stake(parseEther("10"), owner.address, tokenA.address);
 
-//       expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("1"));
 //       expect(await insure.balanceOf(owner.address)).to.eq(0);
 //       expect(await insure.balanceOf(alice.address)).to.eq(0);
 
@@ -812,17 +802,16 @@
 //         [stakeB.address]
 //       );
 
-//       expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("5"));
 //       expect(await insure.balanceOf(owner.address)).to.eq(parseEther("5"));
 //       expect(await insure.balanceOf(alice.address)).to.eq(parseEther("0"));
 
-//       expect(await insure.calcUnderylingInStoredUSD()).to.eq(
+//       expect(await insure.calcUnderlyingInStoredUSD()).to.eq(
 //         parseEther("10000")
 //       );
-//       expect((await insure.calcUnderyling()).amounts[0]).to.eq(
+//       expect((await insure.calcUnderlying()).amounts[0]).to.eq(
 //         parseEther("5000")
 //       );
-//       expect((await insure.calcUnderyling()).amounts[1]).to.eq(
+//       expect((await insure.calcUnderlying()).amounts[1]).to.eq(
 //         parseEther("25")
 //       );
 
@@ -846,7 +835,6 @@
 //         [stakeB.address]
 //       );
 
-//       expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("15.6"));
 //       expect(await insure.balanceOf(owner.address)).to.eq(parseEther("11.6"));
 //       expect(await insure.balanceOf(alice.address)).to.eq(parseEther("4"));
 
@@ -855,12 +843,12 @@
 //       // 15k$
 //       // 1 block = 4k$ extra (1k DAI, 10 ETH)
 //       // 15k + 4k + 10k
-//       expect(await insure.calcUnderylingInStoredUSD()).to.eq(
+//       expect(await insure.calcUnderlyingInStoredUSD()).to.eq(
 //         parseEther("29000").sub(1)
 //       );
 
 //       // 4000pb, 5 blocks = 20k / 2 = 10k
-//       expect(await insure.connect(alice).calcUnderylingInStoredUSD()).to.eq(
+//       expect(await insure.connect(alice).calcUnderlyingInStoredUSD()).to.eq(
 //         parseEther("10000").sub(1)
 //       );
 //     });
@@ -885,7 +873,6 @@
 //       // stake
 //       await insure.stake(parseEther("10"), owner.address, tokenA.address);
 
-//       expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("1"));
 //       expect(await insure.balanceOf(owner.address)).to.eq(0);
 //       expect(await insure.balanceOf(alice.address)).to.eq(0);
 
@@ -898,17 +885,16 @@
 //         [stakeB.address]
 //       );
 
-//       expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("5"));
 //       expect(await insure.balanceOf(owner.address)).to.eq(parseEther("5"));
 //       expect(await insure.balanceOf(alice.address)).to.eq(parseEther("0"));
 
-//       expect(await insure.calcUnderylingInStoredUSD()).to.eq(
+//       expect(await insure.calcUnderlyingInStoredUSD()).to.eq(
 //         parseEther("10000")
 //       );
-//       expect((await insure.calcUnderyling()).amounts[0]).to.eq(
+//       expect((await insure.calcUnderlying()).amounts[0]).to.eq(
 //         parseEther("5000")
 //       );
-//       expect((await insure.calcUnderyling()).amounts[1]).to.eq(
+//       expect((await insure.calcUnderlying()).amounts[1]).to.eq(
 //         parseEther("25")
 //       );
 
@@ -933,17 +919,16 @@
 //         [stakeB.address]
 //       );
 
-//       expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("15.6"));
 //       expect(await insure.balanceOf(owner.address)).to.eq(parseEther("10"));
 //       expect(await insure.balanceOf(alice.address)).to.eq(parseEther("4"));
 //       expect(await insure.balanceOf(insure.address)).to.eq(parseEther("1.6"));
 
-//       expect(await insure.calcUnderylingInStoredUSD()).to.eq(
+//       expect(await insure.calcUnderlyingInStoredUSD()).to.eq(
 //         parseEther("25000").sub(1)
 //       );
 
 //       // 4000pb, 5 blocks = 20k / 2 = 10k
-//       expect(await insure.connect(alice).calcUnderylingInStoredUSD()).to.eq(
+//       expect(await insure.connect(alice).calcUnderlyingInStoredUSD()).to.eq(
 //         parseEther("10000").sub(1)
 //       );
 //     });
@@ -983,16 +968,16 @@
 //         [stakeB.address]
 //       );
 
-//       expect(await insure.calcUnderylingInStoredUSD()).to.eq(
+//       expect(await insure.calcUnderlyingInStoredUSD()).to.eq(
 //         parseEther("2000")
 //       );
-//       expect(await insure.connect(alice).calcUnderylingInStoredUSD()).to.eq(
+//       expect(await insure.connect(alice).calcUnderlyingInStoredUSD()).to.eq(
 //         parseEther("2000")
 //       );
-//       expect(await insure.connect(bob).calcUnderylingInStoredUSD()).to.eq(
+//       expect(await insure.connect(bob).calcUnderlyingInStoredUSD()).to.eq(
 //         parseEther("2000")
 //       );
-//       expect(await insure.calcUnderylingInStoredUSDFor(insure.address)).to.eq(
+//       expect(await insure.calcUnderlyingInStoredUSDFor(insure.address)).to.eq(
 //         parseEther("0")
 //       );
 //     });
@@ -1060,7 +1045,6 @@
 //       // 19 blocks in
 //       // 11 blocks out
 //       // TODO calc right amounts for owner / isnsure
-//       expect(await insure.getFeePool(tokenA.address)).to.eq(parseEther("60"));
 //       expect(await insure.balanceOf(owner.address)).to.eq(
 //         parseEther("9.333333333333333333")
 //       );
@@ -1070,18 +1054,18 @@
 //         parseEther("10.666666666666666667")
 //       );
 //       // 140 ETH * 50 = 7k / 3 = 2.3333
-//       expect(await insure.calcUnderylingInStoredUSD()).to.eq(
+//       expect(await insure.calcUnderlyingInStoredUSD()).to.eq(
 //         parseEther("2333.33333333333333325")
 //       );
 //       // 300 ETH * 50 = 15k / 3 = 5k
-//       expect(await insure.connect(alice).calcUnderylingInStoredUSD()).to.eq(
+//       expect(await insure.connect(alice).calcUnderlyingInStoredUSD()).to.eq(
 //         parseEther("5000")
 //       );
-//       expect(await insure.connect(bob).calcUnderylingInStoredUSD()).to.eq(
+//       expect(await insure.connect(bob).calcUnderlyingInStoredUSD()).to.eq(
 //         parseEther("5000")
 //       );
 //       // 160 ETH * 50 = 8k / 3 = 2.6667
-//       expect(await insure.calcUnderylingInStoredUSDFor(insure.address)).to.eq(
+//       expect(await insure.calcUnderlyingInStoredUSDFor(insure.address)).to.eq(
 //         parseEther("2666.66666666666666675")
 //       );
 //     });

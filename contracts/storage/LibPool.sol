@@ -36,6 +36,8 @@ library PoolStorage {
 
         mapping(bytes32 => bool) isProtocol;
         bytes32[] protocols;
+
+        uint256 exitFee;
     }
 
     struct StakeWithdraw {

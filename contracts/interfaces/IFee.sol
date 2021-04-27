@@ -37,7 +37,7 @@ interface IFee {
 
     function calcUnderlyingInStoredUSD() external view returns (uint256 usd);
 
-    function calcUnderlyingInStoredUSDFor(address _user)
+    function calcUnderlyingInStoredUSDFor(uint256 _amount)
         external
         view
         returns (uint256 usd);

@@ -56,10 +56,6 @@ contract Manager is IManager {
         require(gs.protocolManagers[_protocol] == msg.sender, "NOT_MANAGER");
 
         LibFee.accrueUSDPool();
-
-        console.log("fs.totalBlockIncrement", fs.totalBlockIncrement);
-        console.log("fs.totalUsdPool", fs.totalUsdPool);
-        console.log("-----------------");
         LibFee.accrueFeeToken();
         uint256 curUsd = fs.tokenUSD[_token];
         // sub old premium in usd, add new premium in usdd
@@ -94,15 +90,9 @@ contract Manager is IManager {
             fs.feePerBlock = 10**18;
         } else if (fs.totalUsdPool > 0) {
             // TODO validate when fs.totalUsdPool
-            console.log("fs.feePerBlock", fs.feePerBlock);
-            console.log("ps.underlyingForFee", ps.underlyingForFee);
-            console.log("fs.totalBlockIncrement", fs.totalBlockIncrement);
-            console.log("fs.totalUsdPool", fs.totalUsdPool);
-
             fs.feePerBlock = fs.totalFeePool.mul(fs.totalBlockIncrement).div(
                 fs.totalUsdPool
             );
-            console.log("new", fs.feePerBlock);
         }
     }
 }

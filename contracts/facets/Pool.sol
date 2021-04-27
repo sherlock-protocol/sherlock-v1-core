@@ -4,6 +4,7 @@ pragma abicoder v2;
 
 import "hardhat/console.sol";
 
+import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
@@ -14,13 +15,36 @@ import "../storage/LibGov.sol";
 import "../interfaces/IStake.sol";
 
 import "../libraries/LibPool.sol";
+import "../libraries/LibERC20.sol";
 
 contract Pool {
     // TODO, ability to activate assets (in different facet)
 
+    IUniswapV2Router02 router = IUniswapV2Router02(
+        0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D
+    );
+
+    function testSetRouter(address _router) external {
+        // TODO remove
+        router = IUniswapV2Router02(_router);
+    }
+
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
     using SafeERC20 for IStake;
+
+    function setExitFee(uint256 _fee) external {
+        require(msg.sender == GovStorage.gs().govInsurance, "NOT_GOV");
+        require(_fee <= 10**18, "MAX_VALUE");
+
+        (, PoolStorage.Base storage ps) = baseData();
+        ps.exitFee = _fee;
+    }
+
+    function getExitFee() external view returns (uint256) {
+        (, PoolStorage.Base storage ps) = baseData();
+        return ps.exitFee;
+    }
 
     function getGovPool(address _token) external view returns (address) {
         (, PoolStorage.Base storage ps) = baseData();
@@ -164,7 +188,7 @@ contract Pool {
         uint256 totalStake = ps.stakeToken.totalSupply();
         require(totalStake > 0, "N0_STAKE");
         require(ps.poolBalance > 0, "NO_FUNDS");
-        rate = totalStake.mul(10**18).div(ps.poolBalance);
+        rate = ps.poolBalance.mul(10**18).div(totalStake);
     }
 
     function getTotalAccruedDebt() external view returns (uint256) {
@@ -216,49 +240,16 @@ contract Pool {
         require(_receiver != address(0), "RECEIVER");
         (IERC20 token, PoolStorage.Base storage ps) = baseData();
         require(ps.deposits, "NO_DEPOSITS");
-
-        uint256 totalStake = ps.stakeToken.totalSupply();
-        if (totalStake == 0) {
-            // mint initial stake
-            stake = 10**18;
-        } else {
-            // mint stake based on funds in pool
-            stake = _amount.mul(totalStake).div(ps.poolBalance);
-        }
-
         token.safeTransferFrom(msg.sender, address(this), _amount);
-        ps.poolBalance = ps.poolBalance.add(_amount);
-        ps.stakeToken.mint(_receiver, stake);
+
+        stake = LibPool.stake(ps, _amount, _receiver);
     }
 
     function withdrawStake(uint256 _amount) external returns (uint256) {
         require(_amount > 0, "AMOUNT");
         (IERC20 token, PoolStorage.Base storage ps) = baseData();
-        ps.stakeToken.safeTransferFrom(msg.sender, address(this), _amount);
 
-        GovStorage.Base storage gs = GovStorage.gs();
-        // TODO move calc inside if
-        uint256 stakeTokenExitFee = _amount.mul(gs.exitFee).div(10**18);
-        if (stakeTokenExitFee > 0) {
-            // stake of user gets burned
-            // representative amount token get added to first money out pool
-            uint256 tokenAmount = stakeTokenExitFee.mul(ps.poolBalance).div(
-                ps.stakeToken.totalSupply()
-            );
-            ps.poolBalance = ps.poolBalance.sub(tokenAmount);
-            ps.firstMoneyOut = ps.firstMoneyOut.add(tokenAmount);
-
-            ps.stakeToken.burn(address(this), stakeTokenExitFee);
-        }
-
-        ps.stakesWithdraw[msg.sender].push(
-            PoolStorage.StakeWithdraw(
-                block.number,
-                _amount.sub(stakeTokenExitFee)
-            )
-        );
-        // TODO burn 1% of stake tokens for exit fee
-        return ps.stakesWithdraw[msg.sender].length - 1;
+        return LibPool.withdraw(ps, _amount, msg.sender, msg.sender);
     }
 
     function withdrawCancel(uint256 _id) external {
@@ -295,35 +286,41 @@ contract Pool {
         delete ps.stakesWithdraw[_account][_id];
     }
 
-    function withdrawClaim(uint256 _id) external {
+    // TODO FEE token pool (diffenrent facet)
+    // todo claim and swap
+    // todo claim() for msg sender
+    // view get total claimable
+
+    function withdrawClaimSwap(
+        uint256 _id,
+        uint256 _idFee,
+        uint256 _uniMinOut,
+        address[] calldata _uniPath,
+        uint256 _uniDeadline
+    ) external {
+        withdrawClaim(_id);
+
+        PoolStorage.Base storage psFee = PoolStorage.ps(address(this));
+        uint256 amountFee = LibPool.withdrawClaim(psFee, msg.sender, _idFee);
+        if (amountFee == 0) {
+            return;
+        }
+
+        LibERC20.approve(address(this), address(router), amountFee);
+        router.swapExactTokensForTokens(
+            amountFee,
+            _uniMinOut,
+            _uniPath,
+            msg.sender,
+            _uniDeadline
+        );
+    }
+
+    function withdrawClaim(uint256 _id) public {
         (IERC20 token, PoolStorage.Base storage ps) = baseData();
-        GovStorage.Base storage gs = GovStorage.gs();
 
-        PoolStorage.StakeWithdraw memory withdraw = ps.stakesWithdraw[msg
-            .sender][_id];
-        require(withdraw.blockInitiated != 0, "WITHDRAW_NOT_ACTIVE");
-        // timelock is including
-        require(
-            withdraw.blockInitiated.add(gs.withdrawTimeLock) < block.number,
-            "TIMELOCK_ACTIVE"
-        );
-        // claim period is including
-        require(
-            withdraw.blockInitiated.add(gs.withdrawTimeLock).add(
-                gs.withdrawClaimPeriod
-            ) > block.number,
-            "CLAIMPERIOD_EXPIRED"
-        );
-        uint256 amount = withdraw.stake.mul(ps.poolBalance).div(
-            ps.stakeToken.totalSupply()
-        );
-        // TODO get fee tokens from timelock (and swap for native) (in timelock lib)
-        ps.poolBalance = ps.poolBalance.sub(amount);
+        uint256 amount = LibPool.withdrawClaim(ps, msg.sender, _id);
         token.safeTransfer(msg.sender, amount);
-        ps.stakeToken.burn(address(this), withdraw.stake);
-
-        // TODO send fee tokens
-        delete ps.stakesWithdraw[msg.sender][_id];
     }
 
     function getWithdrawal(address _staker, uint256 _id)

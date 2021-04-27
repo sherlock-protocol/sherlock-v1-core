@@ -111,9 +111,7 @@ describe("Staker tests", function () {
         total: "10",
       });
 
-      expect(await insure.exchangeRate(tokenA.address)).to.eq(
-        parseEther("0.1")
-      );
+      expect(await insure.exchangeRate(tokenA.address)).to.eq(parseEther("10"));
     });
     it("Owner stake 20 for Alice", async function () {
       await insure.stake(parseEther("20"), alice.address, tokenA.address);
@@ -137,9 +135,7 @@ describe("Staker tests", function () {
         total: "30",
       });
 
-      expect(await insure.exchangeRate(tokenA.address)).to.eq(
-        parseEther("0.1")
-      );
+      expect(await insure.exchangeRate(tokenA.address)).to.eq(parseEther("10"));
     });
     it("Owner stake 10 again", async function () {
       await insure.stake(parseEther("10"), owner.address, tokenA.address);
@@ -163,9 +159,7 @@ describe("Staker tests", function () {
         total: "40",
       });
 
-      expect(await insure.exchangeRate(tokenA.address)).to.eq(
-        parseEther("0.1")
-      );
+      expect(await insure.exchangeRate(tokenA.address)).to.eq(parseEther("10"));
       expect(await insure.getFirstMoneyOut(tokenA.address)).to.eq(0);
     });
     it("Alice stake 40", async function () {
@@ -194,9 +188,7 @@ describe("Staker tests", function () {
         total: "80",
       });
 
-      expect(await insure.exchangeRate(tokenA.address)).to.eq(
-        parseEther("0.1")
-      );
+      expect(await insure.exchangeRate(tokenA.address)).to.eq(parseEther("10"));
     });
   });
   describe("stake(), scenario 2", function () {
@@ -226,7 +218,7 @@ describe("Staker tests", function () {
       });
 
       expect(await insure.exchangeRate(tokenA.address)).to.eq(
-        parseEther("0.01")
+        parseEther("100")
       );
     });
     it("Owner stake 200 for Alice", async function () {
@@ -252,7 +244,7 @@ describe("Staker tests", function () {
       });
 
       expect(await insure.exchangeRate(tokenA.address)).to.eq(
-        parseEther("0.01")
+        parseEther("100")
       );
     });
   });
@@ -268,12 +260,11 @@ describe("Staker tests", function () {
       expect(
         await insure.getWithrawalInitialIndex(owner.address, tokenA.address)
       ).to.eq(0);
-      expect(await insure.getExitFee()).to.eq(0);
+      expect(await insure.getExitFee(tokenA.address)).to.eq(0);
     });
     it("Withdraw too much stake", async function () {
-      await expect(
-        insure.withdrawStake(parseEther("1.1"), tokenA.address)
-      ).to.be.reverted;
+      await expect(insure.withdrawStake(parseEther("1.1"), tokenA.address)).to
+        .be.reverted;
     });
     it("Withdraw 0.5 stake", async function () {
       const blocknumber = await blockNumber(
@@ -312,9 +303,7 @@ describe("Staker tests", function () {
         [insure.address]: "5",
         total: "10",
       });
-      expect(await insure.exchangeRate(tokenA.address)).to.eq(
-        parseEther("0.1")
-      );
+      expect(await insure.exchangeRate(tokenA.address)).to.eq(parseEther("10"));
       expect(await insure.getFirstMoneyOut(tokenA.address)).to.eq(0);
     });
   });
@@ -322,7 +311,7 @@ describe("Staker tests", function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
 
-      await insure.setExitFee(onePercent.mul(40));
+      await insure.setExitFee(onePercent.mul(40), tokenA.address);
       await insure.stake(parseEther("10"), owner.address, tokenA.address);
     });
     it("Initial state", async function () {
@@ -332,7 +321,7 @@ describe("Staker tests", function () {
       expect(
         await insure.getWithrawalInitialIndex(owner.address, tokenA.address)
       ).to.eq(0);
-      expect(await insure.getExitFee()).to.eq(onePercent.mul(40));
+      expect(await insure.getExitFee(tokenA.address)).to.eq(onePercent.mul(40));
 
       await erc20(tokenA, {
         [owner.address]: "890",
@@ -391,9 +380,7 @@ describe("Staker tests", function () {
         [insure.address]: "3",
         total: "8",
       });
-      expect(await insure.exchangeRate(tokenA.address)).to.eq(
-        parseEther("0.1")
-      );
+      expect(await insure.exchangeRate(tokenA.address)).to.eq(parseEther("10"));
       expect(await insure.getFirstMoneyOut(tokenA.address)).to.eq(
         parseEther("2")
       );
@@ -460,9 +447,7 @@ describe("Staker tests", function () {
         [insure.address]: "0",
         total: "10",
       });
-      expect(await insure.exchangeRate(tokenA.address)).to.eq(
-        parseEther("0.1")
-      );
+      expect(await insure.exchangeRate(tokenA.address)).to.eq(parseEther("10"));
       expect(await insure.getFirstMoneyOut(tokenA.address)).to.eq(0);
     });
   });
@@ -470,7 +455,7 @@ describe("Staker tests", function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
 
-      await insure.setExitFee(onePercent.mul(20));
+      await insure.setExitFee(onePercent.mul(20), tokenA.address);
       await insure.stake(parseEther("10"), owner.address, tokenA.address);
       await insure.setTimeLock(4);
       await insure.withdrawStake(parseEther("0.5"), tokenA.address);
@@ -512,9 +497,7 @@ describe("Staker tests", function () {
         [insure.address]: "0",
         total: "9",
       });
-      expect(await insure.exchangeRate(tokenA.address)).to.eq(
-        parseEther("0.1")
-      );
+      expect(await insure.exchangeRate(tokenA.address)).to.eq(parseEther("10"));
       expect(await insure.getFirstMoneyOut(tokenA.address)).to.eq(
         parseEther("1")
       );
@@ -597,9 +580,7 @@ describe("Staker tests", function () {
         [insure.address]: "0",
         total: "10",
       });
-      expect(await insure.exchangeRate(tokenA.address)).to.eq(
-        parseEther("0.1")
-      );
+      expect(await insure.exchangeRate(tokenA.address)).to.eq(parseEther("10"));
       expect(await insure.getFirstMoneyOut(tokenA.address)).to.eq(0);
     });
   });
@@ -607,7 +588,7 @@ describe("Staker tests", function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
 
-      await insure.setExitFee(onePercent.mul(20));
+      await insure.setExitFee(onePercent.mul(20), tokenA.address);
       await insure.stake(parseEther("10"), owner.address, tokenA.address);
       await insure.withdrawStake(parseEther("0.5"), tokenA.address);
     });
@@ -647,9 +628,7 @@ describe("Staker tests", function () {
         [insure.address]: "0",
         total: "9",
       });
-      expect(await insure.exchangeRate(tokenA.address)).to.eq(
-        parseEther("0.1")
-      );
+      expect(await insure.exchangeRate(tokenA.address)).to.eq(parseEther("10"));
       expect(await insure.getFirstMoneyOut(tokenA.address)).to.eq(
         parseEther("1")
       );
@@ -728,9 +707,7 @@ describe("Staker tests", function () {
         [insure.address]: "0",
         total: "5",
       });
-      expect(await insure.exchangeRate(tokenA.address)).to.eq(
-        parseEther("0.1")
-      );
+      expect(await insure.exchangeRate(tokenA.address)).to.eq(parseEther("10"));
       expect(await insure.getFirstMoneyOut(tokenA.address)).to.eq(0);
     });
   });
@@ -738,7 +715,7 @@ describe("Staker tests", function () {
     beforeEach(async function () {
       await timeTraveler.revertSnapshot();
 
-      await insure.setExitFee(onePercent.mul(20));
+      await insure.setExitFee(onePercent.mul(20), tokenA.address);
       await insure.stake(parseEther("10"), owner.address, tokenA.address);
       await insure.setTimeLock(2);
       await insure.setClaimPeriod(3);
@@ -783,9 +760,7 @@ describe("Staker tests", function () {
         [insure.address]: "0",
         total: "5",
       });
-      expect(await insure.exchangeRate(tokenA.address)).to.eq(
-        parseEther("0.1")
-      );
+      expect(await insure.exchangeRate(tokenA.address)).to.eq(parseEther("10"));
       expect(await insure.getFirstMoneyOut(tokenA.address)).to.eq(
         parseEther("1")
       );
@@ -795,7 +770,7 @@ describe("Staker tests", function () {
     beforeEach(async function () {
       await timeTraveler.revertSnapshot();
 
-      await insure.setExitFee(onePercent.mul(20));
+      await insure.setExitFee(onePercent.mul(20), tokenA.address);
       await insure.stake(parseEther("10"), owner.address, tokenA.address);
       await insure.setTimeLock(2);
       await insure.setClaimPeriod(3);

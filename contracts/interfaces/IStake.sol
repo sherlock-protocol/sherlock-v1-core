@@ -5,8 +5,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 interface IStake is IERC20 {
-    function underyling() external view returns (address);
-
     function getOwner() external view returns (address);
 
     function mint(address _account, uint256 _amount) external;

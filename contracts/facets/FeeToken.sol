@@ -73,10 +73,8 @@ contract ERC20Facet is IERC20, IERC20Facet {
         returns (bool)
     {
         require(_spender != address(0), "SPENDER_INVALID");
-        LibERC20Storage.erc20Storage().allowances[msg
-            .sender][_spender] = _amount;
         emit Approval(msg.sender, _spender, _amount);
-        return true;
+        return LibERC20.approve(msg.sender, _spender, _amount);
     }
 
     function increaseApproval(address _spender, uint256 _amount)

@@ -19,16 +19,6 @@ contract Gov is IGov {
         return GovStorage.gs().govInsurance;
     }
 
-    function setExitFee(uint256 _fee) external override onlyGovInsurance {
-        require(_fee <= 10**18, "MAX_VALUE");
-        GovStorage.Base storage gs = GovStorage.gs();
-        gs.exitFee = _fee;
-    }
-
-    function getExitFee() external override view returns (uint256) {
-        return GovStorage.gs().exitFee;
-    }
-
     function setInitialGovInsurance(address _govInsurance) external override {
         GovStorage.Base storage gs = GovStorage.gs();
 
@@ -245,7 +235,9 @@ contract Gov is IGov {
     // loop over every pool
     // deduct pool balance
     // deduct yield amount in pool
-    // deduct yield amount in timelock
+
+    // deduct totalFeePool
+    //
 
     // we want to take fee from pools (still need to be timelocked) and fee from timelock (that did not expire yet)
     // sell it for ETH on uni, or redeem for underlying
