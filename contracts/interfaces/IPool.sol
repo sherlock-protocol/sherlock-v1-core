@@ -142,4 +142,9 @@ interface IPool {
         address _receiver,
         address _token
     ) external;
+
+    function getUnmaterializedFee(address _token)
+        external
+        view
+        returns (uint256);
 }

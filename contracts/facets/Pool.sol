@@ -316,6 +316,11 @@ contract Pool {
         );
     }
 
+    function getUnmaterializedFee() external view returns (uint256) {
+        (, PoolStorage.Base storage ps) = baseData();
+        return ps.unmaterializedFee;
+    }
+
     function withdrawClaim(uint256 _id) public {
         (IERC20 token, PoolStorage.Base storage ps) = baseData();
 

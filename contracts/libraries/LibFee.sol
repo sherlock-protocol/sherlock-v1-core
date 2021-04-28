@@ -29,6 +29,20 @@ library LibFee {
         fs.lastPremiumChange = block.number;
     }
 
+    function getOutstandingFeeTokens(address _token)
+        external
+        view
+        returns (uint256 fee)
+    {
+        FeeStorage.Base storage fs = FeeStorage.fs();
+        uint256 amount = block.number.sub(fs.feeLastAccrued).mul(
+            fs.feePerBlock
+        );
+
+        PoolStorage.Base storage ps = PoolStorage.ps(_token);
+        fee = amount.mul(ps.totalFeePoolWeight).div(10**18);
+    }
+
     function accrueFeeToken() external {
         // loop over pools, increase the pool + pool_weight based on the distribution weights
 
@@ -54,6 +68,7 @@ library LibFee {
                 // native fees
                 ps.poolBalance = ps.poolBalance.add(fee);
             } else {
+                ps.unmaterializedFee = ps.unmaterializedFee.add(fee);
                 ps.feeWeight = ps.feeWeight.add(fee);
             }
         }

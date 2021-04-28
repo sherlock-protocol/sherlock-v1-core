@@ -55,4 +55,9 @@ interface IFee {
         returns (IERC20[] memory tokens, uint256[] memory amounts);
 
     function redeem(uint256 _amount, address _receiver) external;
+
+    function getWithdrawableFeeAmount(address _user, address _token)
+        external
+        view
+        returns (uint256 withdrawable_amount);
 }

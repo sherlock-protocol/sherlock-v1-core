@@ -226,6 +226,27 @@ contract Fee is IFee {
         }
     }
 
+    // TODO need to make sure this matches the actual fee amount
+    function getWithdrawableFeeAmount(address _user, address _token)
+        external
+        override
+        view
+        returns (uint256 withdrawable_amount)
+    {
+        PoolStorage.Base storage ps = PoolStorage.ps(_token);
+
+        uint256 userAmount = ps.stakeToken.balanceOf(_user);
+        uint256 totalAmount = ps.stakeToken.totalSupply();
+        if (totalAmount == 0) {
+            return 0;
+        }
+        uint256 outstanding = LibFee.getOutstandingFeeTokens(_token);
+        uint256 raw_amount = ps.feeWeight.add(outstanding).mul(userAmount).div(
+            totalAmount
+        );
+        withdrawable_amount = raw_amount.sub(ps.feeWithdrawn[_user]);
+    }
+
     function doYield(
         address token,
         address from,
@@ -255,6 +276,9 @@ contract Fee is IFee {
                 // store the data in a single calc
                 ps.feeWithdrawn[from] = raw_amount.sub(ineglible_yield_amount);
 
+                ps.unmaterializedFee = ps.unmaterializedFee.sub(
+                    withdrawable_amount
+                );
                 LibERC20.mint(address(this), withdrawable_amount);
                 PoolStorage.Base storage psFee = PoolStorage.ps(address(this));
                 if (from == address(this)) {

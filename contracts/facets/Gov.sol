@@ -11,6 +11,14 @@ import "diamond-2/contracts/libraries/LibDiamond.sol";
 
 import "../interfaces/IGov.sol";
 
+import "../storage/LibPool.sol";
+import "../storage/LibGov.sol";
+import "../storage/LibFee.sol";
+import "../storage/LibERC20Storage.sol";
+
+import "../libraries/LibFee.sol";
+import "../libraries/LibERC20.sol";
+
 contract Gov is IGov {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
@@ -231,18 +239,49 @@ contract Gov is IGov {
         }
     }
 
-    // todo payout
-    // loop over every pool
-    // deduct pool balance
-    // deduct yield amount in pool
+    function payout(
+        address _payout,
+        IERC20[] memory _tokens,
+        uint256[] memory _firstMoneyOut,
+        uint256[] memory _amounts,
+        uint256[] memory _unmaterializedFee
+    ) external override {
+        // all pools (including fee pool) can be deducted fmo and balance
+        // deducting balance will reduce the users underlying value of stake token
+        // for every pool, _unmaterializedFee can be deducted, this will decrease outstanding fee rewards
+        // for users that did not claim them (e.g materialized them and included in fee pool)
 
-    // deduct totalFeePool
-    //
+        LibERC20Storage.ERC20Storage storage es = LibERC20Storage
+            .erc20Storage();
+        FeeStorage.Base storage fs = FeeStorage.fs();
 
-    // we want to take fee from pools (still need to be timelocked) and fee from timelock (that did not expire yet)
-    // sell it for ETH on uni, or redeem for underlying
+        // todo require all equal lengths
 
-    // to think; voor pool balance doen we natuurlijk bij withdraw bij de amount pakken, kan dat niet bij fee?
-    // nee want fee amount staat vast
+        LibFee.accrueFeeToken();
+        uint256 totalUnmaterializedFee = 0;
+        //uint256 maxUnmaterializedFee = fs.totalFeePool.sub(es.totalSupply);
 
+        for (uint256 i; i < _tokens.length; i++) {
+            PoolStorage.Base storage ps = PoolStorage.ps(address(_tokens[i]));
+            require(
+                ps.unmaterializedFee >= _unmaterializedFee[i],
+                "ERR_UNMAT_FEE"
+            );
+            ps.feeWeight = ps.feeWeight.sub(_unmaterializedFee[i]);
+            ps.firstMoneyOut = ps.firstMoneyOut.sub(_firstMoneyOut[i]);
+            ps.poolBalance = ps.poolBalance.sub(_amounts[i]);
+
+            totalUnmaterializedFee = totalUnmaterializedFee.add(
+                _unmaterializedFee[i]
+            );
+
+            uint256 total = _firstMoneyOut[i].add(_amounts[i]);
+            if (total > 0) {
+                _tokens[i].safeTransfer(_payout, total);
+            }
+        }
+        if (totalUnmaterializedFee > 0) {
+            LibERC20.mint(_payout, totalUnmaterializedFee);
+        }
+    }
 }

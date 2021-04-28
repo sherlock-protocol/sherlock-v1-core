@@ -113,7 +113,11 @@ module.exports = {
           LibFee: libFee.address,
         },
       }),
-      await ethers.getContractFactory("Gov"),
+      await ethers.getContractFactory("Gov", {
+        libraries: {
+          LibFee: libFee.address,
+        },
+      }),
       await ethers.getContractFactory("View"),
       await ethers.getContractFactory("Manager", {
         libraries: { LibPool: libPool.address, LibFee: libFee.address },
