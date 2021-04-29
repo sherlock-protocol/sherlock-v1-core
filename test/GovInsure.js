@@ -24,7 +24,7 @@ describe("Gov Insurance tests", function () {
       await Token.deploy("TokenC", "C", parseEther("1000")),
     ];
 
-    const Stake = await ethers.getContractFactory("Stake");
+    const Stake = await ethers.getContractFactory("StakePlus");
     [stakeA, stakeB, stakeC] = [
       await Stake.deploy("Stake TokenA", "stkA", tokenA.address),
       await Stake.deploy("Stake TokenB", "stkB", tokenA.address),

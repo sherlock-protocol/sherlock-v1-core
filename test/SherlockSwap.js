@@ -46,8 +46,8 @@ describe("Stake swap tests", function () {
     await tokenA.connect(alice).approve(insure.address, constants.MaxUint256);
     await tokenA.connect(carol).approve(insure.address, constants.MaxUint256);
 
-    const Stake = await ethers.getContractFactory("Stake");
-    const StakeFee = await ethers.getContractFactory("StakeFee");
+    const Stake = await ethers.getContractFactory("StakePlus");
+    const StakeFee = await ethers.getContractFactory("Stake");
     [stakeA, stakeB, stakeC] = [
       await Stake.deploy("Stake TokenA", "stkA", tokenA.address),
       await Stake.deploy("Stake TokenB", "stkB", tokenB.address),
@@ -295,8 +295,8 @@ describe("Stake swap tests, changing weights", function () {
     await tokenA.connect(alice).approve(insure.address, constants.MaxUint256);
     await tokenA.connect(carol).approve(insure.address, constants.MaxUint256);
 
-    const Stake = await ethers.getContractFactory("Stake");
-    const StakeFee = await ethers.getContractFactory("StakeFee");
+    const Stake = await ethers.getContractFactory("StakePlus");
+    const StakeFee = await ethers.getContractFactory("Stake");
     [stakeA, stakeB, stakeC] = [
       await Stake.deploy("Stake TokenA", "stkA", tokenA.address),
       await Stake.deploy("Stake TokenB", "stkB", tokenB.address),

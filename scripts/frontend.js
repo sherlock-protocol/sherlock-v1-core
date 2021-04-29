@@ -34,7 +34,7 @@ async function main() {
   ];
 
   // Deploying 4 stake tokens
-  const Stake = await ethers.getContractFactory("Stake");
+  const Stake = await ethers.getContractFactory("StakePlus");
   [stakeDAI, stakeUSDC, stakeAAVE, stakeWETH] = [
     await Stake.deploy("Stake Token DAI", "stkDAI"),
     await Stake.deploy("Stake Token USDC", "stkUSDC"),
