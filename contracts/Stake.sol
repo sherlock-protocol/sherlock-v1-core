@@ -8,14 +8,14 @@ import "./interfaces/IStakeToken.sol";
 import "./interfaces/ISolution.sol";
 
 contract Stake is ERC20, IStake, IStakeToken, Ownable {
-    address public override underyling;
+    address public override underlying;
 
     constructor(
         string memory name_,
         string memory symbol_,
-        address _underyling
+        address _underlying
     ) public ERC20(name_, symbol_) {
-        underyling = _underyling;
+        underlying = _underlying;
     }
 
     function mint(address _account, uint256 _amount)

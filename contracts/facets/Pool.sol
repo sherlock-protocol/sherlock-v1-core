@@ -4,7 +4,6 @@ pragma abicoder v2;
 
 import "hardhat/console.sol";
 
-import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
@@ -19,15 +18,6 @@ import "../libraries/LibERC20.sol";
 
 contract Pool {
     // TODO, ability to activate assets (in different facet)
-
-    IUniswapV2Router02 router = IUniswapV2Router02(
-        0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D
-    );
-
-    function testSetRouter(address _router) external {
-        // TODO remove
-        router = IUniswapV2Router02(_router);
-    }
 
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
@@ -249,7 +239,7 @@ contract Pool {
         require(_amount > 0, "AMOUNT");
         (IERC20 token, PoolStorage.Base storage ps) = baseData();
 
-        return LibPool.withdraw(ps, _amount, msg.sender, msg.sender);
+        return LibPool.withdraw(ps, _amount, msg.sender);
     }
 
     function withdrawCancel(uint256 _id) external {
@@ -286,46 +276,19 @@ contract Pool {
         delete ps.stakesWithdraw[_account][_id];
     }
 
-    // TODO FEE token pool (diffenrent facet)
-    // todo claim and swap
-    // todo claim() for msg sender
-    // view get total claimable
-
-    function withdrawClaimSwap(
-        uint256 _id,
-        uint256 _idFee,
-        uint256 _uniMinOut,
-        address[] calldata _uniPath,
-        uint256 _uniDeadline
-    ) external {
-        withdrawClaim(_id);
-
-        PoolStorage.Base storage psFee = PoolStorage.ps(address(this));
-        uint256 amountFee = LibPool.withdrawClaim(psFee, msg.sender, _idFee);
-        if (amountFee == 0) {
-            return;
-        }
-
-        LibERC20.approve(address(this), address(router), amountFee);
-        router.swapExactTokensForTokens(
-            amountFee,
-            _uniMinOut,
-            _uniPath,
-            msg.sender,
-            _uniDeadline
-        );
-    }
-
     function getUnmaterializedFee() external view returns (uint256) {
         (, PoolStorage.Base storage ps) = baseData();
         return ps.unmaterializedFee;
     }
 
-    function withdrawClaim(uint256 _id) public {
+    function withdrawClaim(uint256 _id, address _receiver)
+        external
+        returns (uint256 amount)
+    {
         (IERC20 token, PoolStorage.Base storage ps) = baseData();
 
-        uint256 amount = LibPool.withdrawClaim(ps, msg.sender, _id);
-        token.safeTransfer(msg.sender, amount);
+        amount = LibPool.withdrawClaim(ps, msg.sender, _id);
+        token.safeTransfer(_receiver, amount);
     }
 
     function getWithdrawal(address _staker, uint256 _id)

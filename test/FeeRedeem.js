@@ -115,12 +115,15 @@ describe("Fee tests", function () {
         [stakeB.address]
       );
       await insure.withdrawStake(parseEther("1"), insure.address);
-      await insure.withdrawClaim(0, insure.address);
+      await insure.withdrawClaim(0, owner.address, insure.address);
       await insure
         .connect(alice)
         .withdrawStake(parseEther("1"), insure.address);
-      await insure.connect(alice).withdrawClaim(0, insure.address);
+      await insure
+        .connect(alice)
+        .withdrawClaim(0, alice.address, insure.address);
 
+      console.log(owner.address);
       expect(await insure.totalSupply()).to.eq(parseEther("24"));
       expect(await insure.balanceOf(owner.address)).to.eq(parseEther("12"));
       expect(await insure.balanceOf(alice.address)).to.eq(parseEther("12"));
@@ -153,7 +156,9 @@ describe("Fee tests", function () {
       );
       const stakeCarol = await stakeFee.balanceOf(carol.address);
       await insure.connect(carol).withdrawStake(stakeCarol, insure.address);
-      await insure.connect(carol).withdrawClaim(0, insure.address);
+      await insure
+        .connect(carol)
+        .withdrawClaim(0, carol.address, insure.address);
 
       const fee = await insure.balanceOf(carol.address);
 
@@ -215,30 +220,34 @@ describe("Fee tests", function () {
         await stakeFee.balanceOf(owner.address),
         insure.address
       );
-      await insure.withdrawClaim(0, insure.address);
+      await insure.withdrawClaim(0, owner.address, insure.address);
 
       await insure
         .connect(alice)
         .withdrawStake(await stakeFee.balanceOf(alice.address), insure.address);
-      await insure.connect(alice).withdrawClaim(0, insure.address);
+      await insure
+        .connect(alice)
+        .withdrawClaim(0, alice.address, insure.address);
 
-      expect(await insure.totalSupply()).to.eq(parseEther("17.5"));
+      expect(await insure.totalSupply()).to.eq(parseEther("24"));
       expect(await insure.balanceOf(owner.address)).to.eq(
         parseEther("12").sub(1)
       );
       expect(await insure.balanceOf(alice.address)).to.eq(
         parseEther("5.5").add(1)
       );
+      expect(await insure.balanceOf(insure.address)).to.eq(parseEther("6.5"));
 
       await insure.redeem(parseEther("6"), bob.address);
 
-      expect(await insure.totalSupply()).to.eq(parseEther("11.5"));
+      expect(await insure.totalSupply()).to.eq(parseEther("18"));
       expect(await insure.balanceOf(owner.address)).to.eq(
         parseEther("6").sub(1)
       );
       expect(await insure.balanceOf(alice.address)).to.eq(
         parseEther("5.5").add(1)
       );
+      expect(await insure.balanceOf(insure.address)).to.eq(parseEther("6.5"));
 
       // 24* 1000 DAI = 24k / 4 = 6k
       expect(await tokenA.balanceOf(bob.address)).to.eq(parseEther("6000"));

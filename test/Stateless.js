@@ -379,25 +379,26 @@ describe("static tests", function () {
     });
     describe("withdrawClaim()", function () {
       it("Invalid sender", async function () {
-        await expect(insure.connect(alice).withdrawClaim(0, tokenA.address)).to
-          .be.reverted;
+        await expect(
+          insure.connect(alice).withdrawClaim(0, alice.address, tokenA.address)
+        ).to.be.reverted;
       });
       it("Invalid id", async function () {
         await expect(insure.withdrawClaim(1, tokenA.address)).to.be.reverted;
       });
       it("Invalid token", async function () {
-        await expect(insure.withdrawClaim(0, NON_TOKEN)).to.be.revertedWith(
-          "INVALID_TOKEN"
-        );
+        await expect(
+          insure.withdrawClaim(0, owner.address, NON_TOKEN)
+        ).to.be.revertedWith("INVALID_TOKEN");
       });
       it("Invalid token (zero)", async function () {
         await expect(
-          insure.withdrawClaim(0, constants.AddressZero)
+          insure.withdrawClaim(0, owner.address, constants.AddressZero)
         ).to.be.revertedWith("INVALID_TOKEN");
       });
       it("Success", async function () {
         await expect(
-          insure.withdrawClaim(0, tokenA.address)
+          insure.withdrawClaim(0, owner.address, tokenA.address)
         ).to.be.revertedWith("WITHDRAW_NOT_ACTIVE");
       });
     });

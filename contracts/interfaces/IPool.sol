@@ -8,8 +8,6 @@ import "../storage/LibPool.sol";
 import "../storage/LibGov.sol";
 
 interface IPool {
-    function testSetRouter(address _router, address _token) external;
-
     function setExitFee(uint256 _fee, address _token) external;
 
     function getExitFee(address _token) external view returns (uint256);
@@ -73,16 +71,11 @@ interface IPool {
         address _token
     ) external;
 
-    function withdrawClaimSwap(
+    function withdrawClaim(
         uint256 _id,
-        uint256 _idFee,
-        uint256 _uniMinOut,
-        address[] calldata _uniPath,
-        uint256 _uniDeadline,
+        address _receiver,
         address _token
-    ) external;
-
-    function withdrawClaim(uint256 _id, address _token) external;
+    ) external returns (uint256 amount);
 
     function getWithdrawal(
         address _staker,

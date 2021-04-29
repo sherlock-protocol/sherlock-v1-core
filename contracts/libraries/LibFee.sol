@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 import "../storage/LibPool.sol";
+import "../libraries/LibERC20.sol";
 import "../storage/LibGov.sol";
 
 import "../interfaces/IFee.sol";
@@ -65,14 +66,13 @@ library LibFee {
 
             uint256 fee = amount.mul(ps.totalFeePoolWeight).div(10**18);
             if (address(token) == address(this)) {
-                // native fees
                 ps.poolBalance = ps.poolBalance.add(fee);
             } else {
                 ps.unmaterializedFee = ps.unmaterializedFee.add(fee);
                 ps.feeWeight = ps.feeWeight.add(fee);
             }
         }
-
+        LibERC20.mint(address(this), amount);
         fs.totalFeePool = fs.totalFeePool.add(amount);
         fs.feeLastAccrued = block.number;
     }

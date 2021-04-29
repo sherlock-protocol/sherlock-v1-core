@@ -39,7 +39,6 @@ describe("Stake swap tests", function () {
     const MockUNI = await ethers.getContractFactory("MockUNI");
     mockUNI = await MockUNI.deploy();
     await tokenA.transfer(mockUNI.address, parseEther("100000"));
-    await insure.testSetRouter(mockUNI.address, constants.AddressZero);
 
     //await tokenA.transfer(carol.address, parseEther("10"));
     await tokenA.approve(insure.address, constants.MaxUint256);
@@ -57,13 +56,23 @@ describe("Stake swap tests", function () {
 
     stakeFee = await StakeFee.deploy("Stake Fee", "stkFEE");
     await stakeFee.transferOwnership(insure.address);
-    //await stakeFee.approve(insure.address, constants.MaxUint256);
-    await stakeFee.connect(alice).approve(insure.address, constants.MaxUint256);
-    await stakeFee.connect(carol).approve(insure.address, constants.MaxUint256);
 
-    await stakeA.approve(insure.address, constants.MaxUint256);
-    await stakeA.connect(carol).approve(insure.address, constants.MaxUint256);
-    await stakeB.approve(insure.address, constants.MaxUint256);
+    const SherlockSwap = await ethers.getContractFactory("SherlockSwap");
+    sherlockSwap = await SherlockSwap.deploy(insure.address, stakeFee.address);
+    await sherlockSwap.testSetRouter(mockUNI.address);
+    await stakeFee.approve(sherlockSwap.address, constants.MaxUint256);
+    await stakeFee
+      .connect(alice)
+      .approve(sherlockSwap.address, constants.MaxUint256);
+    await stakeFee
+      .connect(carol)
+      .approve(sherlockSwap.address, constants.MaxUint256);
+
+    await stakeA.approve(sherlockSwap.address, constants.MaxUint256);
+    await stakeA
+      .connect(carol)
+      .approve(sherlockSwap.address, constants.MaxUint256);
+    await stakeB.approve(sherlockSwap.address, constants.MaxUint256);
     await stakeA.transferOwnership(insure.address);
     await stakeB.transferOwnership(insure.address);
     await stakeC.transferOwnership(insure.address);
@@ -115,15 +124,13 @@ describe("Stake swap tests", function () {
 
         await mine(9);
         // harvest
-        await insure.withdrawStake(parseEther("1"), tokenA.address);
-        await insure.withdrawClaimSwap(
-          0,
+        await sherlockSwap.withdrawStake(parseEther("1"), stakeA.address);
+        await sherlockSwap.withdrawClaimSwap(
           0,
           parseEther("2"),
           // FEE --> TokenA
           [insure.address, tokenA.address],
-          1000,
-          tokenA.address
+          1000
         );
 
         expect(await tokenA.balanceOf(owner.address)).to.eq(parseEther("13"));
@@ -149,21 +156,19 @@ describe("Stake swap tests", function () {
         await insure.harvest(stakeA.address);
         await mine(4);
         // harvest
-        await insure.withdrawStake(parseEther("1"), tokenA.address);
-        await insure.withdrawClaimSwap(
-          0,
+        await sherlockSwap.withdrawStake(parseEther("1"), stakeA.address);
+        await sherlockSwap.withdrawClaimSwap(
           0,
           parseEther("1"),
           // FEE --> TokenA
           [insure.address, tokenA.address],
-          1000,
-          tokenA.address
+          1000
         );
 
         expect(await tokenA.balanceOf(owner.address)).to.eq(parseEther("12"));
         expect(await stakeA.balanceOf(owner.address)).to.eq(parseEther("0"));
         expect(await insure.balanceOf(owner.address)).to.eq(parseEther("0"));
-        expect(await stakeFee.balanceOf(owner.address)).to.eq(parseEther("1"));
+        expect(await stakeFee.balanceOf(owner.address)).to.eq(parseEther("0"));
 
         expect(await insure.getFirstMoneyOut(insure.address)).to.eq(
           parseEther("1")
@@ -183,21 +188,19 @@ describe("Stake swap tests", function () {
         await mine(9);
         // harvest
         const b1 = await blockNumber(
-          insure.withdrawStake(parseEther("1"), tokenA.address)
+          await sherlockSwap.withdrawStake(parseEther("1"), stakeA.address)
         );
 
         const expectedFeeCut = b1.sub(b0).mul(parseEther("1")).div(2); // takes 50% of all fees withdrawn
         expect(await insure.getFirstMoneyOut(insure.address)).to.eq(
           expectedFeeCut
         );
-        await insure.withdrawClaimSwap(
-          0,
+        await sherlockSwap.withdrawClaimSwap(
           0,
           parseEther("2"),
           // FEE --> TokenA
           [insure.address, tokenA.address],
-          1000,
-          tokenA.address
+          1000
         );
 
         expect(await tokenA.balanceOf(owner.address)).to.eq(parseEther("13"));
@@ -233,29 +236,27 @@ describe("Stake swap tests", function () {
         // harvest
 
         const b2 = await blockNumber(
-          insure.withdrawStake(parseEther("1"), tokenA.address)
+          sherlockSwap.withdrawStake(parseEther("1"), stakeA.address)
         );
-        const expectedFeeCut = b2.sub(b1).mul(parseEther("1")).div(2); // takes 50% of all fees withdrawn
+        const expectedFeeCut = b2.sub(b0).mul(parseEther("1")).div(2); // takes 50% of all fees withdrawn
         expect(await insure.getFirstMoneyOut(insure.address)).to.eq(
-          expectedFeeCut.sub(3)
+          expectedFeeCut
         );
-        await insure.withdrawClaimSwap(
-          0,
+        await sherlockSwap.withdrawClaimSwap(
           0,
           parseEther("1"),
           // FEE --> TokenA
           [insure.address, tokenA.address],
-          1000,
-          tokenA.address
+          1000
         );
 
         expect(await tokenA.balanceOf(owner.address)).to.eq(parseEther("12"));
         expect(await stakeA.balanceOf(owner.address)).to.eq(parseEther("0"));
         expect(await insure.balanceOf(owner.address)).to.eq(parseEther("0"));
-        expect(await stakeFee.balanceOf(owner.address)).to.eq(parseEther("1"));
+        expect(await stakeFee.balanceOf(owner.address)).to.eq(parseEther("0"));
 
         expect(await insure.getFirstMoneyOut(insure.address)).to.eq(
-          expectedFeeCut.sub(3).add(parseEther("1"))
+          expectedFeeCut.add(parseEther("1"))
         );
       });
     });
@@ -287,7 +288,6 @@ describe("Stake swap tests, changing weights", function () {
     const MockUNI = await ethers.getContractFactory("MockUNI");
     mockUNI = await MockUNI.deploy();
     await tokenA.transfer(mockUNI.address, parseEther("100000"));
-    await insure.testSetRouter(mockUNI.address, constants.AddressZero);
 
     //await tokenA.transfer(carol.address, parseEther("10"));
     await tokenA.approve(insure.address, constants.MaxUint256);
@@ -305,13 +305,24 @@ describe("Stake swap tests, changing weights", function () {
 
     stakeFee = await StakeFee.deploy("Stake Fee", "stkFEE");
     await stakeFee.transferOwnership(insure.address);
-    //await stakeFee.approve(insure.address, constants.MaxUint256);
-    await stakeFee.connect(alice).approve(insure.address, constants.MaxUint256);
-    await stakeFee.connect(carol).approve(insure.address, constants.MaxUint256);
 
-    await stakeA.approve(insure.address, constants.MaxUint256);
-    await stakeA.connect(carol).approve(insure.address, constants.MaxUint256);
-    await stakeB.approve(insure.address, constants.MaxUint256);
+    const SherlockSwap = await ethers.getContractFactory("SherlockSwap");
+    sherlockSwap = await SherlockSwap.deploy(insure.address, stakeFee.address);
+    await sherlockSwap.testSetRouter(mockUNI.address);
+
+    await stakeFee.approve(sherlockSwap.address, constants.MaxUint256);
+    await stakeFee
+      .connect(alice)
+      .approve(sherlockSwap.address, constants.MaxUint256);
+    await stakeFee
+      .connect(carol)
+      .approve(sherlockSwap.address, constants.MaxUint256);
+
+    await stakeA.approve(sherlockSwap.address, constants.MaxUint256);
+    await stakeA
+      .connect(carol)
+      .approve(sherlockSwap.address, constants.MaxUint256);
+    await stakeB.approve(sherlockSwap.address, constants.MaxUint256);
     await stakeA.transferOwnership(insure.address);
     await stakeB.transferOwnership(insure.address);
     await stakeC.transferOwnership(insure.address);
@@ -366,15 +377,13 @@ describe("Stake swap tests, changing weights", function () {
 
         await mine(9);
         // harvest
-        await insure.withdrawStake(parseEther("1"), tokenA.address);
-        await insure.withdrawClaimSwap(
-          0,
+        await sherlockSwap.withdrawStake(parseEther("1"), stakeA.address);
+        await sherlockSwap.withdrawClaimSwap(
           0,
           parseEther("2"),
           // FEE --> TokenA
           [insure.address, tokenA.address],
-          1000,
-          tokenA.address
+          1000
         );
 
         expect(await tokenA.balanceOf(owner.address)).to.eq(parseEther("13"));
@@ -400,21 +409,20 @@ describe("Stake swap tests, changing weights", function () {
         await insure.harvest(stakeA.address);
         await mine(4);
         // harvest
-        await insure.withdrawStake(parseEther("1"), tokenA.address);
-        await insure.withdrawClaimSwap(
-          0,
+        await sherlockSwap.withdrawStake(parseEther("1"), stakeA.address);
+        await sherlockSwap.withdrawClaimSwap(
           0,
           parseEther("1"),
           // FEE --> TokenA
           [insure.address, tokenA.address],
-          1000,
-          tokenA.address
+          1000
         );
 
         expect(await tokenA.balanceOf(owner.address)).to.eq(parseEther("12"));
         expect(await stakeA.balanceOf(owner.address)).to.eq(parseEther("0"));
         expect(await insure.balanceOf(owner.address)).to.eq(parseEther("0"));
-        expect(await stakeFee.balanceOf(owner.address)).to.eq(parseEther("1"));
+        // 0 because all stake is withdrawed when using tool
+        expect(await stakeFee.balanceOf(owner.address)).to.eq(parseEther("0"));
 
         expect(await insure.getFirstMoneyOut(insure.address)).to.eq(
           parseEther("0.5")
@@ -434,7 +442,7 @@ describe("Stake swap tests, changing weights", function () {
         await mine(9);
         // harvest
         const b1 = await blockNumber(
-          insure.withdrawStake(parseEther("1"), tokenA.address)
+          sherlockSwap.withdrawStake(parseEther("1"), stakeA.address)
         );
 
         const expectedFeeCut = b1.sub(b0).mul(parseEther("1")).div(2); // takes 50% of all fees withdrawn
@@ -445,14 +453,12 @@ describe("Stake swap tests, changing weights", function () {
           expectedFeeCut
         );
 
-        await insure.withdrawClaimSwap(
-          0,
+        await sherlockSwap.withdrawClaimSwap(
           0,
           parseEther("2"),
           // FEE --> TokenA
           [insure.address, tokenA.address],
-          1000,
-          tokenA.address
+          1000
         );
 
         expect(await tokenA.balanceOf(owner.address)).to.eq(parseEther("13"));
@@ -489,32 +495,30 @@ describe("Stake swap tests, changing weights", function () {
         // harvest
 
         const b2 = await blockNumber(
-          insure.withdrawStake(parseEther("1"), tokenA.address)
+          sherlockSwap.withdrawStake(parseEther("1"), stakeA.address)
         );
-        const expectedFeeCut = b2.sub(b1).mul(parseEther("1")).div(2); // takes 50% of all fees withdrawn
+        const expectedFeeCut = b2.sub(b0).mul(parseEther("1")).div(2); // takes 50% of all fees withdrawn
         // User does not get any extra fees as it is distributed to the stake fee pool
         expect(await insure.getFirstMoneyOut(insure.address)).to.eq(
-          expectedFeeCut.div(2).sub(13)
+          expectedFeeCut.sub(8)
         );
-        await insure.withdrawClaimSwap(
-          0,
+        await sherlockSwap.withdrawClaimSwap(
           0,
           parseEther("1"),
           // FEE --> TokenA
           [insure.address, tokenA.address],
-          1000,
-          tokenA.address
+          1000
         );
 
         expect(await tokenA.balanceOf(owner.address)).to.eq(parseEther("12"));
         expect(await stakeA.balanceOf(owner.address)).to.eq(parseEther("0"));
         expect(await insure.balanceOf(owner.address)).to.eq(parseEther("0"));
-        expect(await stakeFee.balanceOf(owner.address)).to.eq(parseEther("1"));
+        expect(await stakeFee.balanceOf(owner.address)).to.eq(parseEther("0"));
 
         // The 0.5 earned FEE is distributed to the first money out pool
         // The other 0.5 FEE is distributed to the FEE pool.
         expect(await insure.getFirstMoneyOut(insure.address)).to.eq(
-          expectedFeeCut.div(2).add(parseEther("1").div(2)).sub(13)
+          expectedFeeCut.add(parseEther("1").div(2)).sub(8)
         );
       });
     });

@@ -646,33 +646,33 @@ describe("Staker tests", function () {
     });
     it("Claim canceled", async function () {
       await insure.withdrawCancel(0, tokenA.address);
-      await expect(insure.withdrawClaim(0, tokenA.address)).to.be.revertedWith(
-        "WITHDRAW_NOT_ACTIVE"
-      );
+      await expect(
+        insure.withdrawClaim(0, owner.address, tokenA.address)
+      ).to.be.revertedWith("WITHDRAW_NOT_ACTIVE");
     });
     it("Timelock, t=2", async function () {
       await mine(1);
-      await expect(insure.withdrawClaim(0, tokenA.address)).to.be.revertedWith(
-        "TIMELOCK_ACTIVE"
-      );
+      await expect(
+        insure.withdrawClaim(0, owner.address, tokenA.address)
+      ).to.be.revertedWith("TIMELOCK_ACTIVE");
     });
     it("Claimperiod, t=6", async function () {
       await mine(5);
-      await expect(insure.withdrawClaim(0, tokenA.address)).to.be.revertedWith(
-        "CLAIMPERIOD_EXPIRED"
-      );
+      await expect(
+        insure.withdrawClaim(0, owner.address, tokenA.address)
+      ).to.be.revertedWith("CLAIMPERIOD_EXPIRED");
     });
     it("Claim twice", async function () {
       await mine(2);
-      await insure.withdrawClaim(0, tokenA.address);
-      await expect(insure.withdrawClaim(0, tokenA.address)).to.be.revertedWith(
-        "WITHDRAW_NOT_ACTIVE"
-      );
+      await insure.withdrawClaim(0, owner.address, tokenA.address);
+      await expect(
+        insure.withdrawClaim(0, owner.address, tokenA.address)
+      ).to.be.revertedWith("WITHDRAW_NOT_ACTIVE");
     });
     it("Claim", async function () {
       // window of opportunity is 3 blocks (3,4,5)
       await mine(2);
-      await insure.withdrawClaim(0, tokenA.address);
+      await insure.withdrawClaim(0, owner.address, tokenA.address);
 
       expect(
         await insure.getWithdrawalSize(owner.address, tokenA.address)
@@ -725,7 +725,7 @@ describe("Staker tests", function () {
     it("Claim", async function () {
       // window of opportunity is 3 blocks (3,4,5)
       await mine(2);
-      await insure.withdrawClaim(0, tokenA.address);
+      await insure.withdrawClaim(0, owner.address, tokenA.address);
 
       expect(
         await insure.getWithdrawalSize(owner.address, tokenA.address)
@@ -815,7 +815,7 @@ describe("Staker tests", function () {
     });
     it("Multiple, single claimed", async function () {
       await mine(2);
-      await insure.withdrawClaim(0, tokenA.address);
+      await insure.withdrawClaim(0, owner.address, tokenA.address);
       await insure.withdrawStake(parseEther("0.5"), tokenA.address);
 
       expect(
@@ -841,7 +841,7 @@ describe("Staker tests", function () {
     it("Multiple, claim second", async function () {
       await insure.withdrawStake(parseEther("0.5"), tokenA.address);
       await mine(2);
-      await insure.withdrawClaim(1, tokenA.address);
+      await insure.withdrawClaim(1, owner.address, tokenA.address);
 
       expect(
         await insure.getWithrawalInitialIndex(owner.address, tokenA.address)
@@ -850,7 +850,7 @@ describe("Staker tests", function () {
     it("Multiple, claim first", async function () {
       await insure.withdrawStake(parseEther("0.5"), tokenA.address);
       await mine(2);
-      await insure.withdrawClaim(0, tokenA.address);
+      await insure.withdrawClaim(0, owner.address, tokenA.address);
 
       expect(
         await insure.getWithrawalInitialIndex(owner.address, tokenA.address)

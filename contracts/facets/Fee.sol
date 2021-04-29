@@ -50,7 +50,7 @@ contract Fee is IFee {
             harvestForMultiple(_token[i], _users);
         }
         for (uint256 i; i < _debtTokens.length; i++) {
-            address underlying = IStakeToken(_debtTokens[i]).underyling();
+            address underlying = IStakeToken(_debtTokens[i]).underlying();
             LibPool.payOffDebtAll(IERC20(underlying));
         }
     }
@@ -59,7 +59,7 @@ contract Fee is IFee {
         public
         override
     {
-        address underlying = IStakeToken(_token).underyling();
+        address underlying = IStakeToken(_token).underlying();
         LibPool.payOffDebtAll(IERC20(underlying));
         for (uint256 i; i < _users.length; i++) {
             doYield(_token, _users[i], _users[i], 0);
@@ -203,29 +203,6 @@ contract Fee is IFee {
         doYield(msg.sender, from, to, amount);
     }
 
-    function handleFeeMint(
-        PoolStorage.Base storage psFee,
-        address from,
-        address to,
-        uint256 withdrawable_amount
-    ) private {
-        if (to != address(this)) {
-            // not a withdraw
-            LibPool.stake(psFee, withdrawable_amount, from);
-        } else {
-            // stake user fees with this as receipent of the stake token
-            uint256 stake = LibPool.stake(
-                psFee,
-                withdrawable_amount,
-                address(this)
-            );
-            // approve stakeToken to this, so a withdrawal can happen
-            psFee.stakeToken.approve(address(this), stake);
-            // withdraw with user as receipent of the withdrawal
-            LibPool.withdraw(psFee, stake, address(this), from);
-        }
-    }
-
     // TODO need to make sure this matches the actual fee amount
     function getWithdrawableFeeAmount(address _user, address _token)
         external
@@ -253,7 +230,7 @@ contract Fee is IFee {
         address to,
         uint256 amount
     ) private {
-        address underlying = IStakeToken(token).underyling();
+        address underlying = IStakeToken(token).underlying();
         PoolStorage.Base storage ps = PoolStorage.ps(underlying);
         require(address(ps.stakeToken) == token, "Unexpected sender");
         // mint / transfer FEE tokens, triggered by withdraw + transfer
@@ -279,7 +256,6 @@ contract Fee is IFee {
                 ps.unmaterializedFee = ps.unmaterializedFee.sub(
                     withdrawable_amount
                 );
-                LibERC20.mint(address(this), withdrawable_amount);
                 PoolStorage.Base storage psFee = PoolStorage.ps(address(this));
                 if (from == address(this)) {
                     // add fee harvested by the pool itself to first money out pool.
@@ -287,7 +263,7 @@ contract Fee is IFee {
                         withdrawable_amount
                     );
                 } else {
-                    handleFeeMint(psFee, from, to, withdrawable_amount);
+                    LibPool.stake(psFee, withdrawable_amount, from);
                 }
             } else {
                 ps.feeWithdrawn[from] = ps.feeWithdrawn[from].sub(

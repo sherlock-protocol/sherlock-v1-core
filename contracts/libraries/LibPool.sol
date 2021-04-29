@@ -33,8 +33,7 @@ library LibPool {
     function withdraw(
         PoolStorage.Base storage ps,
         uint256 _amount,
-        address _holder,
-        address _receiver
+        address _user
     ) external returns (uint256) {
         /*
         X Stake token is transferred, this triggers the fee mint, deposit, withdrawal
@@ -43,7 +42,7 @@ library LibPool {
 
         TODO make only this reentry possible or restructure.
         */
-        ps.stakeToken.safeTransferFrom(_holder, address(this), _amount);
+        ps.stakeToken.safeTransferFrom(_user, address(this), _amount);
         uint256 stakeTokenExitFee = _amount.mul(ps.exitFee).div(10**18);
         if (stakeTokenExitFee > 0) {
             // stake of user gets burned
@@ -57,14 +56,14 @@ library LibPool {
             ps.stakeToken.burn(address(this), stakeTokenExitFee);
         }
 
-        ps.stakesWithdraw[_receiver].push(
+        ps.stakesWithdraw[_user].push(
             PoolStorage.StakeWithdraw(
                 block.number,
                 _amount.sub(stakeTokenExitFee)
             )
         );
 
-        return ps.stakesWithdraw[_receiver].length - 1;
+        return ps.stakesWithdraw[_user].length - 1;
     }
 
     function withdrawClaim(

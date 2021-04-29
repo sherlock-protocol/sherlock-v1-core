@@ -40,7 +40,6 @@ describe("Hack tests", function () {
     const MockUNI = await ethers.getContractFactory("MockUNI");
     mockUNI = await MockUNI.deploy();
     await tokenA.transfer(mockUNI.address, parseEther("100000"));
-    await insure.testSetRouter(mockUNI.address, constants.AddressZero);
 
     //await tokenA.transfer(carol.address, parseEther("10"));
     await tokenA.approve(insure.address, constants.MaxUint256);
@@ -184,7 +183,7 @@ describe("Hack tests", function () {
       await mine(5);
 
       await insure.withdrawStake(parseEther("0.5"), tokenA.address);
-      await insure.withdrawClaim(0, tokenA.address);
+      await insure.withdrawClaim(0, owner.address, tokenA.address);
 
       // 5/10 tokens go to fmo pool.
 
