@@ -18,7 +18,6 @@ import "../interfaces/IStakePlus.sol";
 import "../libraries/LibPool.sol";
 import "../libraries/LibFee.sol";
 import "../libraries/LibERC20.sol";
-import "../libraries/LibTimelock.sol";
 
 contract Fee is IFee {
     using SafeMath for uint256;
