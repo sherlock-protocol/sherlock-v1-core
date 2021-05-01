@@ -39,7 +39,7 @@
 //     await tokenA.connect(alice).approve(insure.address, constants.MaxUint256);
 //     await tokenA.connect(bob).approve(insure.address, constants.MaxUint256);
 
-//     const Stake = await ethers.getContractFactory("Stake");
+//     const Stake = await ethers.getContractFactory("NativeStake");
 //     const StakeFee = await ethers.getContractFactory("StakeFee");
 //     [stakeA, stakeB, stakeC] = [
 //       await Stake.deploy("Stake TokenA", "stkA", tokenA.address),

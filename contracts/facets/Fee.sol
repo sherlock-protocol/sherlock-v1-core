@@ -8,8 +8,8 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 import "../interfaces/IFee.sol";
-import "../interfaces/IStake.sol";
-import "../interfaces/IStakePlus.sol";
+import "../interfaces/stake/INativeStake.sol";
+import "../interfaces/stake/IForeignStake.sol";
 
 import "../libraries/LibPool.sol";
 import "../libraries/LibFee.sol";
@@ -40,7 +40,7 @@ contract Fee is IFee {
             harvestForMultiple(_token[i], _users);
         }
         for (uint256 i; i < _debtTokens.length; i++) {
-            address underlying = IStakePlus(_debtTokens[i]).underlying();
+            address underlying = IForeignStake(_debtTokens[i]).underlying();
             LibPool.payOffDebtAll(IERC20(underlying));
         }
     }
@@ -49,7 +49,7 @@ contract Fee is IFee {
         public
         override
     {
-        address underlying = IStakePlus(_token).underlying();
+        address underlying = IForeignStake(_token).underlying();
         LibPool.payOffDebtAll(IERC20(underlying));
         for (uint256 i; i < _users.length; i++) {
             doYield(_token, _users[i], _users[i], 0);
@@ -223,7 +223,7 @@ contract Fee is IFee {
         address to,
         uint256 amount
     ) private {
-        address underlying = IStakePlus(token).underlying();
+        address underlying = IForeignStake(token).underlying();
         PoolStorage.Base storage ps = PoolStorage.ps(underlying);
         require(address(ps.stakeToken) == token, "Unexpected sender");
         // mint / transfer FEE tokens, triggered by withdraw + transfer

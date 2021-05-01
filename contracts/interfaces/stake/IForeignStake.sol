@@ -1,8 +1,8 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.7.4;
 
-import "./IStake.sol";
+import "./INativeStake.sol";
 
-interface IStakePlus is IStake {
+interface IForeignStake is INativeStake {
     function underlying() external view returns (address);
 }

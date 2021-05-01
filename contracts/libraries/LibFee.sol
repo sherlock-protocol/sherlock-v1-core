@@ -12,7 +12,7 @@ import "../libraries/LibERC20.sol";
 import "../storage/LibGov.sol";
 
 import "../interfaces/IFee.sol";
-import "../interfaces/IStake.sol";
+import "../interfaces/stake/INativeStake.sol";
 
 import "./LibPool.sol";
 
@@ -29,7 +29,6 @@ library LibFee {
         );
         fs.lastPremiumChange = block.number;
     }
-
 
     // TODO remove?
     function getOutstandingFeeTokens(address _token)

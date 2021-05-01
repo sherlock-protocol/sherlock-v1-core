@@ -3,20 +3,20 @@ pragma solidity ^0.7.4;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./interfaces/IStake.sol";
-import "./interfaces/IStakePlus.sol";
+import "./interfaces/stake/IForeignStake.sol";
+import "./interfaces/stake/INativeStake.sol";
 import "./interfaces/ISolution.sol";
 
-import "./Stake.sol";
+import "./NativeStake.sol";
 
-contract StakePlus is Stake, IStakePlus {
+contract ForeignStake is NativeStake, IForeignStake {
     address public override underlying;
 
     constructor(
         string memory name_,
         string memory symbol_,
         address _underlying
-    ) public Stake(name_, symbol_) {
+    ) public NativeStake(name_, symbol_) {
         underlying = _underlying;
     }
 

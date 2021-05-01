@@ -165,7 +165,7 @@ contract Gov is IGov {
 
     function tokenAdd(
         IERC20 _token,
-        IStake _stake,
+        INativeStake _stake,
         address _govPool
     ) external override onlyGovInsurance {
         GovStorage.Base storage gs = GovStorage.gs();

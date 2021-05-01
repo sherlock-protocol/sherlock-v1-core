@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
-import "../interfaces/IStake.sol";
+import "../interfaces/stake/INativeStake.sol";
 
 import "../libraries/LibPool.sol";
 
@@ -17,7 +17,7 @@ contract Pool {
 
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
-    using SafeERC20 for IStake;
+    using SafeERC20 for INativeStake;
 
     function setExitFee(uint256 _fee) external {
         require(msg.sender == GovStorage.gs().govInsurance, "NOT_GOV");

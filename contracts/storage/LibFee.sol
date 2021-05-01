@@ -3,7 +3,7 @@ pragma solidity ^0.7.0;
 
 import "hardhat/console.sol";
 
-import "../interfaces/IStake.sol";
+import "../interfaces/stake/INativeStake.sol";
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 

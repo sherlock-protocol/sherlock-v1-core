@@ -3,10 +3,10 @@ pragma solidity ^0.7.4;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./interfaces/IStake.sol";
+import "./interfaces/stake/INativeStake.sol";
 import "./interfaces/ISolution.sol";
 
-contract Stake is ERC20, IStake, Ownable {
+contract NativeStake is ERC20, INativeStake, Ownable {
     constructor(string memory name_, string memory symbol_)
         public
         ERC20(name_, symbol_)

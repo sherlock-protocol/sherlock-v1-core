@@ -11,7 +11,7 @@ import "../storage/LibFee.sol";
 library LibPool {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
-    using SafeERC20 for IStake;
+    using SafeERC20 for INativeStake;
 
     function stake(
         PoolStorage.Base storage ps,
