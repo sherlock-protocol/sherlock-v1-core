@@ -200,8 +200,8 @@ contract SherX is ISherX {
     {
         PoolStorage.Base storage ps = PoolStorage.ps(_token);
 
-        uint256 userAmount = ps.stakeToken.balanceOf(_user);
-        uint256 totalAmount = ps.stakeToken.totalSupply();
+        uint256 userAmount = ps.lockToken.balanceOf(_user);
+        uint256 totalAmount = ps.lockToken.totalSupply();
         if (totalAmount == 0) {
             return 0;
         }
@@ -220,12 +220,12 @@ contract SherX is ISherX {
     ) private {
         address underlying = IForeignLock(token).underlying();
         PoolStorage.Base storage ps = PoolStorage.ps(underlying);
-        require(address(ps.stakeToken) == token, "Unexpected sender");
+        require(address(ps.lockToken) == token, "Unexpected sender");
 
         LibSherX.accrueSherX();
 
-        uint256 userAmount = ps.stakeToken.balanceOf(from);
-        uint256 totalAmount = ps.stakeToken.totalSupply();
+        uint256 userAmount = ps.lockToken.balanceOf(from);
+        uint256 totalAmount = ps.lockToken.totalSupply();
 
         uint256 ineglible_yield_amount;
         if (totalAmount > 0) {

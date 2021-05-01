@@ -37,7 +37,7 @@ library PoolStorage {
 
         mapping(address => UnstakeEntry[]) unstakeEntries;
 
-        INativeLock stakeToken;
+        INativeLock lockToken;
 
         mapping(bytes32 => bool) isProtocol;
         bytes32[] protocols;

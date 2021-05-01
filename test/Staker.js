@@ -404,7 +404,7 @@ describe("Staker tests", function () {
     it("Expired, t=5", async function () {
       await mine(4);
       await expect(insure.cancelCooldown(0, tokenA.address)).to.be.revertedWith(
-        "TIMELOCK_EXPIRED"
+        "COOLDOWN_EXPIRED"
       );
     });
     it("Cancel twice", async function () {
@@ -652,11 +652,11 @@ describe("Staker tests", function () {
         insure.unstake(0, owner.address, tokenA.address)
       ).to.be.revertedWith("WITHDRAW_NOT_ACTIVE");
     });
-    it("Timelock, t=2", async function () {
+    it("Cooldown, t=2", async function () {
       await mine(1);
       await expect(
         insure.unstake(0, owner.address, tokenA.address)
-      ).to.be.revertedWith("TIMELOCK_ACTIVE");
+      ).to.be.revertedWith("COOLDOWN_ACTIVE");
     });
     it("Claimperiod, t=6", async function () {
       await mine(5);

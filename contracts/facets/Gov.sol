@@ -55,12 +55,12 @@ contract Gov is IGov {
         onlyGovInsurance
     {
         GovStorage.Base storage gs = GovStorage.gs();
-        gs.unstakePeriod = _claimPeriod;
+        gs.unstakeWindow = _claimPeriod;
     }
 
-    function setCooldown(uint256 _timeLock) external override onlyGovInsurance {
+    function setCooldown(uint256 _period) external override onlyGovInsurance {
         GovStorage.Base storage gs = GovStorage.gs();
-        gs.withdrawTimeLock = _timeLock;
+        gs.unstakeCooldown = _period;
     }
 
     function getUnstakeWindow()
@@ -70,12 +70,12 @@ contract Gov is IGov {
         returns (uint256 claimPeriod)
     {
         GovStorage.Base storage gs = GovStorage.gs();
-        claimPeriod = gs.unstakePeriod;
+        claimPeriod = gs.unstakeWindow;
     }
 
-    function getCooldown() external override view returns (uint256 timeLock) {
+    function getCooldown() external override view returns (uint256 period) {
         GovStorage.Base storage gs = GovStorage.gs();
-        timeLock = gs.withdrawTimeLock;
+        period = gs.unstakeCooldown;
     }
 
     function getProtocolIsCovered(bytes32 _protocol)
@@ -165,7 +165,7 @@ contract Gov is IGov {
 
     function tokenAdd(
         IERC20 _token,
-        INativeLock _stake,
+        INativeLock _lock,
         address _govPool
     ) external override onlyGovInsurance {
         GovStorage.Base storage gs = GovStorage.gs();
@@ -173,17 +173,17 @@ contract Gov is IGov {
 
         require(address(_token) != address(0), "ZERO_TOKEN");
         require(!ps.initialized, "INITIALIZED");
-        require(address(_stake) != address(0), "ZERO_STAKE");
-        require(_stake.getOwner() == address(this), "OWNER");
+        require(address(_lock) != address(0), "ZERO_LOCK");
+        require(_lock.getOwner() == address(this), "OWNER");
         require(_govPool != address(0), "ZERO_GOV");
-        require(_stake.totalSupply() == 0, "SUPPLY");
+        require(_lock.totalSupply() == 0, "SUPPLY");
 
         gs.tokens.push(_token);
         ps.initialized = true;
         ps.stakes = true;
-        ps.stakeToken = _stake;
+        ps.lockToken = _lock;
         ps.govPool = _govPool;
-        emit TokenAdded(_token, _stake);
+        emit TokenAdded(_token, _lock);
     }
 
     function tokenDisable(IERC20 _token) external override onlyGovInsurance {
@@ -227,7 +227,7 @@ contract Gov is IGov {
         delete ps.totalPremiumPerBlock;
         delete ps.totalPremiumLastPaid;
         //delete ps.unstakeEntries;
-        delete ps.stakeToken;
+        delete ps.lockToken;
         //delete ps.isProtocol;
         delete ps.protocols;
         delete ps.govPool;

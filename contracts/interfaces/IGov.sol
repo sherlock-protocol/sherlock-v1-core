@@ -12,11 +12,11 @@ interface IGov {
 
     function setUnstakeWindow(uint256 _claimPeriod) external;
 
-    function setCooldown(uint256 _timeLock) external;
+    function setCooldown(uint256 _period) external;
 
     function getUnstakeWindow() external view returns (uint256 claimPeriod);
 
-    function getCooldown() external view returns (uint256 timeLock);
+    function getCooldown() external view returns (uint256 period);
 
     function getTokens() external view returns (IERC20[] memory tokens);
 
@@ -35,7 +35,7 @@ interface IGov {
         view
         returns (address agent);
 
-    event TokenAdded(IERC20 _token, INativeLock _stake);
+    event TokenAdded(IERC20 _token, INativeLock _lock);
 
     function protocolAdd(
         bytes32 _protocol,
@@ -54,7 +54,7 @@ interface IGov {
     // TODO transfer govpool role
     function tokenAdd(
         IERC20 _token,
-        INativeLock _stake,
+        INativeLock _lock,
         address _govPool
     ) external;
 

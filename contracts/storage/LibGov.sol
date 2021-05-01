@@ -14,8 +14,8 @@ library GovStorage {
         mapping(bytes32 => address) protocolManagers;
         mapping(bytes32 => address) protocolAgents;
 
-        uint256 withdrawTimeLock;
-        uint256 unstakePeriod;
+        uint256 unstakeCooldown;
+        uint256 unstakeWindow;
 
         mapping(bytes32 => bool) protocolIsCovered;
 

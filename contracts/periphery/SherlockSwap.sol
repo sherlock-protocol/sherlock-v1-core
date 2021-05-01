@@ -48,7 +48,7 @@ contract SherlockSwap {
         // TODO bool for max stakewithdraw, and check before balance of lockSherX
         // withdraws your stake
         // withdraws all stake SherX
-        // user should approve stakeToken to sherlock contract
+        // user should approve lockToken to sherlock contract
 
         // withdraw SherX stake
         // withdraw stake SherX

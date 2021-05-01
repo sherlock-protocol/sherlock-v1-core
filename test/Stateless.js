@@ -347,7 +347,7 @@ describe("static tests", function () {
       it("Success", async function () {
         await expect(
           insure.cancelCooldown(0, tokenA.address)
-        ).to.be.revertedWith("TIMELOCK_EXPIRED");
+        ).to.be.revertedWith("COOLDOWN_EXPIRED");
         // todo assert events
       });
     });
@@ -605,7 +605,7 @@ describe("static tests", function () {
       it("Invalid stake (zero)", async function () {
         await expect(
           insure.tokenAdd(tokenB.address, constants.AddressZero, owner.address)
-        ).to.be.revertedWith("ZERO_STAKE");
+        ).to.be.revertedWith("ZERO_LOCK");
       });
       it("Invalid stake (owner)", async function () {
         await expect(

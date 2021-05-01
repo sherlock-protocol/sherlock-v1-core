@@ -17,17 +17,17 @@ library LibPool {
         PoolStorage.Base storage ps,
         uint256 _amount,
         address _receiver
-    ) external returns (uint256 stake) {
-        uint256 totalStake = ps.stakeToken.totalSupply();
-        if (totalStake == 0) {
-            // mint initial stake
-            stake = 10**18;
+    ) external returns (uint256 lock) {
+        uint256 totalLock = ps.lockToken.totalSupply();
+        if (totalLock == 0) {
+            // mint initial lock
+            lock = 10**18;
         } else {
-            // mint stake based on funds in pool
-            stake = _amount.mul(totalStake).div(ps.stakeBalance);
+            // mint lock based on funds in pool
+            lock = _amount.mul(totalLock).div(ps.stakeBalance);
         }
         ps.stakeBalance = ps.stakeBalance.add(_amount);
-        ps.stakeToken.mint(_receiver, stake);
+        ps.lockToken.mint(_receiver, lock);
     }
 
     function payOffDebtAll(IERC20 _token) external {

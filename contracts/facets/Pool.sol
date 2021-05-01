@@ -67,7 +67,7 @@ contract Pool {
 
     function getLockToken(address _token) external view returns (address) {
         (, PoolStorage.Base storage ps) = baseData();
-        return address(ps.stakeToken);
+        return address(ps.lockToken);
     }
 
     function isProtocol(bytes32 _protocol, address _token)
@@ -174,10 +174,10 @@ contract Pool {
     function exchangeRate() external view returns (uint256 rate) {
         // token to stakedtoken
         (, PoolStorage.Base storage ps) = baseData();
-        uint256 totalStake = ps.stakeToken.totalSupply();
-        require(totalStake > 0, "N0_STAKE");
+        uint256 totalLock = ps.lockToken.totalSupply();
+        require(totalLock > 0, "N0_STAKE");
         require(ps.stakeBalance > 0, "NO_FUNDS");
-        rate = ps.stakeBalance.mul(10**18).div(totalStake);
+        rate = ps.stakeBalance.mul(10**18).div(totalLock);
     }
 
     function getTotalAccruedDebt() external view returns (uint256) {
@@ -216,18 +216,18 @@ contract Pool {
         returns (uint256)
     {
         (, PoolStorage.Base storage ps) = baseData();
-        if (ps.stakeToken.totalSupply() == 0) {
+        if (ps.lockToken.totalSupply() == 0) {
             return 0;
         }
         return
-            ps.stakeToken.balanceOf(_staker).mul(getStakersPoolBalance()).div(
-                ps.stakeToken.totalSupply()
+            ps.lockToken.balanceOf(_staker).mul(getStakersPoolBalance()).div(
+                ps.lockToken.totalSupply()
             );
     }
 
     function stake(uint256 _amount, address _receiver)
         external
-        returns (uint256 stake)
+        returns (uint256 lock)
     {
         require(_amount > 0, "AMOUNT");
         require(_receiver != address(0), "RECEIVER");
@@ -235,34 +235,29 @@ contract Pool {
         require(ps.stakes, "NO_STAKES");
         token.safeTransferFrom(msg.sender, address(this), _amount);
 
-        stake = LibPool.stake(ps, _amount, _receiver);
+        lock = LibPool.stake(ps, _amount, _receiver);
     }
 
     function activateCooldown(uint256 _amount) external returns (uint256) {
         require(_amount > 0, "AMOUNT");
         (IERC20 token, PoolStorage.Base storage ps) = baseData();
 
-        ps.stakeToken.safeTransferFrom(msg.sender, address(this), _amount);
-        uint256 stakeTokenExitFee = _amount.mul(ps.activateCooldownFee).div(
-            10**18
-        );
-        if (stakeTokenExitFee > 0) {
+        ps.lockToken.safeTransferFrom(msg.sender, address(this), _amount);
+        uint256 fee = _amount.mul(ps.activateCooldownFee).div(10**18);
+        if (fee > 0) {
             // stake of user gets burned
             // representative amount token get added to first money out pool
-            uint256 tokenAmount = stakeTokenExitFee.mul(ps.stakeBalance).div(
-                ps.stakeToken.totalSupply()
+            uint256 tokenAmount = fee.mul(ps.stakeBalance).div(
+                ps.lockToken.totalSupply()
             );
             ps.stakeBalance = ps.stakeBalance.sub(tokenAmount);
             ps.firstMoneyOut = ps.firstMoneyOut.add(tokenAmount);
 
-            ps.stakeToken.burn(address(this), stakeTokenExitFee);
+            ps.lockToken.burn(address(this), fee);
         }
 
         ps.unstakeEntries[msg.sender].push(
-            PoolStorage.UnstakeEntry(
-                block.number,
-                _amount.sub(stakeTokenExitFee)
-            )
+            PoolStorage.UnstakeEntry(block.number, _amount.sub(fee))
         );
 
         return ps.unstakeEntries[msg.sender].length - 1;
@@ -277,10 +272,10 @@ contract Pool {
         require(withdraw.blockInitiated != 0, "WITHDRAW_NOT_ACTIVE");
 
         require(
-            withdraw.blockInitiated.add(gs.withdrawTimeLock) >= block.number,
-            "TIMELOCK_EXPIRED"
+            withdraw.blockInitiated.add(gs.unstakeCooldown) >= block.number,
+            "COOLDOWN_EXPIRED"
         );
-        ps.stakeToken.safeTransfer(msg.sender, withdraw.stake);
+        ps.lockToken.safeTransfer(msg.sender, withdraw.stake);
         delete ps.unstakeEntries[msg.sender][_id];
     }
 
@@ -293,12 +288,12 @@ contract Pool {
         require(withdraw.blockInitiated != 0, "WITHDRAW_NOT_ACTIVE");
 
         require(
-            withdraw.blockInitiated.add(gs.withdrawTimeLock).add(
-                gs.unstakePeriod
+            withdraw.blockInitiated.add(gs.unstakeCooldown).add(
+                gs.unstakeWindow
             ) < block.number,
             "CLAIMPERIOD_NOT_EXPIRED"
         );
-        ps.stakeToken.safeTransfer(_account, withdraw.stake);
+        ps.lockToken.safeTransfer(_account, withdraw.stake);
         delete ps.unstakeEntries[_account][_id];
     }
 
@@ -317,24 +312,24 @@ contract Pool {
         PoolStorage.UnstakeEntry memory withdraw = ps.unstakeEntries[msg
             .sender][_id];
         require(withdraw.blockInitiated != 0, "WITHDRAW_NOT_ACTIVE");
-        // timelock is including
+        // period is including
         require(
-            withdraw.blockInitiated.add(gs.withdrawTimeLock) < block.number,
-            "TIMELOCK_ACTIVE"
+            withdraw.blockInitiated.add(gs.unstakeCooldown) < block.number,
+            "COOLDOWN_ACTIVE"
         );
         // claim period is including, TODO should it be including?
         require(
-            withdraw.blockInitiated.add(gs.withdrawTimeLock).add(
-                gs.unstakePeriod
+            withdraw.blockInitiated.add(gs.unstakeCooldown).add(
+                gs.unstakeWindow
             ) > block.number,
             "CLAIMPERIOD_EXPIRED"
         );
         amount = withdraw.stake.mul(ps.stakeBalance).div(
-            ps.stakeToken.totalSupply()
+            ps.lockToken.totalSupply()
         );
 
         ps.stakeBalance = ps.stakeBalance.sub(amount);
-        ps.stakeToken.burn(address(this), withdraw.stake);
+        ps.lockToken.burn(address(this), withdraw.stake);
         delete ps.unstakeEntries[msg.sender][_id];
         token.safeTransfer(_receiver, amount);
     }
@@ -376,8 +371,8 @@ contract Pool {
             if (
                 ps.unstakeEntries[_staker][i]
                     .blockInitiated
-                    .add(gs.withdrawTimeLock)
-                    .add(gs.unstakePeriod) <= block.number
+                    .add(gs.unstakeCooldown)
+                    .add(gs.unstakeWindow) <= block.number
             ) {
                 continue;
             }
