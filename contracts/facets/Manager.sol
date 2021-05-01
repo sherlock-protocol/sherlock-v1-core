@@ -40,6 +40,8 @@ contract Manager is IManager {
         GovStorage.Base storage gs = GovStorage.gs();
         PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
         FeeStorage.Base storage fs = FeeStorage.fs();
+        LibERC20Storage.ERC20Storage storage es = LibERC20Storage
+            .erc20Storage();
 
         require(ps.initialized, "WHITELIST");
 
@@ -86,7 +88,7 @@ contract Manager is IManager {
             fs.feePerBlock = 10**18;
         } else if (fs.totalUsdPool > 0) {
             // TODO validate when fs.totalUsdPool
-            fs.feePerBlock = fs.totalFeePool.mul(fs.totalBlockIncrement).div(
+            fs.feePerBlock = es.totalSupply.mul(fs.totalBlockIncrement).div(
                 fs.totalUsdPool
             );
         }

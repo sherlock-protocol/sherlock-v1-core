@@ -256,7 +256,6 @@ contract Gov is IGov {
 
         LibFee.accrueFeeToken();
         uint256 totalUnmaterializedFee = 0;
-        //uint256 maxUnmaterializedFee = fs.totalFeePool.sub(es.totalSupply);
 
         for (uint256 i; i < _tokens.length; i++) {
             PoolStorage.Base storage ps = PoolStorage.ps(address(_tokens[i]));

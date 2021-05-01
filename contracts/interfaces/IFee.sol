@@ -5,8 +5,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // ISherX
 interface IFee {
-    // TODO remove?
-    function getTotalFeePool() external view returns (uint256);
 
     function _beforeTokenTransfer(
         address from,

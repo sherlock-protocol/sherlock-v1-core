@@ -20,8 +20,6 @@ library FeeStorage {
 
         uint256 feePerBlock; // sherXPerBlock
         uint256 feeLastAccrued; // sherXLastAccrued
-
-        uint256 totalFeePool; // TODO remove?
     }
 
     function fs() internal pure returns (Base storage fs) {

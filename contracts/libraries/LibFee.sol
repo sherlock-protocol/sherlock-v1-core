@@ -75,7 +75,6 @@ library LibFee {
             }
         }
         LibERC20.mint(address(this), amount);
-        fs.totalFeePool = fs.totalFeePool.add(amount);
         fs.feeLastAccrued = block.number;
     }
 }
