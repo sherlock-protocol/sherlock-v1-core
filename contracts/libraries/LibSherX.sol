@@ -1,5 +1,10 @@
-//SPDX-License-Identifier: Unlicense
+// SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.7.4;
+
+/******************************************************************************\
+* Author: Evert Kors <dev@sherlock.xyz> (https://twitter.com/evert0x)
+* Sherlock Protocol: https://sherlock.xyz
+/******************************************************************************/
 
 import "hardhat/console.sol";
 

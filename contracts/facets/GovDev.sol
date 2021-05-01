@@ -2,6 +2,11 @@
 pragma solidity ^0.7.0;
 pragma abicoder v2;
 
+/******************************************************************************\
+* Author: Evert Kors <dev@sherlock.xyz> (https://twitter.com/evert0x)
+* Sherlock Protocol: https://sherlock.xyz
+/******************************************************************************/
+
 import "diamond-2/contracts/libraries/LibDiamond.sol";
 import "../interfaces/IGovDev.sol";
 

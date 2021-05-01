@@ -2,6 +2,11 @@
 pragma solidity ^0.7.4;
 pragma abicoder v2;
 
+/******************************************************************************\
+* Author: Evert Kors <dev@sherlock.xyz> (https://twitter.com/evert0x)
+* Sherlock Protocol: https://sherlock.xyz
+/******************************************************************************/
+
 import "../storage/LibPool.sol";
 
 interface IPool {

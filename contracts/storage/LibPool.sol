@@ -1,6 +1,11 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.7.0;
 
+/******************************************************************************\
+* Author: Evert Kors <dev@sherlock.xyz> (https://twitter.com/evert0x)
+* Sherlock Protocol: https://sherlock.xyz
+/******************************************************************************/
+
 import "hardhat/console.sol";
 
 import "../interfaces/lock/INativeLock.sol";

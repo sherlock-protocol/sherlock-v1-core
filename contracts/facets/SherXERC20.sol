@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.7.1;
 
+/******************************************************************************\
+* Author: Evert Kors <dev@sherlock.xyz> (https://twitter.com/evert0x)
+* Sherlock Protocol: https://sherlock.xyz
+/******************************************************************************/
+
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "diamond-2/contracts/libraries/LibDiamond.sol";
@@ -59,20 +64,18 @@ contract SherXERC20 is IERC20, ISherXERC20 {
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
         SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
 
+        LibDiamond.enforceIsContractOwner();
         require(
             bytes(sx20.name).length == 0 && bytes(sx20.symbol).length == 0,
-            "ALREADY_INITIALIZED"
+            "INIT"
         );
 
-        require(
-            bytes(_name).length != 0 && bytes(_symbol).length != 0,
-            "INVALID_PARAMS"
-        );
+        require(bytes(_name).length != 0, "NAME");
+        require(bytes(_symbol).length != 0, "SYMBOL");
 
-        require(msg.sender == ds.contractOwner, "Must own the contract.");
-
-        LibSherXERC20.mint(msg.sender, _initialSupply);
-
+        if (_initialSupply > 0) {
+            LibSherXERC20.mint(msg.sender, _initialSupply);
+        }
         sx20.name = _name;
         sx20.symbol = _symbol;
     }
@@ -98,7 +101,7 @@ contract SherXERC20 is IERC20, ISherXERC20 {
         override
         returns (bool)
     {
-        require(_spender != address(0), "SPENDER_INVALID");
+        require(_spender != address(0), "SPENDER");
         SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
         sx20.allowances[msg.sender][_spender] = sx20.allowances[msg
             .sender][_spender]
@@ -116,7 +119,7 @@ contract SherXERC20 is IERC20, ISherXERC20 {
         override
         returns (bool)
     {
-        require(_spender != address(0), "SPENDER_INVALID");
+        require(_spender != address(0), "SPENDER");
         SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
         uint256 oldValue = sx20.allowances[msg.sender][_spender];
         if (_amount > oldValue) {
@@ -137,7 +140,7 @@ contract SherXERC20 is IERC20, ISherXERC20 {
         override
         returns (bool)
     {
-        require(_spender != address(0), "SPENDER_INVALID");
+        require(_spender != address(0), "SPENDER");
         emit Approval(msg.sender, _spender, _amount);
         return LibSherXERC20.approve(msg.sender, _spender, _amount);
     }
@@ -157,7 +160,7 @@ contract SherXERC20 is IERC20, ISherXERC20 {
         uint256 _amount
     ) external override returns (bool) {
         SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
-        require(_from != address(0), "FROM_INVALID");
+        require(_from != address(0), "FROM");
 
         // Update approval if not set to max uint256
         if (sx20.allowances[_from][msg.sender] != uint256(-1)) {

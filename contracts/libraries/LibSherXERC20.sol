@@ -1,5 +1,10 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.7.1;
+// SPDX-License-Identifier: Apache-2.0
+pragma solidity ^0.7.4;
+
+/******************************************************************************\
+* Author: Evert Kors <dev@sherlock.xyz> (https://twitter.com/evert0x)
+* Sherlock Protocol: https://sherlock.xyz
+/******************************************************************************/
 
 import "../storage/LibSherXERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";

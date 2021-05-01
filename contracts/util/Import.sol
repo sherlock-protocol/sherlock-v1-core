@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.7.4;
 
+/******************************************************************************\
+* Author: Evert Kors <dev@sherlock.xyz> (https://twitter.com/evert0x)
+* Sherlock Protocol: https://sherlock.xyz
+/******************************************************************************/
+
 import "diamond-2/contracts/facets/DiamondCutFacet.sol";
 import "diamond-2/contracts/facets/DiamondLoupeFacet.sol";
 import "diamond-2/contracts/facets/OwnershipFacet.sol";
