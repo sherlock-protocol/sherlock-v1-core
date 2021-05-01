@@ -50,8 +50,7 @@ interface ISherX {
 
     function redeem(uint256 _amount, address _receiver) external;
 
-    // getUnmaterializedSherX()
-    function getWithdrawableFeeAmount(address _user, address _token)
+    function getTotalUnmaterializedSherX(address _user, address _token)
         external
         view
         returns (uint256 withdrawable_amount);

@@ -70,9 +70,9 @@ module.exports = {
       const is = parseEther(val);
       let need;
       if (key == "total") {
-        need = await insure.getStakersTVL(token.address);
+        need = await insure.getStakersPoolBalance(token.address);
       } else {
-        need = await insure.getStakerTVL(key, token.address);
+        need = await insure.getStakerPoolBalance(key, token.address);
       }
       if (!need.eq(is)) {
         throw new Error(await errorMsg(i, key, token, need, is));

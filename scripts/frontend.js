@@ -55,8 +55,8 @@ async function main() {
   await insure.tokenAdd(tokenWETH.address, stakeWETH.address, owner.address);
 
   // Set withdraw variables
-  await insure.setTimeLock(10);
-  await insure.setClaimPeriod(5);
+  await insure.setCooldown(10);
+  await insure.setUnstakeWindow(5);
 
   // Add protocols
   await insure.protocolAdd(PROTOCOL_1, owner.address, owner.address);

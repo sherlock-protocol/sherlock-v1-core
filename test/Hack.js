@@ -85,7 +85,7 @@ describe("Hack tests", function () {
       tokenB.address
     );
 
-    await insure.setClaimPeriod(2);
+    await insure.setUnstakeWindow(2);
     await insure.setWeights([tokenA.address], [parseEther("1")]);
 
     await timeTraveler.snapshot();
@@ -111,7 +111,7 @@ describe("Hack tests", function () {
 
       await mine(9);
 
-      const fee = await insure.getWithdrawableFeeAmount(
+      const fee = await insure.getTotalUnmaterializedSherX(
         owner.address,
         tokenA.address
       );
@@ -137,7 +137,7 @@ describe("Hack tests", function () {
         [parseEther("6")]
       );
 
-      const fee = await insure.getWithdrawableFeeAmount(
+      const fee = await insure.getTotalUnmaterializedSherX(
         owner.address,
         tokenA.address
       );
@@ -163,7 +163,7 @@ describe("Hack tests", function () {
         [0]
       );
 
-      const fee = await insure.getWithdrawableFeeAmount(
+      const fee = await insure.getTotalUnmaterializedSherX(
         owner.address,
         tokenA.address
       );
@@ -176,14 +176,14 @@ describe("Hack tests", function () {
       );
     });
     it("Yes hack, fmo", async function () {
-      await insure.setExitFee(parseEther("0.5"), tokenA.address);
+      await insure.setCooldownFee(parseEther("0.5"), tokenA.address);
 
       await insure.stake(parseEther("20"), owner.address, tokenA.address);
 
       await mine(5);
 
-      await insure.withdrawStake(parseEther("0.5"), tokenA.address);
-      await insure.withdrawClaim(0, owner.address, tokenA.address);
+      await insure.activateCooldown(parseEther("0.5"), tokenA.address);
+      await insure.unstake(0, owner.address, tokenA.address);
 
       // 5/10 tokens go to fmo pool.
 
@@ -195,13 +195,13 @@ describe("Hack tests", function () {
         [0]
       );
 
-      const fee = await insure.getWithdrawableFeeAmount(
+      const fee = await insure.getTotalUnmaterializedSherX(
         owner.address,
         tokenA.address
       );
 
       // 0.33 because it is 1/3 of the current pool (0.25 stake)
-      // As 0.25 is burned in withdrawStake as exit fee
+      // As 0.25 is burned in activateCooldown as exit fee
       // So 1 FEE is divided among all stake (which is 0.75)
       // And pool holds 0.25 stake for 1 block
       await expect(await insure.getFirstMoneyOut(insure.address)).to.eq(

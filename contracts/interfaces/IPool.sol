@@ -5,17 +5,15 @@ pragma abicoder v2;
 import "../storage/LibPool.sol";
 
 interface IPool {
-    // setCooldownFee
-    function setExitFee(uint256 _fee, address _token) external;
+    function setCooldownFee(uint256 _fee, address _token) external;
 
-    function getExitFee(address _token) external view returns (uint256);
+    function getCooldownFee(address _token) external view returns (uint256);
 
     function getGovPool(address _token) external view returns (address);
 
     function isInitialized(address _token) external view returns (bool);
 
-    // isStake()
-    function isDeposit(address _token) external view returns (bool);
+    function isStake(address _token) external view returns (bool);
 
     function getProtocolBalance(bytes32 _protocol, address _token)
         external
@@ -27,8 +25,7 @@ interface IPool {
         view
         returns (uint256);
 
-    // getLockToken()
-    function getStakeToken(address _token) external view returns (address);
+    function getLockToken(address _token) external view returns (address);
 
     function isProtocol(bytes32 _protocol, address _token)
         external
@@ -59,30 +56,26 @@ interface IPool {
         address _token
     ) external returns (uint256);
 
-    // activateCooldown()
-    function withdrawStake(uint256 _amount, address _token)
+    function activateCooldown(uint256 _amount, address _token)
         external
         returns (uint256);
 
-    // cancelCooldown()
-    function withdrawCancel(uint256 _id, address _token) external;
+    function cancelCooldown(uint256 _id, address _token) external;
 
-    // unstakeWindowExpiry()
-    function withdrawPurge(
+    function unstakeWindowExpiry(
         address _account,
         uint256 _id,
         address _token
     ) external;
 
-    // unstake()
-    function withdrawClaim(
+    function unstake(
         uint256 _id,
         address _receiver,
         address _token
     ) external returns (uint256 amount);
 
     // getUnstakeEntry
-    function getWithdrawal(
+    function getUnstakeEntry(
         address _staker,
         uint256 _id,
         address _token
@@ -109,23 +102,19 @@ interface IPool {
 
     function getPremiumLastPaid(address _token) external view returns (uint256);
 
-    // getUnstakeEntrySize()
-    function getWithdrawalSize(address _staker, address _token)
+    function getUnstakeEntrySize(address _staker, address _token)
         external
         view
         returns (uint256);
 
-    // getInitialUnstakeEntry()
-    function getWithrawalInitialIndex(address _staker, address _token)
+    function getInitialUnstakeEntry(address _staker, address _token)
         external
         view
         returns (uint256);
 
-    // getStakersPoolBalance()
-    function getStakersTVL(address _token) external view returns (uint256);
+    function getStakersPoolBalance(address _token) external view returns (uint256);
 
-    // getStakerPoolBalance()
-    function getStakerTVL(address _staker, address _token)
+    function getStakerPoolBalance(address _staker, address _token)
         external
         view
         returns (uint256);
@@ -135,6 +124,7 @@ interface IPool {
     //     view
     //     returns (uint256);
 
+    // TODO
     // xRateLockToToken
     // xRateTokenToLock
     function exchangeRate(address _token) external view returns (uint256);
@@ -147,8 +137,7 @@ interface IPool {
         address _token
     ) external;
 
-    // getUnmaterializedSherX
-    function getUnmaterializedFee(address _token)
+    function getUnmaterializedSherX(address _token)
         external
         view
         returns (uint256);

@@ -94,7 +94,7 @@ describe("Stake swap tests", function () {
       tokenB.address
     );
 
-    await insure.setClaimPeriod(2);
+    await insure.setUnstakeWindow(2);
     await insure.setWeights([tokenA.address], [parseEther("1")]);
 
     const ApremiumPerBlock = parseEther("1000");
@@ -124,8 +124,8 @@ describe("Stake swap tests", function () {
 
         await mine(9);
         // harvest
-        await sherlockSwap.withdrawStake(parseEther("1"), stakeA.address);
-        await sherlockSwap.withdrawClaimSwap(
+        await sherlockSwap.activateCooldown(parseEther("1"), stakeA.address);
+        await sherlockSwap.unstakeSwap(
           0,
           parseEther("2"),
           // FEE --> TokenA
@@ -156,8 +156,8 @@ describe("Stake swap tests", function () {
         await insure.harvest(stakeA.address);
         await mine(4);
         // harvest
-        await sherlockSwap.withdrawStake(parseEther("1"), stakeA.address);
-        await sherlockSwap.withdrawClaimSwap(
+        await sherlockSwap.activateCooldown(parseEther("1"), stakeA.address);
+        await sherlockSwap.unstakeSwap(
           0,
           parseEther("1"),
           // FEE --> TokenA
@@ -181,21 +181,21 @@ describe("Stake swap tests", function () {
         //await insure.tokenAdd(tokenB.address, stakeB.address, owner.address);
       });
       it("exit fee, non harvest", async function () {
-        await insure.setExitFee(hundredPercent.div(2), insure.address);
+        await insure.setCooldownFee(hundredPercent.div(2), insure.address);
         // stake
         await insure.stake(parseEther("10"), owner.address, tokenA.address);
 
         await mine(9);
         // harvest
         const b1 = await blockNumber(
-          await sherlockSwap.withdrawStake(parseEther("1"), stakeA.address)
+          await sherlockSwap.activateCooldown(parseEther("1"), stakeA.address)
         );
 
         const expectedFeeCut = b1.sub(b0).mul(parseEther("1")).div(2); // takes 50% of all fees withdrawn
         expect(await insure.getFirstMoneyOut(insure.address)).to.eq(
           expectedFeeCut
         );
-        await sherlockSwap.withdrawClaimSwap(
+        await sherlockSwap.unstakeSwap(
           0,
           parseEther("2"),
           // FEE --> TokenA
@@ -225,7 +225,7 @@ describe("Stake swap tests", function () {
 
         // 0-12 --> deposited (fee is executed later stage)
         // 12-16 --> withdrawn
-        await insure.setExitFee(hundredPercent.div(2), insure.address);
+        await insure.setCooldownFee(hundredPercent.div(2), insure.address);
 
         // stake
         await insure.stake(parseEther("10"), owner.address, tokenA.address);
@@ -236,13 +236,13 @@ describe("Stake swap tests", function () {
         // harvest
 
         const b2 = await blockNumber(
-          sherlockSwap.withdrawStake(parseEther("1"), stakeA.address)
+          sherlockSwap.activateCooldown(parseEther("1"), stakeA.address)
         );
         const expectedFeeCut = b2.sub(b0).mul(parseEther("1")).div(2); // takes 50% of all fees withdrawn
         expect(await insure.getFirstMoneyOut(insure.address)).to.eq(
           expectedFeeCut
         );
-        await sherlockSwap.withdrawClaimSwap(
+        await sherlockSwap.unstakeSwap(
           0,
           parseEther("1"),
           // FEE --> TokenA
@@ -344,7 +344,7 @@ describe("Stake swap tests, changing weights", function () {
       tokenB.address
     );
 
-    await insure.setClaimPeriod(2);
+    await insure.setUnstakeWindow(2);
     await insure.setWeights(
       [tokenA.address, insure.address],
       [parseEther("0.5"), parseEther("0.5")]
@@ -377,8 +377,8 @@ describe("Stake swap tests, changing weights", function () {
 
         await mine(9);
         // harvest
-        await sherlockSwap.withdrawStake(parseEther("1"), stakeA.address);
-        await sherlockSwap.withdrawClaimSwap(
+        await sherlockSwap.activateCooldown(parseEther("1"), stakeA.address);
+        await sherlockSwap.unstakeSwap(
           0,
           parseEther("2"),
           // FEE --> TokenA
@@ -409,8 +409,8 @@ describe("Stake swap tests, changing weights", function () {
         await insure.harvest(stakeA.address);
         await mine(4);
         // harvest
-        await sherlockSwap.withdrawStake(parseEther("1"), stakeA.address);
-        await sherlockSwap.withdrawClaimSwap(
+        await sherlockSwap.activateCooldown(parseEther("1"), stakeA.address);
+        await sherlockSwap.unstakeSwap(
           0,
           parseEther("1"),
           // FEE --> TokenA
@@ -435,14 +435,14 @@ describe("Stake swap tests, changing weights", function () {
         //await insure.tokenAdd(tokenB.address, stakeB.address, owner.address);
       });
       it("exit fee, non harvest", async function () {
-        await insure.setExitFee(hundredPercent.div(2), insure.address);
+        await insure.setCooldownFee(hundredPercent.div(2), insure.address);
         // stake
         await insure.stake(parseEther("10"), owner.address, tokenA.address);
 
         await mine(9);
         // harvest
         const b1 = await blockNumber(
-          sherlockSwap.withdrawStake(parseEther("1"), stakeA.address)
+          sherlockSwap.activateCooldown(parseEther("1"), stakeA.address)
         );
 
         const expectedFeeCut = b1.sub(b0).mul(parseEther("1")).div(2); // takes 50% of all fees withdrawn
@@ -453,7 +453,7 @@ describe("Stake swap tests, changing weights", function () {
           expectedFeeCut
         );
 
-        await sherlockSwap.withdrawClaimSwap(
+        await sherlockSwap.unstakeSwap(
           0,
           parseEther("2"),
           // FEE --> TokenA
@@ -485,7 +485,7 @@ describe("Stake swap tests, changing weights", function () {
 
         // 0-12 --> deposited (fee is executed later stage)
         // 12-16 --> withdrawn
-        await insure.setExitFee(hundredPercent.div(2), insure.address);
+        await insure.setCooldownFee(hundredPercent.div(2), insure.address);
         // stake
         await insure.stake(parseEther("10"), owner.address, tokenA.address);
         await mine(4);
@@ -495,14 +495,14 @@ describe("Stake swap tests, changing weights", function () {
         // harvest
 
         const b2 = await blockNumber(
-          sherlockSwap.withdrawStake(parseEther("1"), stakeA.address)
+          sherlockSwap.activateCooldown(parseEther("1"), stakeA.address)
         );
         const expectedFeeCut = b2.sub(b0).mul(parseEther("1")).div(2); // takes 50% of all fees withdrawn
         // User does not get any extra fees as it is distributed to the stake fee pool
         expect(await insure.getFirstMoneyOut(insure.address)).to.eq(
           expectedFeeCut.sub(8)
         );
-        await sherlockSwap.withdrawClaimSwap(
+        await sherlockSwap.unstakeSwap(
           0,
           parseEther("1"),
           // FEE --> TokenA

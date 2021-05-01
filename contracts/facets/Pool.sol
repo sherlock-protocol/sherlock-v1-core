@@ -19,7 +19,7 @@ contract Pool {
     using SafeERC20 for IERC20;
     using SafeERC20 for INativeStake;
 
-    function setExitFee(uint256 _fee) external {
+    function setCooldownFee(uint256 _fee) external {
         require(msg.sender == GovStorage.gs().govInsurance, "NOT_GOV");
         require(_fee <= 10**18, "MAX_VALUE");
 
@@ -27,7 +27,7 @@ contract Pool {
         ps.activateCooldownFee = _fee;
     }
 
-    function getExitFee() external view returns (uint256) {
+    function getCooldownFee() external view returns (uint256) {
         (, PoolStorage.Base storage ps) = baseData();
         return ps.activateCooldownFee;
     }
@@ -42,7 +42,7 @@ contract Pool {
         return ps.initialized;
     }
 
-    function isDeposit(address _token) external view returns (bool) {
+    function isStake(address _token) external view returns (bool) {
         (, PoolStorage.Base storage ps) = baseData();
         return ps.stakes;
     }
@@ -65,7 +65,7 @@ contract Pool {
         return ps.protocolPremium[_protocol];
     }
 
-    function getStakeToken(address _token) external view returns (address) {
+    function getLockToken(address _token) external view returns (address) {
         (, PoolStorage.Base storage ps) = baseData();
         return address(ps.stakeToken);
     }
@@ -205,18 +205,18 @@ contract Pool {
         return ps.firstMoneyOut;
     }
 
-    function getStakersTVL() public view returns (uint256) {
+    function getStakersPoolBalance() public view returns (uint256) {
         (IERC20 _token, PoolStorage.Base storage ps) = baseData();
         return ps.stakeBalance;
     }
 
-    function getStakerTVL(address _staker) external view returns (uint256) {
+    function getStakerPoolBalance(address _staker) external view returns (uint256) {
         (, PoolStorage.Base storage ps) = baseData();
         if (ps.stakeToken.totalSupply() == 0) {
             return 0;
         }
         return
-            ps.stakeToken.balanceOf(_staker).mul(getStakersTVL()).div(
+            ps.stakeToken.balanceOf(_staker).mul(getStakersPoolBalance()).div(
                 ps.stakeToken.totalSupply()
             );
     }
@@ -234,7 +234,7 @@ contract Pool {
         stake = LibPool.stake(ps, _amount, _receiver);
     }
 
-    function withdrawStake(uint256 _amount) external returns (uint256) {
+    function activateCooldown(uint256 _amount) external returns (uint256) {
         require(_amount > 0, "AMOUNT");
         (IERC20 token, PoolStorage.Base storage ps) = baseData();
 
@@ -264,7 +264,7 @@ contract Pool {
         return ps.unstakeEntries[msg.sender].length - 1;
     }
 
-    function withdrawCancel(uint256 _id) external {
+    function cancelCooldown(uint256 _id) external {
         (IERC20 token, PoolStorage.Base storage ps) = baseData();
         GovStorage.Base storage gs = GovStorage.gs();
 
@@ -280,7 +280,7 @@ contract Pool {
         delete ps.unstakeEntries[msg.sender][_id];
     }
 
-    function withdrawPurge(address _account, uint256 _id) external {
+    function unstakeWindowExpiry(address _account, uint256 _id) external {
         (IERC20 token, PoolStorage.Base storage ps) = baseData();
         GovStorage.Base storage gs = GovStorage.gs();
 
@@ -290,7 +290,7 @@ contract Pool {
 
         require(
             withdraw.blockInitiated.add(gs.withdrawTimeLock).add(
-                gs.withdrawClaimPeriod
+                gs.unstakePeriod
             ) < block.number,
             "CLAIMPERIOD_NOT_EXPIRED"
         );
@@ -298,12 +298,12 @@ contract Pool {
         delete ps.unstakeEntries[_account][_id];
     }
 
-    function getUnmaterializedFee() external view returns (uint256) {
+    function getUnmaterializedSherX() external view returns (uint256) {
         (, PoolStorage.Base storage ps) = baseData();
         return ps.unmaterializedSherX;
     }
 
-    function withdrawClaim(uint256 _id, address _receiver)
+    function unstake(uint256 _id, address _receiver)
         external
         returns (uint256 amount)
     {
@@ -321,22 +321,21 @@ contract Pool {
         // claim period is including, TODO should it be including?
         require(
             withdraw.blockInitiated.add(gs.withdrawTimeLock).add(
-                gs.withdrawClaimPeriod
+                gs.unstakePeriod
             ) > block.number,
             "CLAIMPERIOD_EXPIRED"
         );
         amount = withdraw.stake.mul(ps.stakeBalance).div(
             ps.stakeToken.totalSupply()
         );
-        // TODO get fee tokens from timelock (and swap for native) (in timelock lib)
+
         ps.stakeBalance = ps.stakeBalance.sub(amount);
         ps.stakeToken.burn(address(this), withdraw.stake);
-        // TODO send fee tokens
         delete ps.unstakeEntries[msg.sender][_id];
         token.safeTransfer(_receiver, amount);
     }
 
-    function getWithdrawal(address _staker, uint256 _id)
+    function getUnstakeEntry(address _staker, uint256 _id)
         external
         view
         returns (PoolStorage.UnstakeEntry memory)
@@ -350,7 +349,7 @@ contract Pool {
         return ps.totalPremiumLastPaid;
     }
 
-    function getWithdrawalSize(address _staker)
+    function getUnstakeEntrySize(address _staker)
         external
         view
         returns (uint256)
@@ -359,7 +358,7 @@ contract Pool {
         return ps.unstakeEntries[_staker].length;
     }
 
-    function getWithrawalInitialIndex(address _staker)
+    function getInitialUnstakeEntry(address _staker)
         external
         view
         returns (uint256)
@@ -374,7 +373,7 @@ contract Pool {
                 ps.unstakeEntries[_staker][i]
                     .blockInitiated
                     .add(gs.withdrawTimeLock)
-                    .add(gs.withdrawClaimPeriod) <= block.number
+                    .add(gs.unstakePeriod) <= block.number
             ) {
                 continue;
             }

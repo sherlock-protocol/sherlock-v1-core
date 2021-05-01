@@ -44,8 +44,8 @@ describe("Gov Insurance tests", function () {
   });
   it("Initial state", async function () {
     expect(await insure.getGovInsurance()).to.eq(owner.address);
-    expect(await insure.getClaimPeriod()).to.eq(0);
-    expect(await insure.getTimeLock()).to.eq(0);
+    expect(await insure.getUnstakeWindow()).to.eq(0);
+    expect(await insure.getCooldown()).to.eq(0);
     expect(await insure.getProtocolIsCovered(PROTOCOL_X)).to.eq(false);
     expect(await insure.getProtocolManager(PROTOCOL_X)).to.eq(
       constants.AddressZero
@@ -69,22 +69,22 @@ describe("Gov Insurance tests", function () {
       expect(await insure.getGovInsurance()).to.eq(alice.address);
     });
   });
-  describe("setClaimPeriod()", function () {
+  describe("setUnstakeWindow()", function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
     });
     it("Set", async function () {
-      await insure.setClaimPeriod(100);
-      expect(await insure.getClaimPeriod()).to.eq(100);
+      await insure.setUnstakeWindow(100);
+      expect(await insure.getUnstakeWindow()).to.eq(100);
     });
   });
-  describe("setTimeLock()", function () {
+  describe("setCooldown()", function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
     });
     it("Set", async function () {
-      await insure.setTimeLock(500);
-      expect(await insure.getTimeLock()).to.eq(500);
+      await insure.setCooldown(500);
+      expect(await insure.getCooldown()).to.eq(500);
     });
   });
   describe("protocolAdd()", function () {
@@ -194,9 +194,9 @@ describe("Gov Insurance tests", function () {
       expect(tokens[0]).to.eq(tokenA.address);
 
       expect(await insure.isInitialized(tokenA.address)).to.eq(true);
-      expect(await insure.isDeposit(tokenA.address)).to.eq(true);
+      expect(await insure.isStake(tokenA.address)).to.eq(true);
       expect(await insure.getGovPool(tokenA.address)).to.eq(owner.address);
-      expect(await insure.getStakeToken(tokenA.address)).to.eq(stakeA.address);
+      expect(await insure.getLockToken(tokenA.address)).to.eq(stakeA.address);
     });
   });
   describe("tokenDisable()", function () {
@@ -212,9 +212,9 @@ describe("Gov Insurance tests", function () {
       expect(tokens[0]).to.eq(tokenA.address);
 
       expect(await insure.isInitialized(tokenA.address)).to.eq(true);
-      expect(await insure.isDeposit(tokenA.address)).to.eq(false);
+      expect(await insure.isStake(tokenA.address)).to.eq(false);
       expect(await insure.getGovPool(tokenA.address)).to.eq(owner.address);
-      expect(await insure.getStakeToken(tokenA.address)).to.eq(stakeA.address);
+      expect(await insure.getLockToken(tokenA.address)).to.eq(stakeA.address);
     });
   });
   describe("tokenRemove()", function () {

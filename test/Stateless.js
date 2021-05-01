@@ -297,108 +297,112 @@ describe("static tests", function () {
         // todo assert events
       });
     });
-    describe("withdrawStake()", function () {
+    describe("activateCooldown()", function () {
       it("Invalid sender", async function () {
         await expect(
-          insure.connect(alice).withdrawStake(parseEther("0.5"), tokenA.address)
+          insure
+            .connect(alice)
+            .activateCooldown(parseEther("0.5"), tokenA.address)
         ).to.be.reverted;
       });
       it("Invalid amount (zero)", async function () {
         await expect(
-          insure.withdrawStake(0, tokenA.address)
+          insure.activateCooldown(0, tokenA.address)
         ).to.be.revertedWith("AMOUNT");
       });
       it("Invalid token", async function () {
         await expect(
-          insure.withdrawStake(parseEther("0.5"), NON_TOKEN)
+          insure.activateCooldown(parseEther("0.5"), NON_TOKEN)
         ).to.be.revertedWith("INVALID_TOKEN");
       });
       it("Invalid token (zero)", async function () {
         await expect(
-          insure.withdrawStake(parseEther("0.5"), constants.AddressZero)
+          insure.activateCooldown(parseEther("0.5"), constants.AddressZero)
         ).to.be.revertedWith("INVALID_TOKEN");
       });
       it("Success", async function () {
-        await insure.withdrawStake(parseEther("0.5"), tokenA.address);
+        await insure.activateCooldown(parseEther("0.5"), tokenA.address);
         // todo assert events
       });
     });
-    describe("withdrawCancel()", function () {
+    describe("cancelCooldown()", function () {
       it("Invalid sender", async function () {
-        await expect(insure.connect(alice).withdrawCancel(0, tokenA.address)).to
+        await expect(insure.connect(alice).cancelCooldown(0, tokenA.address)).to
           .be.reverted;
       });
       it("Invalid id", async function () {
-        await expect(insure.withdrawCancel(1, tokenA.address)).to.be.reverted;
+        await expect(insure.cancelCooldown(1, tokenA.address)).to.be.reverted;
       });
       it("Invalid token", async function () {
-        await expect(insure.withdrawCancel(1, NON_TOKEN)).to.be.revertedWith(
+        await expect(insure.cancelCooldown(1, NON_TOKEN)).to.be.revertedWith(
           "INVALID_TOKEN"
         );
       });
       it("Invalid token (zero)", async function () {
         await expect(
-          insure.withdrawCancel(1, constants.AddressZero)
+          insure.cancelCooldown(1, constants.AddressZero)
         ).to.be.revertedWith("INVALID_TOKEN");
       });
       // Requires more state
       it("Success", async function () {
         await expect(
-          insure.withdrawCancel(0, tokenA.address)
+          insure.cancelCooldown(0, tokenA.address)
         ).to.be.revertedWith("TIMELOCK_EXPIRED");
         // todo assert events
       });
     });
-    describe("withdrawPurge()", function () {
+    describe("unstakeWindowExpiry()", function () {
       it("Invalid account", async function () {
-        await expect(insure.withdrawPurge(alice.address, 0, tokenA.address)).to
-          .be.reverted;
+        await expect(
+          insure.unstakeWindowExpiry(alice.address, 0, tokenA.address)
+        ).to.be.reverted;
       });
       it("Invalid account (zero)", async function () {
         await expect(
-          insure.withdrawPurge(constants.AddressZero, 0, tokenA.address)
+          insure.unstakeWindowExpiry(constants.AddressZero, 0, tokenA.address)
         ).to.be.reverted;
       });
       it("Invalid id", async function () {
-        await expect(insure.withdrawPurge(owner.address, 1, tokenA.address)).to
-          .be.reverted;
+        await expect(
+          insure.unstakeWindowExpiry(owner.address, 1, tokenA.address)
+        ).to.be.reverted;
       });
       it("Invalid token", async function () {
         await expect(
-          insure.withdrawPurge(owner.address, 0, NON_TOKEN)
+          insure.unstakeWindowExpiry(owner.address, 0, NON_TOKEN)
         ).to.be.revertedWith("INVALID_TOKEN");
       });
       it("Invalid token (zero)", async function () {
         await expect(
-          insure.withdrawPurge(owner.address, 0, constants.AddressZero)
+          insure.unstakeWindowExpiry(owner.address, 0, constants.AddressZero)
         ).to.be.revertedWith("INVALID_TOKEN");
       });
       it("Success", async function () {
-        await insure.withdrawPurge(owner.address, 0, tokenA.address);
+        await insure.unstakeWindowExpiry(owner.address, 0, tokenA.address);
       });
     });
-    describe("withdrawClaim()", function () {
+    describe("unstake()", function () {
       it("Invalid sender", async function () {
         await expect(
-          insure.connect(alice).withdrawClaim(0, alice.address, tokenA.address)
+          insure.connect(alice).unstake(0, alice.address, tokenA.address)
         ).to.be.reverted;
       });
       it("Invalid id", async function () {
-        await expect(insure.withdrawClaim(1, tokenA.address)).to.be.reverted;
+        await expect(insure.unstake(1, tokenA.address)).to.be.reverted;
       });
       it("Invalid token", async function () {
         await expect(
-          insure.withdrawClaim(0, owner.address, NON_TOKEN)
+          insure.unstake(0, owner.address, NON_TOKEN)
         ).to.be.revertedWith("INVALID_TOKEN");
       });
       it("Invalid token (zero)", async function () {
         await expect(
-          insure.withdrawClaim(0, owner.address, constants.AddressZero)
+          insure.unstake(0, owner.address, constants.AddressZero)
         ).to.be.revertedWith("INVALID_TOKEN");
       });
       it("Success", async function () {
         await expect(
-          insure.withdrawClaim(0, owner.address, tokenA.address)
+          insure.unstake(0, owner.address, tokenA.address)
         ).to.be.revertedWith("WITHDRAW_NOT_ACTIVE");
       });
     });
@@ -406,26 +410,26 @@ describe("static tests", function () {
   describe("Pool ─ View Methods", function () {
     describe("getGovPool()", function () {});
     describe("isInitialized()", function () {});
-    describe("isDeposit()", function () {});
+    describe("isStake()", function () {});
     describe("getProtocolBalance()", function () {});
     describe("getProtocolPremium()", function () {});
-    describe("getStakeToken()", function () {});
+    describe("getLockToken()", function () {});
     describe("isProtocol()", function () {});
     describe("getProtocols()", function () {});
     describe("getAccruedDebt()", function () {});
     describe("getTotalAccruedDebt()", function () {});
-    describe("getWithdrawal()", function () {});
+    describe("getUnstakeEntry()", function () {});
     describe("getTotalPremiumPerBlock()", function () {});
     describe("getFirstMoneyOut()", function () {});
     describe("getPremiumLastPaid()", function () {});
-    describe("getWithdrawalSize()", function () {});
-    describe("getWithrawalInitialIndex()", function () {});
-    describe("getStakersTVL()", function () {});
-    describe("getStakerTVL()", function () {});
+    describe("getUnstakeEntrySize()", function () {});
+    describe("getInitialUnstakeEntry()", function () {});
+    describe("getStakersPoolBalance()", function () {});
+    describe("getStakerPoolBalance()", function () {});
     describe("exchangeRate()", function () {});
   });
   describe("Gov ─ State Changing", function () {
-    //describe("setExitFee()", function () {});
+    //describe("setCooldownFee()", function () {});
     describe("setInitialGovInsurance()", function () {
       it("Invalid sender", async function () {
         await expect(
@@ -464,24 +468,24 @@ describe("static tests", function () {
         await insure.connect(alice).transferGovInsurance(owner.address);
       });
     });
-    describe("setClaimPeriod()", function () {
+    describe("setUnstakeWindow()", function () {
       it("Invalid sender", async function () {
         await expect(
-          insure.connect(alice).setClaimPeriod(1)
+          insure.connect(alice).setUnstakeWindow(1)
         ).to.be.revertedWith("NOT_GOV");
       });
       it("Success", async function () {
-        await insure.setClaimPeriod(1);
+        await insure.setUnstakeWindow(1);
       });
     });
-    describe("setTimeLock()", function () {
+    describe("setCooldown()", function () {
       it("Invalid sender", async function () {
-        await expect(insure.connect(alice).setTimeLock(1)).to.be.revertedWith(
+        await expect(insure.connect(alice).setCooldown(1)).to.be.revertedWith(
           "NOT_GOV"
         );
       });
       it("Success", async function () {
-        await insure.setTimeLock(1);
+        await insure.setCooldown(1);
       });
     });
     describe("protocolAdd()", function () {
@@ -663,9 +667,9 @@ describe("static tests", function () {
   });
   describe("Gov ─ View Methods", function () {
     describe("getGovInsurance()", function () {});
-    //describe("getExitFee()", function () {});
-    describe("getClaimPeriod()", function () {});
-    describe("getTimeLock()", function () {});
+    //describe("getCooldownFee()", function () {});
+    describe("getUnstakeWindow()", function () {});
+    describe("getCooldown()", function () {});
     describe("getTokens()", function () {});
     describe("getProtocolIsCovered()", function () {});
     describe("getProtocolManager()", function () {});

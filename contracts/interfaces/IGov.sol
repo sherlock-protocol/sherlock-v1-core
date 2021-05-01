@@ -10,17 +10,13 @@ interface IGov {
 
     function getGovInsurance() external view returns (address);
 
-    // setUnstakeWindow()
-    function setClaimPeriod(uint256 _claimPeriod) external;
+    function setUnstakeWindow(uint256 _claimPeriod) external;
 
-    // setCooldown()
-    function setTimeLock(uint256 _timeLock) external;
+    function setCooldown(uint256 _timeLock) external;
 
-    // same
-    function getClaimPeriod() external view returns (uint256 claimPeriod);
+    function getUnstakeWindow() external view returns (uint256 claimPeriod);
 
-    // same
-    function getTimeLock() external view returns (uint256 timeLock);
+    function getCooldown() external view returns (uint256 timeLock);
 
     function getTokens() external view returns (IERC20[] memory tokens);
 

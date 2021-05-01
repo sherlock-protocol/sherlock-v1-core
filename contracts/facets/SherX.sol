@@ -21,7 +21,7 @@ contract SherX is ISherX {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
-    // todo harvest(address[]), loop over all tokens user holds and redeem fees
+    // todo harvest(address[]), loop over all tokens user holds and redeem SherXs
 
     function harvest(address _token) external override {
         harvestFor(_token, msg.sender);
@@ -192,7 +192,7 @@ contract SherX is ISherX {
     }
 
     // TODO need to make sure this matches the actual fee amount
-    function getWithdrawableFeeAmount(address _user, address _token)
+    function getTotalUnmaterializedSherX(address _user, address _token)
         external
         override
         view
@@ -221,7 +221,7 @@ contract SherX is ISherX {
         address underlying = IForeignStake(token).underlying();
         PoolStorage.Base storage ps = PoolStorage.ps(underlying);
         require(address(ps.stakeToken) == token, "Unexpected sender");
-        // mint / transfer FEE tokens, triggered by withdraw + transfer
+        
         LibSherX.accrueSherX();
 
         uint256 userAmount = ps.stakeToken.balanceOf(from);
@@ -246,7 +246,7 @@ contract SherX is ISherX {
                 );
                 PoolStorage.Base storage psFee = PoolStorage.ps(address(this));
                 if (from == address(this)) {
-                    // add fee harvested by the pool itself to first money out pool.
+                    // add SherX harvested by the pool itself to first money out pool.
                     psFee.firstMoneyOut = psFee.firstMoneyOut.add(
                         withdrawable_amount
                     );

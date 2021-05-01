@@ -77,7 +77,7 @@ describe("Fee tests", function () {
       tokenB.address
     );
 
-    await insure.setClaimPeriod(2);
+    await insure.setUnstakeWindow(2);
     await timeTraveler.snapshot();
   });
   describe("stake(), multi", function () {
@@ -114,14 +114,12 @@ describe("Fee tests", function () {
         [owner.address, alice.address],
         [stakeB.address]
       );
-      await insure.withdrawStake(parseEther("1"), insure.address);
-      await insure.withdrawClaim(0, owner.address, insure.address);
+      await insure.activateCooldown(parseEther("1"), insure.address);
+      await insure.unstake(0, owner.address, insure.address);
       await insure
         .connect(alice)
-        .withdrawStake(parseEther("1"), insure.address);
-      await insure
-        .connect(alice)
-        .withdrawClaim(0, alice.address, insure.address);
+        .activateCooldown(parseEther("1"), insure.address);
+      await insure.connect(alice).unstake(0, alice.address, insure.address);
 
       expect(await insure.totalSupply()).to.eq(parseEther("24"));
       expect(await insure.balanceOf(owner.address)).to.eq(parseEther("12"));
@@ -154,10 +152,8 @@ describe("Fee tests", function () {
         [stakeB.address]
       );
       const stakeCarol = await stakeFee.balanceOf(carol.address);
-      await insure.connect(carol).withdrawStake(stakeCarol, insure.address);
-      await insure
-        .connect(carol)
-        .withdrawClaim(0, carol.address, insure.address);
+      await insure.connect(carol).activateCooldown(stakeCarol, insure.address);
+      await insure.connect(carol).unstake(0, carol.address, insure.address);
 
       const fee = await insure.balanceOf(carol.address);
 
@@ -215,18 +211,19 @@ describe("Fee tests", function () {
         [owner.address],
         [stakeB.address]
       );
-      await insure.withdrawStake(
+      await insure.activateCooldown(
         await stakeFee.balanceOf(owner.address),
         insure.address
       );
-      await insure.withdrawClaim(0, owner.address, insure.address);
+      await insure.unstake(0, owner.address, insure.address);
 
       await insure
         .connect(alice)
-        .withdrawStake(await stakeFee.balanceOf(alice.address), insure.address);
-      await insure
-        .connect(alice)
-        .withdrawClaim(0, alice.address, insure.address);
+        .activateCooldown(
+          await stakeFee.balanceOf(alice.address),
+          insure.address
+        );
+      await insure.connect(alice).unstake(0, alice.address, insure.address);
 
       expect(await insure.totalSupply()).to.eq(parseEther("24"));
       expect(await insure.balanceOf(owner.address)).to.eq(

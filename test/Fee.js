@@ -908,7 +908,7 @@
 //       await insure
 //         .connect(alice)
 //         .stake(parseEther("10"), alice.address, tokenA.address);
-//       await insure.withdrawStake(parseEther("0.5"), tokenA.address);
+//       await insure.activateCooldown(parseEther("0.5"), tokenA.address);
 
 //       await mine(3);
 
@@ -1021,7 +1021,7 @@
 //       await mine(8);
 
 //       const b = await blockNumber(
-//         insure.withdrawStake(parseEther("1"), tokenA.address)
+//         insure.activateCooldown(parseEther("1"), tokenA.address)
 //       );
 
 //       // t = 20

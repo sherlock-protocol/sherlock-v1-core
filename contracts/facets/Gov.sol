@@ -49,31 +49,31 @@ contract Gov is IGov {
         GovStorage.gs().govInsurance = _govInsurance;
     }
 
-    function setClaimPeriod(uint256 _claimPeriod)
+    function setUnstakeWindow(uint256 _claimPeriod)
         external
         override
         onlyGovInsurance
     {
         GovStorage.Base storage gs = GovStorage.gs();
-        gs.withdrawClaimPeriod = _claimPeriod;
+        gs.unstakePeriod = _claimPeriod;
     }
 
-    function setTimeLock(uint256 _timeLock) external override onlyGovInsurance {
+    function setCooldown(uint256 _timeLock) external override onlyGovInsurance {
         GovStorage.Base storage gs = GovStorage.gs();
         gs.withdrawTimeLock = _timeLock;
     }
 
-    function getClaimPeriod()
+    function getUnstakeWindow()
         external
         override
         view
         returns (uint256 claimPeriod)
     {
         GovStorage.Base storage gs = GovStorage.gs();
-        claimPeriod = gs.withdrawClaimPeriod;
+        claimPeriod = gs.unstakePeriod;
     }
 
-    function getTimeLock() external override view returns (uint256 timeLock) {
+    function getCooldown() external override view returns (uint256 timeLock) {
         GovStorage.Base storage gs = GovStorage.gs();
         timeLock = gs.withdrawTimeLock;
     }
@@ -243,10 +243,10 @@ contract Gov is IGov {
         uint256[] memory _amounts,
         uint256[] memory _unmaterializedSherX
     ) external override {
-        // all pools (including fee pool) can be deducted fmo and balance
+        // all pools (including SherX pool) can be deducted fmo and balance
         // deducting balance will reduce the users underlying value of stake token
-        // for every pool, _unmaterializedSherX can be deducted, this will decrease outstanding fee rewards
-        // for users that did not claim them (e.g materialized them and included in fee pool)
+        // for every pool, _unmaterializedSherX can be deducted, this will decrease outstanding SherX rewards
+        // for users that did not claim them (e.g materialized them and included in SherX pool)
 
         SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
         SherXStorage.Base storage sx = SherXStorage.sx();

@@ -37,7 +37,7 @@ library LibPool {
         }
 
         uint256 totalAccruedDebt = getTotalAccruedDebt(_token);
-        // move funds to the fee pool
+        // move funds to the sherX etf
         ps.sherXUnderlying = ps.sherXUnderlying.add(totalAccruedDebt);
 
         SherXStorage.Base storage sx = SherXStorage.sx();
