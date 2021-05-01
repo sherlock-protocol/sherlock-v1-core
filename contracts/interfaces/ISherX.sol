@@ -3,9 +3,7 @@ pragma solidity ^0.7.4;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-// ISherX
-interface IFee {
-
+interface ISherX {
     function _beforeTokenTransfer(
         address from,
         address to,

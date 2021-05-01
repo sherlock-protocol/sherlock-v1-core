@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 
 import "../interfaces/IManager.sol";
 
-import "../libraries/LibFee.sol";
+import "../libraries/LibSherX.sol";
 import "../libraries/LibPool.sol";
 
 contract Manager is IManager {
@@ -39,42 +39,41 @@ contract Manager is IManager {
     ) public override {
         GovStorage.Base storage gs = GovStorage.gs();
         PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
-        FeeStorage.Base storage fs = FeeStorage.fs();
-        LibERC20Storage.ERC20Storage storage es = LibERC20Storage
-            .erc20Storage();
+        SherXStorage.Base storage sx = SherXStorage.sx();
+        SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
 
         require(ps.initialized, "WHITELIST");
 
         LibPool.payOffDebtAll(IERC20(_token));
-        if (fs.feeLastAccrued == 0) {
-            fs.feeLastAccrued = block.number;
+        if (sx.feeLastAccrued == 0) {
+            sx.feeLastAccrued = block.number;
         }
 
         require(gs.protocolIsCovered[_protocol], "NOT_COVERED");
         require(gs.protocolManagers[_protocol] == msg.sender, "NOT_MANAGER");
 
-        LibFee.accrueUSDPool();
-        LibFee.accrueFeeToken();
-        uint256 curUsd = fs.tokenUSD[_token];
+        LibSherX.accrueUSDPool();
+        LibSherX.accrueFeeToken();
+        uint256 curUsd = sx.tokenUSD[_token];
         // sub old premium in usd, add new premium in usdd
         // TODO optimize, writing to times to storage
-        fs.totalBlockIncrement = fs.totalBlockIncrement.sub(
+        sx.totalBlockIncrement = sx.totalBlockIncrement.sub(
             ps.protocolPremium[_protocol].mul(curUsd).div(10**18)
         );
-        fs.totalBlockIncrement = fs.totalBlockIncrement.add(
+        sx.totalBlockIncrement = sx.totalBlockIncrement.add(
             _premium.mul(_price).div(10**18)
         );
 
         //IF price changes, we need to recalc current USD pool
-        // if (fs.tokenUSD[_token] != _price) {
-        fs.totalUsdPool = fs
+        // if (sx.tokenUSD[_token] != _price) {
+        sx.totalUsdPool = sx
             .totalUsdPool
             .sub(ps.underlyingForFee.mul(curUsd).div(10**18))
             .add(ps.underlyingForFee.mul(_price).div(10**18));
         // recalcs current poolbalance
 
         // update price
-        fs.tokenUSD[_token] = _price;
+        sx.tokenUSD[_token] = _price;
 
         // payoffDebt (+ add exra pool balance with new price)
 
@@ -84,12 +83,12 @@ contract Manager is IManager {
             .add(_premium);
         ps.protocolPremium[_protocol] = _premium;
 
-        if (fs.feePerBlock == 0) {
-            fs.feePerBlock = 10**18;
-        } else if (fs.totalUsdPool > 0) {
-            // TODO validate when fs.totalUsdPool
-            fs.feePerBlock = es.totalSupply.mul(fs.totalBlockIncrement).div(
-                fs.totalUsdPool
+        if (sx.feePerBlock == 0) {
+            sx.feePerBlock = 10**18;
+        } else if (sx.totalUsdPool > 0) {
+            // TODO validate when sx.totalUsdPool
+            sx.feePerBlock = sx20.totalSupply.mul(sx.totalBlockIncrement).div(
+                sx.totalUsdPool
             );
         }
     }

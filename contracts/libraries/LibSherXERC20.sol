@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.7.1;
 
-import "../storage/LibERC20Storage.sol";
+import "../storage/LibSherXERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
-library LibERC20 {
+library LibSherXERC20 {
     using SafeMath for uint256;
 
     // Need to include events locally because `emit Interface.Event(params)` does not work
@@ -14,20 +14,18 @@ library LibERC20 {
     function mint(address _to, uint256 _amount) internal {
         require(_to != address(0), "INVALID_TO_ADDRESS");
 
-        LibERC20Storage.ERC20Storage storage es = LibERC20Storage
-            .erc20Storage();
+        SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
 
-        es.balances[_to] = es.balances[_to].add(_amount);
-        es.totalSupply = es.totalSupply.add(_amount);
+        sx20.balances[_to] = sx20.balances[_to].add(_amount);
+        sx20.totalSupply = sx20.totalSupply.add(_amount);
         emit Transfer(address(0), _to, _amount);
     }
 
     function burn(address _from, uint256 _amount) internal {
-        LibERC20Storage.ERC20Storage storage es = LibERC20Storage
-            .erc20Storage();
+        SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
 
-        es.balances[_from] = es.balances[_from].sub(_amount);
-        es.totalSupply = es.totalSupply.sub(_amount);
+        sx20.balances[_from] = sx20.balances[_from].sub(_amount);
+        sx20.totalSupply = sx20.totalSupply.sub(_amount);
         emit Transfer(_from, address(0), _amount);
     }
 
@@ -36,7 +34,7 @@ library LibERC20 {
         address _to,
         uint256 _amount
     ) internal returns (bool) {
-        LibERC20Storage.erc20Storage().allowances[_from][_to] = _amount;
+        SherXERC20Storage.sx20().allowances[_from][_to] = _amount;
         return true;
     }
 }

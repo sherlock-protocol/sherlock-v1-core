@@ -11,10 +11,10 @@ import "diamond-2/contracts/libraries/LibDiamond.sol";
 
 import "../interfaces/IGov.sol";
 
-import "../libraries/LibFee.sol";
-import "../libraries/LibERC20.sol";
+import "../libraries/LibSherX.sol";
+import "../libraries/LibSherXERC20.sol";
 
-import "../storage/LibERC20Storage.sol";
+import "../storage/LibSherXERC20.sol";
 
 contract Gov is IGov {
     using SafeMath for uint256;
@@ -248,13 +248,12 @@ contract Gov is IGov {
         // for every pool, _unmaterializedFee can be deducted, this will decrease outstanding fee rewards
         // for users that did not claim them (e.g materialized them and included in fee pool)
 
-        LibERC20Storage.ERC20Storage storage es = LibERC20Storage
-            .erc20Storage();
-        FeeStorage.Base storage fs = FeeStorage.fs();
+        SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
+        SherXStorage.Base storage sx = SherXStorage.sx();
 
         // todo require all equal lengths
 
-        LibFee.accrueFeeToken();
+        LibSherX.accrueFeeToken();
         uint256 totalUnmaterializedFee = 0;
 
         for (uint256 i; i < _tokens.length; i++) {
@@ -277,7 +276,7 @@ contract Gov is IGov {
             }
         }
         if (totalUnmaterializedFee > 0) {
-            LibERC20.mint(_payout, totalUnmaterializedFee);
+            LibSherXERC20.mint(_payout, totalUnmaterializedFee);
         }
     }
 }

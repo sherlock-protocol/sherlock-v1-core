@@ -8,26 +8,26 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 import "../storage/LibPool.sol";
-import "../libraries/LibERC20.sol";
+import "../libraries/LibSherXERC20.sol";
 import "../storage/LibGov.sol";
 
-import "../interfaces/IFee.sol";
+import "../interfaces/ISherX.sol";
 import "../interfaces/stake/INativeStake.sol";
 
 import "./LibPool.sol";
 
-library LibFee {
+library LibSherX {
     using SafeMath for uint256;
 
     // TODO accureFeeToken(address token), to just accrue for a certain token
     // do accrueFeeToken() to loop over all if updating weights
 
     function accrueUSDPool() external {
-        FeeStorage.Base storage fs = FeeStorage.fs();
-        fs.totalUsdPool = fs.totalUsdPool.add(
-            block.number.sub(fs.lastPremiumChange).mul(fs.totalBlockIncrement)
+        SherXStorage.Base storage sx = SherXStorage.sx();
+        sx.totalUsdPool = sx.totalUsdPool.add(
+            block.number.sub(sx.lastPremiumChange).mul(sx.totalBlockIncrement)
         );
-        fs.lastPremiumChange = block.number;
+        sx.lastPremiumChange = block.number;
     }
 
     // TODO remove?
@@ -36,9 +36,9 @@ library LibFee {
         view
         returns (uint256 fee)
     {
-        FeeStorage.Base storage fs = FeeStorage.fs();
-        uint256 amount = block.number.sub(fs.feeLastAccrued).mul(
-            fs.feePerBlock
+        SherXStorage.Base storage sx = SherXStorage.sx();
+        uint256 amount = block.number.sub(sx.feeLastAccrued).mul(
+            sx.feePerBlock
         );
 
         PoolStorage.Base storage ps = PoolStorage.ps(_token);
@@ -49,12 +49,12 @@ library LibFee {
         // loop over pools, increase the pool + pool_weight based on the distribution weights
 
         GovStorage.Base storage gs = GovStorage.gs();
-        FeeStorage.Base storage fs = FeeStorage.fs();
+        SherXStorage.Base storage sx = SherXStorage.sx();
 
-        // mint fee tokens op basis van (fs.feePerBlock) diff
+        // mint fee tokens op basis van (sx.feePerBlock) diff
 
-        uint256 amount = block.number.sub(fs.feeLastAccrued).mul(
-            fs.feePerBlock
+        uint256 amount = block.number.sub(sx.feeLastAccrued).mul(
+            sx.feePerBlock
         );
         if (amount == 0) {
             return;
@@ -73,7 +73,7 @@ library LibFee {
                 ps.feeWeight = ps.feeWeight.add(fee);
             }
         }
-        LibERC20.mint(address(this), amount);
-        fs.feeLastAccrued = block.number;
+        LibSherXERC20.mint(address(this), amount);
+        sx.feeLastAccrued = block.number;
     }
 }

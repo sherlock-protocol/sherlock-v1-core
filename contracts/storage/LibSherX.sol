@@ -7,9 +7,9 @@ import "../interfaces/stake/INativeStake.sol";
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-library FeeStorage {
-    bytes32 constant FEE_STORAGE_POSITION = keccak256(
-        abi.encode("diamond.sherlock.fee")
+library SherXStorage {
+    bytes32 constant SHERX_STORAGE_POSITION = keccak256(
+        abi.encode("diamond.sherlock.x")
     );
 
     struct Base {
@@ -22,10 +22,10 @@ library FeeStorage {
         uint256 feeLastAccrued; // sherXLastAccrued
     }
 
-    function fs() internal pure returns (Base storage fs) {
-        bytes32 position = FEE_STORAGE_POSITION;
+    function sx() internal pure returns (Base storage sx) {
+        bytes32 position = SHERX_STORAGE_POSITION;
         assembly {
-            fs.slot := position
+            sx.slot := position
         }
     }
 }

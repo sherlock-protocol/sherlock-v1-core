@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 import "../storage/LibGov.sol";
 import "../storage/LibPool.sol";
-import "../storage/LibFee.sol";
+import "../storage/LibSherX.sol";
 
 library LibPool {
     using SafeMath for uint256;
@@ -40,10 +40,10 @@ library LibPool {
         // move funds to the fee pool
         ps.underlyingForFee = ps.underlyingForFee.add(totalAccruedDebt);
 
-        FeeStorage.Base storage fs = FeeStorage.fs();
-        // changes the fs.totalUsdPool
-        // fs.totalUsdPool = fs.totalUsdPool.add(
-        //     totalAccruedDebt.mul(fs.tokenUSD[_token]).div(10**18)
+        SherXStorage.Base storage sx = SherXStorage.sx();
+        // changes the sx.totalUsdPool
+        // sx.totalUsdPool = sx.totalUsdPool.add(
+        //     totalAccruedDebt.mul(sx.tokenUSD[_token]).div(10**18)
         // );
 
         ps.totalPremiumLastPaid = block.number;

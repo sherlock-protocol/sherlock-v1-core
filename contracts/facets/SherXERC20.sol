@@ -5,13 +5,13 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "diamond-2/contracts/libraries/LibDiamond.sol";
 
-import "../interfaces/IERC20Facet.sol";
+import "../interfaces/ISherXERC20.sol";
 
-import "../libraries/LibERC20.sol";
+import "../libraries/LibSherXERC20.sol";
 
-import "../storage/LibERC20Storage.sol";
+import "../storage/LibSherXERC20.sol";
 
-contract ERC20Facet is IERC20, IERC20Facet {
+contract SherXERC20 is IERC20, ISherXERC20 {
     using SafeMath for uint256;
 
     function initialize(
@@ -20,11 +20,10 @@ contract ERC20Facet is IERC20, IERC20Facet {
         string memory _symbol
     ) external override {
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
-        LibERC20Storage.ERC20Storage storage es = LibERC20Storage
-            .erc20Storage();
+        SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
 
         require(
-            bytes(es.name).length == 0 && bytes(es.symbol).length == 0,
+            bytes(sx20.name).length == 0 && bytes(sx20.symbol).length == 0,
             "ALREADY_INITIALIZED"
         );
 
@@ -35,26 +34,26 @@ contract ERC20Facet is IERC20, IERC20Facet {
 
         require(msg.sender == ds.contractOwner, "Must own the contract.");
 
-        LibERC20.mint(msg.sender, _initialSupply);
+        LibSherXERC20.mint(msg.sender, _initialSupply);
 
-        es.name = _name;
-        es.symbol = _symbol;
+        sx20.name = _name;
+        sx20.symbol = _symbol;
     }
 
     function name() external override view returns (string memory) {
-        return LibERC20Storage.erc20Storage().name;
+        return SherXERC20Storage.sx20().name;
     }
 
     function setName(string calldata _name) external override {
-        LibERC20Storage.erc20Storage().name = _name;
+        SherXERC20Storage.sx20().name = _name;
     }
 
     function symbol() external override view returns (string memory) {
-        return LibERC20Storage.erc20Storage().symbol;
+        return SherXERC20Storage.sx20().symbol;
     }
 
     function setSymbol(string calldata _symbol) external override {
-        LibERC20Storage.erc20Storage().symbol = _symbol;
+        SherXERC20Storage.sx20().symbol = _symbol;
     }
 
     function decimals() external override pure returns (uint8) {
@@ -62,11 +61,11 @@ contract ERC20Facet is IERC20, IERC20Facet {
     }
 
     function mint(address _receiver, uint256 _amount) external override {
-        LibERC20.mint(_receiver, _amount);
+        LibSherXERC20.mint(_receiver, _amount);
     }
 
     function burn(address _from, uint256 _amount) external override {
-        LibERC20.burn(_from, _amount);
+        LibSherXERC20.burn(_from, _amount);
     }
 
     function approve(address _spender, uint256 _amount)
@@ -76,7 +75,7 @@ contract ERC20Facet is IERC20, IERC20Facet {
     {
         require(_spender != address(0), "SPENDER_INVALID");
         emit Approval(msg.sender, _spender, _amount);
-        return LibERC20.approve(msg.sender, _spender, _amount);
+        return LibSherXERC20.approve(msg.sender, _spender, _amount);
     }
 
     function increaseApproval(address _spender, uint256 _amount)
@@ -85,15 +84,14 @@ contract ERC20Facet is IERC20, IERC20Facet {
         returns (bool)
     {
         require(_spender != address(0), "SPENDER_INVALID");
-        LibERC20Storage.ERC20Storage storage es = LibERC20Storage
-            .erc20Storage();
-        es.allowances[msg.sender][_spender] = es.allowances[msg
+        SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
+        sx20.allowances[msg.sender][_spender] = sx20.allowances[msg
             .sender][_spender]
             .add(_amount);
         emit Approval(
             msg.sender,
             _spender,
-            es.allowances[msg.sender][_spender]
+            sx20.allowances[msg.sender][_spender]
         );
         return true;
     }
@@ -104,18 +102,17 @@ contract ERC20Facet is IERC20, IERC20Facet {
         returns (bool)
     {
         require(_spender != address(0), "SPENDER_INVALID");
-        LibERC20Storage.ERC20Storage storage es = LibERC20Storage
-            .erc20Storage();
-        uint256 oldValue = es.allowances[msg.sender][_spender];
+        SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
+        uint256 oldValue = sx20.allowances[msg.sender][_spender];
         if (_amount > oldValue) {
-            es.allowances[msg.sender][_spender] = 0;
+            sx20.allowances[msg.sender][_spender] = 0;
         } else {
-            es.allowances[msg.sender][_spender] = oldValue.sub(_amount);
+            sx20.allowances[msg.sender][_spender] = oldValue.sub(_amount);
         }
         emit Approval(
             msg.sender,
             _spender,
-            es.allowances[msg.sender][_spender]
+            sx20.allowances[msg.sender][_spender]
         );
         return true;
     }
@@ -134,14 +131,15 @@ contract ERC20Facet is IERC20, IERC20Facet {
         address _to,
         uint256 _amount
     ) external override returns (bool) {
-        LibERC20Storage.ERC20Storage storage es = LibERC20Storage
-            .erc20Storage();
+        SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
         require(_from != address(0), "FROM_INVALID");
 
         // Update approval if not set to max uint256
-        if (es.allowances[_from][msg.sender] != uint256(-1)) {
-            uint256 newApproval = es.allowances[_from][msg.sender].sub(_amount);
-            es.allowances[_from][msg.sender] = newApproval;
+        if (sx20.allowances[_from][msg.sender] != uint256(-1)) {
+            uint256 newApproval = sx20.allowances[_from][msg.sender].sub(
+                _amount
+            );
+            sx20.allowances[_from][msg.sender] = newApproval;
             emit Approval(_from, msg.sender, newApproval);
         }
 
@@ -155,15 +153,15 @@ contract ERC20Facet is IERC20, IERC20Facet {
         view
         returns (uint256)
     {
-        return LibERC20Storage.erc20Storage().allowances[_owner][_spender];
+        return SherXERC20Storage.sx20().allowances[_owner][_spender];
     }
 
     function balanceOf(address _of) external override view returns (uint256) {
-        return LibERC20Storage.erc20Storage().balances[_of];
+        return SherXERC20Storage.sx20().balances[_of];
     }
 
     function totalSupply() external override view returns (uint256) {
-        return LibERC20Storage.erc20Storage().totalSupply;
+        return SherXERC20Storage.sx20().totalSupply;
     }
 
     function _transfer(
@@ -171,11 +169,10 @@ contract ERC20Facet is IERC20, IERC20Facet {
         address _to,
         uint256 _amount
     ) internal {
-        LibERC20Storage.ERC20Storage storage es = LibERC20Storage
-            .erc20Storage();
+        SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
 
-        es.balances[_from] = es.balances[_from].sub(_amount);
-        es.balances[_to] = es.balances[_to].add(_amount);
+        sx20.balances[_from] = sx20.balances[_from].sub(_amount);
+        sx20.balances[_to] = sx20.balances[_to].add(_amount);
 
         emit Transfer(_from, _to, _amount);
     }

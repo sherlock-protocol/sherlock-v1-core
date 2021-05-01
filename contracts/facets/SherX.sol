@@ -7,17 +7,17 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
-import "../interfaces/IFee.sol";
+import "../interfaces/ISherX.sol";
 import "../interfaces/stake/INativeStake.sol";
 import "../interfaces/stake/IForeignStake.sol";
 
 import "../libraries/LibPool.sol";
-import "../libraries/LibFee.sol";
-import "../libraries/LibERC20.sol";
+import "../libraries/LibSherX.sol";
+import "../libraries/LibSherXERC20.sol";
 
-import "../storage/LibERC20Storage.sol";
+import "../storage/LibSherXERC20.sol";
 
-contract Fee is IFee {
+contract SherX is ISherX {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -64,7 +64,7 @@ contract Fee is IFee {
         // setInitialWeight (set single pool to 100)
         // makes it easier to this loop, as the difference in weights has to be zero. (sums should still be 100)
         // or just do total weight (e.g not 100 total)
-        LibFee.accrueFeeToken();
+        LibSherX.accrueFeeToken();
 
         require(_tokens.length == _weights.length, "L2");
 
@@ -81,10 +81,9 @@ contract Fee is IFee {
         view
         returns (uint256 usd)
     {
-        FeeStorage.Base storage fs = FeeStorage.fs();
+        SherXStorage.Base storage sx = SherXStorage.sx();
         GovStorage.Base storage gs = GovStorage.gs();
-        LibERC20Storage.ERC20Storage storage es = LibERC20Storage
-            .erc20Storage();
+        SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
 
         for (uint256 i; i < gs.tokens.length; i++) {
             IERC20 token = gs.tokens[i];
@@ -93,9 +92,9 @@ contract Fee is IFee {
             // TODO callstack
             PoolStorage.Base storage ps = PoolStorage.ps(address(token));
             uint256 _temp = ps.underlyingForFee.mul(_amount).mul(
-                fs.tokenUSD[token]
+                sx.tokenUSD[token]
             );
-            _temp = _temp.div(10**18).div(es.totalSupply);
+            _temp = _temp.div(10**18).div(sx20.totalSupply);
 
             usd = usd.add(_temp);
         }
@@ -107,9 +106,8 @@ contract Fee is IFee {
         view
         returns (uint256 usd)
     {
-        LibERC20Storage.ERC20Storage storage es = LibERC20Storage
-            .erc20Storage();
-        usd = calcUnderlyingInStoredUSDFor(es.balances[msg.sender]);
+        SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
+        usd = calcUnderlyingInStoredUSDFor(sx20.balances[msg.sender]);
     }
 
     function calcUnderlying()
@@ -118,10 +116,9 @@ contract Fee is IFee {
         view
         returns (IERC20[] memory tokens, uint256[] memory amounts)
     {
-        LibERC20Storage.ERC20Storage storage es = LibERC20Storage
-            .erc20Storage();
+        SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
 
-        return calcUnderlying(es.balances[msg.sender]);
+        return calcUnderlying(sx20.balances[msg.sender]);
     }
 
     function calcUnderlying(address _user)
@@ -130,10 +127,9 @@ contract Fee is IFee {
         view
         returns (IERC20[] memory tokens, uint256[] memory amounts)
     {
-        LibERC20Storage.ERC20Storage storage es = LibERC20Storage
-            .erc20Storage();
+        SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
 
-        return calcUnderlying(es.balances[_user]);
+        return calcUnderlying(sx20.balances[_user]);
     }
 
     function calcUnderlying(uint256 _amount)
@@ -142,10 +138,9 @@ contract Fee is IFee {
         view
         returns (IERC20[] memory tokens, uint256[] memory amounts)
     {
-        FeeStorage.Base storage fs = FeeStorage.fs();
+        SherXStorage.Base storage sx = SherXStorage.sx();
         GovStorage.Base storage gs = GovStorage.gs();
-        LibERC20Storage.ERC20Storage storage es = LibERC20Storage
-            .erc20Storage();
+        SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
 
         tokens = new IERC20[](gs.tokens.length);
         amounts = new uint256[](gs.tokens.length);
@@ -158,13 +153,13 @@ contract Fee is IFee {
             tokens[i] = token;
             // TODO add underlyingForFee and blockIncrement
             // TODO add totalSupply rolling amount (per block)
-            amounts[i] = ps.underlyingForFee.mul(_amount).div(es.totalSupply);
+            amounts[i] = ps.underlyingForFee.mul(_amount).div(sx20.totalSupply);
         }
     }
 
     function redeem(uint256 _amount, address _receiver) external override {
-        FeeStorage.Base storage fs = FeeStorage.fs();
-        LibFee.accrueUSDPool();
+        SherXStorage.Base storage sx = SherXStorage.sx();
+        LibSherX.accrueUSDPool();
         // TODO get last amount of FEE tokens (accrue)
         // TODO get last amount underlyingForFee
 
@@ -179,13 +174,13 @@ contract Fee is IFee {
             LibPool.payOffDebtAll(tokens[i]);
             // TODO, deduct?
             // ps.feeWeight
-            fs.totalUsdPool = fs.totalUsdPool.sub(
-                amounts[i].mul(fs.tokenUSD[tokens[i]]).div(10**18)
+            sx.totalUsdPool = sx.totalUsdPool.sub(
+                amounts[i].mul(sx.tokenUSD[tokens[i]]).div(10**18)
             );
 
             tokens[i].safeTransfer(_receiver, amounts[i]);
         }
-        LibERC20.burn(msg.sender, _amount);
+        LibSherXERC20.burn(msg.sender, _amount);
     }
 
     function _beforeTokenTransfer(
@@ -210,7 +205,7 @@ contract Fee is IFee {
         if (totalAmount == 0) {
             return 0;
         }
-        uint256 outstanding = LibFee.getOutstandingFeeTokens(_token);
+        uint256 outstanding = LibSherX.getOutstandingFeeTokens(_token);
         uint256 raw_amount = ps.feeWeight.add(outstanding).mul(userAmount).div(
             totalAmount
         );
@@ -227,7 +222,7 @@ contract Fee is IFee {
         PoolStorage.Base storage ps = PoolStorage.ps(underlying);
         require(address(ps.stakeToken) == token, "Unexpected sender");
         // mint / transfer FEE tokens, triggered by withdraw + transfer
-        LibFee.accrueFeeToken();
+        LibSherX.accrueFeeToken();
 
         uint256 userAmount = ps.stakeToken.balanceOf(from);
         uint256 totalAmount = ps.stakeToken.totalSupply();
