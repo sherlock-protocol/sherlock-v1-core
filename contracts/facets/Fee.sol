@@ -156,6 +156,8 @@ contract Fee is IFee {
             PoolStorage.Base storage ps = PoolStorage.ps(address(token));
             // todo include debt
             tokens[i] = token;
+            // TODO add underlyingForFee and blockIncrement
+            // TODO add totalSupply rolling amount (per block)
             amounts[i] = ps.underlyingForFee.mul(_amount).div(es.totalSupply);
         }
     }
@@ -163,6 +165,8 @@ contract Fee is IFee {
     function redeem(uint256 _amount, address _receiver) external override {
         FeeStorage.Base storage fs = FeeStorage.fs();
         LibFee.accrueUSDPool();
+        // TODO get last amount of FEE tokens (accrue)
+        // TODO get last amount underlyingForFee
 
         (IERC20[] memory tokens, uint256[] memory amounts) = calcUnderlying(
             _amount
