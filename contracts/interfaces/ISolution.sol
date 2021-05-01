@@ -6,6 +6,7 @@ import "diamond-2/contracts/interfaces/IDiamondCut.sol";
 import "./ISherX.sol";
 import "./ISherXERC20.sol";
 import "./IGov.sol";
+import "./IGovDev.sol";
 import "./IPayout.sol";
 import "./IManager.sol";
 import "./IPool.sol";
@@ -21,6 +22,7 @@ interface ISolution is
     ISherXERC20,
     IERC20,
     IGov,
+    IGovDev,
     IPayout,
     IManager,
     IPool
