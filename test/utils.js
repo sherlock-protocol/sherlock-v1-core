@@ -113,7 +113,8 @@ module.exports = {
           LibSherX: libSherX.address,
         },
       }),
-      await ethers.getContractFactory("Gov", {
+      await ethers.getContractFactory("Gov"),
+      await ethers.getContractFactory("Payout", {
         libraries: {
           LibSherX: libSherX.address,
         },

@@ -65,12 +65,4 @@ interface IGov {
         uint256 _index,
         address _to
     ) external;
-
-    function payout(
-        address _payout,
-        IERC20[] memory _tokens,
-        uint256[] memory _firstMoneyOut,
-        uint256[] memory _amounts,
-        uint256[] memory _unmaterializedSherX
-    ) external;
 }
