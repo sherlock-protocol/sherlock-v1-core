@@ -29,22 +29,22 @@ contract Pool {
         return ps.activateCooldownFee;
     }
 
-    function getGovPool(address _token) external view returns (address) {
+    function getGovPool() external view returns (address) {
         (, PoolStorage.Base storage ps) = baseData();
         return ps.govPool;
     }
 
-    function isInitialized(address _token) external view returns (bool) {
+    function isInitialized() external view returns (bool) {
         (, PoolStorage.Base storage ps) = baseData();
         return ps.initialized;
     }
 
-    function isStake(address _token) external view returns (bool) {
+    function isStake() external view returns (bool) {
         (, PoolStorage.Base storage ps) = baseData();
         return ps.stakes;
     }
 
-    function getProtocolBalance(bytes32 _protocol, address _token)
+    function getProtocolBalance(bytes32 _protocol)
         external
         view
         returns (uint256)
@@ -53,7 +53,7 @@ contract Pool {
         return ps.protocolBalance[_protocol];
     }
 
-    function getProtocolPremium(bytes32 _protocol, address _token)
+    function getProtocolPremium(bytes32 _protocol)
         external
         view
         returns (uint256)
@@ -62,12 +62,12 @@ contract Pool {
         return ps.protocolPremium[_protocol];
     }
 
-    function getLockToken(address _token) external view returns (address) {
+    function getLockToken() external view returns (address) {
         (, PoolStorage.Base storage ps) = baseData();
         return address(ps.lockToken);
     }
 
-    function isProtocol(bytes32 _protocol, address _token)
+    function isProtocol(bytes32 _protocol)
         external
         view
         returns (bool)
@@ -76,7 +76,7 @@ contract Pool {
         return ps.isProtocol[_protocol];
     }
 
-    function getProtocols(address _token)
+    function getProtocols()
         external
         view
         returns (bytes32[] memory)
@@ -153,7 +153,7 @@ contract Pool {
     }
 
     function getStakersPoolBalance() public view returns (uint256) {
-        (IERC20 _token, PoolStorage.Base storage ps) = baseData();
+        (, PoolStorage.Base storage ps) = baseData();
         return ps.stakeBalance;
     }
 
@@ -288,7 +288,7 @@ contract Pool {
 
     function activateCooldown(uint256 _amount) external returns (uint256) {
         require(_amount > 0, "AMOUNT");
-        (IERC20 token, PoolStorage.Base storage ps) = baseData();
+        (, PoolStorage.Base storage ps) = baseData();
 
         ps.lockToken.safeTransferFrom(msg.sender, address(this), _amount);
         uint256 fee = _amount.mul(ps.activateCooldownFee).div(10**18);
@@ -312,7 +312,7 @@ contract Pool {
     }
 
     function cancelCooldown(uint256 _id) external {
-        (IERC20 token, PoolStorage.Base storage ps) = baseData();
+        (, PoolStorage.Base storage ps) = baseData();
         GovStorage.Base storage gs = GovStorage.gs();
 
         PoolStorage.UnstakeEntry memory withdraw = ps.unstakeEntries[msg
@@ -328,7 +328,7 @@ contract Pool {
     }
 
     function unstakeWindowExpiry(address _account, uint256 _id) external {
-        (IERC20 token, PoolStorage.Base storage ps) = baseData();
+        (, PoolStorage.Base storage ps) = baseData();
         GovStorage.Base storage gs = GovStorage.gs();
 
         PoolStorage.UnstakeEntry memory withdraw = ps

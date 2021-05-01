@@ -61,7 +61,6 @@ contract SherXERC20 is IERC20, ISherXERC20 {
         string memory _name,
         string memory _symbol
     ) external override {
-        LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
         SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
 
         LibDiamond.enforceIsContractOwner();

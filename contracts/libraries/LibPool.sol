@@ -48,7 +48,7 @@ library LibPool {
         // move funds to the sherX etf
         ps.sherXUnderlying = ps.sherXUnderlying.add(totalAccruedDebt);
 
-        SherXStorage.Base storage sx = SherXStorage.sx();
+        //SherXStorage.Base storage sx = SherXStorage.sx();
         // changes the sx.totalUsdPool
         // sx.totalUsdPool = sx.totalUsdPool.add(
         //     totalAccruedDebt.mul(sx.tokenUSD[_token]).div(10**18)

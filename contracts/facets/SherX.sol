@@ -47,7 +47,7 @@ contract SherX is ISherX {
         view
         returns (IERC20[] memory tokens, uint256[] memory amounts)
     {
-        SherXStorage.Base storage sx = SherXStorage.sx();
+        //SherXStorage.Base storage sx = SherXStorage.sx();
         GovStorage.Base storage gs = GovStorage.gs();
         SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
 

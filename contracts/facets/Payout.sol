@@ -83,9 +83,6 @@ contract Payout is IPayout {
         // for every pool, _unmaterializedSherX can be deducted, this will decrease outstanding SherX rewards
         // for users that did not claim them (e.g materialized them and included in SherX pool)
 
-        SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
-        SherXStorage.Base storage sx = SherXStorage.sx();
-
         // todo require all equal lengths
 
         LibSherX.accrueSherX();
