@@ -29,6 +29,7 @@ describe("Hack tests", function () {
 
     insure = await insurance(owner.address);
     await insure.setInitialGovInsurance(owner.address);
+    await insure.setInitialGovPayout(owner.address);
 
     const Token = await ethers.getContractFactory("MockToken");
     [tokenA, tokenB, tokenC] = [
