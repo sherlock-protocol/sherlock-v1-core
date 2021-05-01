@@ -4,17 +4,19 @@ pragma solidity ^0.7.4;
 import "../interfaces/lock/INativeLock.sol";
 
 interface IGov {
-    function setInitialGovInsurance(address _govInsurance) external;
+    //
+    // Events
+    //
 
-    function transferGovInsurance(address _govInsurance) external;
+    event TokenAdded(IERC20 _token, INativeLock _lock);
+
+    //
+    // View methods
+    //
 
     function getGovInsurance() external view returns (address);
 
-    function setUnstakeWindow(uint256 _claimPeriod) external;
-
-    function setCooldown(uint256 _period) external;
-
-    function getUnstakeWindow() external view returns (uint256 claimPeriod);
+    function getUnstakeWindow() external view returns (uint256 unstakeWindow);
 
     function getCooldown() external view returns (uint256 period);
 
@@ -35,7 +37,17 @@ interface IGov {
         view
         returns (address agent);
 
-    event TokenAdded(IERC20 _token, INativeLock _lock);
+    //
+    // State changing methods
+    //
+
+    function setInitialGovInsurance(address _govInsurance) external;
+
+    function transferGovInsurance(address _govInsurance) external;
+
+    function setUnstakeWindow(uint256 _unstakeWindow) external;
+
+    function setCooldown(uint256 _period) external;
 
     function protocolAdd(
         bytes32 _protocol,

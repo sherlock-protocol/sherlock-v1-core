@@ -20,6 +20,10 @@ contract Payout is IPayout {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
+    //
+    // Modifiers
+    //
+
     modifier onlyGovInsurance() {
         require(msg.sender == GovStorage.gs().govInsurance, "NOT_GOV");
         _;
@@ -30,9 +34,17 @@ contract Payout is IPayout {
         _;
     }
 
+    //
+    // View methods
+    //
+
     function getGovPayout() external override view returns (address) {
         return PayoutStorage.ps().govPayout;
     }
+
+    //
+    // State changing methods
+    //
 
     function setInitialGovPayout(address _govPayout) external override {
         PayoutStorage.Base storage ps = PayoutStorage.ps();

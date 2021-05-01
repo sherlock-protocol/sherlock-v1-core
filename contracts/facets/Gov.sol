@@ -18,62 +18,45 @@ contract Gov is IGov {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
-    function getGovInsurance() external override view returns (address) {
-        return GovStorage.gs().govInsurance;
-    }
-
-    function setInitialGovInsurance(address _govInsurance) external override {
-        GovStorage.Base storage gs = GovStorage.gs();
-
-        require(_govInsurance != address(0), "ZERO_GOV");
-        require(msg.sender == LibDiamond.contractOwner(), "NOT_OWNER");
-        require(gs.govInsurance == address(0), "ALREADY_SET");
-
-        gs.govInsurance = _govInsurance;
-    }
+    //
+    // Modifiers
+    //
 
     modifier onlyGovInsurance() {
         require(msg.sender == GovStorage.gs().govInsurance, "NOT_GOV");
         _;
     }
 
-    function transferGovInsurance(address _govInsurance)
-        external
-        override
-        onlyGovInsurance
-    {
-        require(_govInsurance != address(0), "ZERO_GOV");
-        require(GovStorage.gs().govInsurance != _govInsurance, "SAME_GOV");
-        GovStorage.gs().govInsurance = _govInsurance;
-    }
+    //
+    // View methods
+    //
 
-    function setUnstakeWindow(uint256 _claimPeriod)
-        external
-        override
-        onlyGovInsurance
-    {
-        GovStorage.Base storage gs = GovStorage.gs();
-        gs.unstakeWindow = _claimPeriod;
-    }
-
-    function setCooldown(uint256 _period) external override onlyGovInsurance {
-        GovStorage.Base storage gs = GovStorage.gs();
-        gs.unstakeCooldown = _period;
+    function getGovInsurance() external override view returns (address) {
+        return GovStorage.gs().govInsurance;
     }
 
     function getUnstakeWindow()
         external
         override
         view
-        returns (uint256 claimPeriod)
+        returns (uint256 unstakeWindow)
     {
         GovStorage.Base storage gs = GovStorage.gs();
-        claimPeriod = gs.unstakeWindow;
+        unstakeWindow = gs.unstakeWindow;
     }
 
     function getCooldown() external override view returns (uint256 period) {
         GovStorage.Base storage gs = GovStorage.gs();
         period = gs.unstakeCooldown;
+    }
+
+    function getTokens()
+        external
+        override
+        view
+        returns (IERC20[] memory tokens)
+    {
+        tokens = GovStorage.gs().tokens;
     }
 
     function getProtocolIsCovered(bytes32 _protocol)
@@ -101,6 +84,44 @@ contract Gov is IGov {
         returns (address agent)
     {
         agent = GovStorage.gs().protocolAgents[_protocol];
+    }
+
+    //
+    // State changing methods
+    //
+
+    function setInitialGovInsurance(address _govInsurance) external override {
+        GovStorage.Base storage gs = GovStorage.gs();
+
+        require(_govInsurance != address(0), "ZERO_GOV");
+        require(msg.sender == LibDiamond.contractOwner(), "NOT_OWNER");
+        require(gs.govInsurance == address(0), "ALREADY_SET");
+
+        gs.govInsurance = _govInsurance;
+    }
+
+    function transferGovInsurance(address _govInsurance)
+        external
+        override
+        onlyGovInsurance
+    {
+        require(_govInsurance != address(0), "ZERO_GOV");
+        require(GovStorage.gs().govInsurance != _govInsurance, "SAME_GOV");
+        GovStorage.gs().govInsurance = _govInsurance;
+    }
+
+    function setUnstakeWindow(uint256 _unstakeWindow)
+        external
+        override
+        onlyGovInsurance
+    {
+        GovStorage.Base storage gs = GovStorage.gs();
+        gs.unstakeWindow = _unstakeWindow;
+    }
+
+    function setCooldown(uint256 _period) external override onlyGovInsurance {
+        GovStorage.Base storage gs = GovStorage.gs();
+        gs.unstakeCooldown = _period;
     }
 
     function protocolAdd(
@@ -150,15 +171,6 @@ contract Gov is IGov {
         delete gs.protocolIsCovered[_protocol];
         delete gs.protocolManagers[_protocol];
         delete gs.protocolAgents[_protocol];
-    }
-
-    function getTokens()
-        external
-        override
-        view
-        returns (IERC20[] memory tokens)
-    {
-        tokens = GovStorage.gs().tokens;
     }
 
     function tokenAdd(

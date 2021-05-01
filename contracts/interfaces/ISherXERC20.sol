@@ -2,6 +2,10 @@
 pragma solidity ^0.7.1;
 
 interface ISherXERC20 {
+    //
+    // View methods
+    //
+
     /**
         @notice Get the token name
         @return The token name
@@ -20,6 +24,22 @@ interface ISherXERC20 {
     */
     function decimals() external view returns (uint8);
 
+    //
+    // State changing methods
+    //
+
+    /**
+        @notice Sets up the metadata and initial supply. Can be called by the contract owner
+        @param _initialSupply Initial supply of the token
+        @param _name Name of the token
+        @param _symbol Symbol of the token
+    */
+    function initializeSherXERC20(
+        uint256 _initialSupply,
+        string memory _name,
+        string memory _symbol
+    ) external;
+
     /**
         @notice Mints tokens. Can only be called by the contract owner or the contract itself
         @param _receiver Address receiving the tokens
@@ -33,18 +53,6 @@ interface ISherXERC20 {
         @param _amount Amount to burn
     */
     function burn(address _from, uint256 _amount) external;
-
-    /**
-        @notice Sets up the metadata and initial supply. Can be called by the contract owner
-        @param _initialSupply Initial supply of the token
-        @param _name Name of the token
-        @param _symbol Symbol of the token
-    */
-    function initialize(
-        uint256 _initialSupply,
-        string memory _name,
-        string memory _symbol
-    ) external;
 
     /**
         @notice Set the token name of the contract. Can only be called by the contract owner or the contract itself

@@ -21,6 +21,151 @@ contract SherX is ISherX {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
+    //
+    // View methods
+    //
+
+    function calcUnderlying()
+        external
+        override
+        view
+        returns (IERC20[] memory tokens, uint256[] memory amounts)
+    {
+        SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
+
+        return calcUnderlying(sx20.balances[msg.sender]);
+    }
+
+    function calcUnderlying(uint256 _amount)
+        public
+        override
+        view
+        returns (IERC20[] memory tokens, uint256[] memory amounts)
+    {
+        SherXStorage.Base storage sx = SherXStorage.sx();
+        GovStorage.Base storage gs = GovStorage.gs();
+        SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
+
+        tokens = new IERC20[](gs.tokens.length);
+        amounts = new uint256[](gs.tokens.length);
+
+        for (uint256 i; i < gs.tokens.length; i++) {
+            IERC20 token = gs.tokens[i];
+            //LibPool.payOffDebtAll(token);
+            PoolStorage.Base storage ps = PoolStorage.ps(address(token));
+            // todo include debt
+            tokens[i] = token;
+            // TODO add sherXUnderlying and blockIncrement
+            // TODO add totalSupply rolling amount (per block)
+            amounts[i] = ps.sherXUnderlying.mul(_amount).div(sx20.totalSupply);
+        }
+    }
+
+    function calcUnderlying(address _user)
+        external
+        override
+        view
+        returns (IERC20[] memory tokens, uint256[] memory amounts)
+    {
+        SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
+
+        return calcUnderlying(sx20.balances[_user]);
+    }
+
+    function calcUnderlyingInStoredUSD()
+        external
+        override
+        view
+        returns (uint256 usd)
+    {
+        SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
+        usd = calcUnderlyingInStoredUSDFor(sx20.balances[msg.sender]);
+    }
+
+    function calcUnderlyingInStoredUSDFor(uint256 _amount)
+        public
+        override
+        view
+        returns (uint256 usd)
+    {
+        SherXStorage.Base storage sx = SherXStorage.sx();
+        GovStorage.Base storage gs = GovStorage.gs();
+        SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
+
+        for (uint256 i; i < gs.tokens.length; i++) {
+            IERC20 token = gs.tokens[i];
+            //LibPool.payOffDebtAll(token);
+
+            // TODO callstack
+            PoolStorage.Base storage ps = PoolStorage.ps(address(token));
+            uint256 _temp = ps.sherXUnderlying.mul(_amount).mul(
+                sx.tokenUSD[token]
+            );
+            _temp = _temp.div(10**18).div(sx20.totalSupply);
+
+            usd = usd.add(_temp);
+        }
+    }
+
+    // TODO need to make sure this matches the actual fee amount
+    function getTotalUnmaterializedSherX(address _user, address _token)
+        external
+        override
+        view
+        returns (uint256 withdrawable_amount)
+    {
+        PoolStorage.Base storage ps = PoolStorage.ps(_token);
+
+        uint256 userAmount = ps.lockToken.balanceOf(_user);
+        uint256 totalAmount = ps.lockToken.totalSupply();
+        if (totalAmount == 0) {
+            return 0;
+        }
+        uint256 outstanding = LibSherX.getUnmintedSherX(_token);
+        uint256 raw_amount = ps.sWeight.add(outstanding).mul(userAmount).div(
+            totalAmount
+        );
+        withdrawable_amount = raw_amount.sub(ps.sWithdrawn[_user]);
+    }
+
+    //
+    // State changing methods
+    //
+
+    function redeem(uint256 _amount, address _receiver) external override {
+        SherXStorage.Base storage sx = SherXStorage.sx();
+        LibSherX.accrueUSDPool();
+        // TODO get last amount of FEE tokens (accrue)
+        // TODO get last amount sherXUnderlying
+
+        (IERC20[] memory tokens, uint256[] memory amounts) = calcUnderlying(
+            _amount
+        );
+
+        for (uint256 i; i < tokens.length; i++) {
+            PoolStorage.Base storage ps = PoolStorage.ps(address(tokens[i]));
+            ps.sherXUnderlying = ps.sherXUnderlying.sub(amounts[i]);
+
+            LibPool.payOffDebtAll(tokens[i]);
+            // TODO, deduct?
+            // ps.sWeight
+            sx.totalUsdPool = sx.totalUsdPool.sub(
+                amounts[i].mul(sx.tokenUSD[tokens[i]]).div(10**18)
+            );
+
+            tokens[i].safeTransfer(_receiver, amounts[i]);
+        }
+        LibSherXERC20.burn(msg.sender, _amount);
+    }
+
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) external override {
+        doYield(msg.sender, from, to, amount);
+    }
+
     // todo harvest(address[]), loop over all tokens user holds and redeem SherXs
 
     function harvest(address _token) external override {
@@ -73,143 +218,6 @@ contract SherX is ISherX {
 
             ps.sherXWeight = _weights[i];
         }
-    }
-
-    function calcUnderlyingInStoredUSDFor(uint256 _amount)
-        public
-        override
-        view
-        returns (uint256 usd)
-    {
-        SherXStorage.Base storage sx = SherXStorage.sx();
-        GovStorage.Base storage gs = GovStorage.gs();
-        SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
-
-        for (uint256 i; i < gs.tokens.length; i++) {
-            IERC20 token = gs.tokens[i];
-            //LibPool.payOffDebtAll(token);
-
-            // TODO callstack
-            PoolStorage.Base storage ps = PoolStorage.ps(address(token));
-            uint256 _temp = ps.sherXUnderlying.mul(_amount).mul(
-                sx.tokenUSD[token]
-            );
-            _temp = _temp.div(10**18).div(sx20.totalSupply);
-
-            usd = usd.add(_temp);
-        }
-    }
-
-    function calcUnderlyingInStoredUSD()
-        external
-        override
-        view
-        returns (uint256 usd)
-    {
-        SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
-        usd = calcUnderlyingInStoredUSDFor(sx20.balances[msg.sender]);
-    }
-
-    function calcUnderlying()
-        external
-        override
-        view
-        returns (IERC20[] memory tokens, uint256[] memory amounts)
-    {
-        SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
-
-        return calcUnderlying(sx20.balances[msg.sender]);
-    }
-
-    function calcUnderlying(address _user)
-        external
-        override
-        view
-        returns (IERC20[] memory tokens, uint256[] memory amounts)
-    {
-        SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
-
-        return calcUnderlying(sx20.balances[_user]);
-    }
-
-    function calcUnderlying(uint256 _amount)
-        public
-        override
-        view
-        returns (IERC20[] memory tokens, uint256[] memory amounts)
-    {
-        SherXStorage.Base storage sx = SherXStorage.sx();
-        GovStorage.Base storage gs = GovStorage.gs();
-        SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
-
-        tokens = new IERC20[](gs.tokens.length);
-        amounts = new uint256[](gs.tokens.length);
-
-        for (uint256 i; i < gs.tokens.length; i++) {
-            IERC20 token = gs.tokens[i];
-            //LibPool.payOffDebtAll(token);
-            PoolStorage.Base storage ps = PoolStorage.ps(address(token));
-            // todo include debt
-            tokens[i] = token;
-            // TODO add sherXUnderlying and blockIncrement
-            // TODO add totalSupply rolling amount (per block)
-            amounts[i] = ps.sherXUnderlying.mul(_amount).div(sx20.totalSupply);
-        }
-    }
-
-    function redeem(uint256 _amount, address _receiver) external override {
-        SherXStorage.Base storage sx = SherXStorage.sx();
-        LibSherX.accrueUSDPool();
-        // TODO get last amount of FEE tokens (accrue)
-        // TODO get last amount sherXUnderlying
-
-        (IERC20[] memory tokens, uint256[] memory amounts) = calcUnderlying(
-            _amount
-        );
-
-        for (uint256 i; i < tokens.length; i++) {
-            PoolStorage.Base storage ps = PoolStorage.ps(address(tokens[i]));
-            ps.sherXUnderlying = ps.sherXUnderlying.sub(amounts[i]);
-
-            LibPool.payOffDebtAll(tokens[i]);
-            // TODO, deduct?
-            // ps.sWeight
-            sx.totalUsdPool = sx.totalUsdPool.sub(
-                amounts[i].mul(sx.tokenUSD[tokens[i]]).div(10**18)
-            );
-
-            tokens[i].safeTransfer(_receiver, amounts[i]);
-        }
-        LibSherXERC20.burn(msg.sender, _amount);
-    }
-
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 amount
-    ) external override {
-        doYield(msg.sender, from, to, amount);
-    }
-
-    // TODO need to make sure this matches the actual fee amount
-    function getTotalUnmaterializedSherX(address _user, address _token)
-        external
-        override
-        view
-        returns (uint256 withdrawable_amount)
-    {
-        PoolStorage.Base storage ps = PoolStorage.ps(_token);
-
-        uint256 userAmount = ps.lockToken.balanceOf(_user);
-        uint256 totalAmount = ps.lockToken.totalSupply();
-        if (totalAmount == 0) {
-            return 0;
-        }
-        uint256 outstanding = LibSherX.getUnmintedSherX(_token);
-        uint256 raw_amount = ps.sWeight.add(outstanding).mul(userAmount).div(
-            totalAmount
-        );
-        withdrawable_amount = raw_amount.sub(ps.sWithdrawn[_user]);
     }
 
     function doYield(

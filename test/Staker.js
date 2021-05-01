@@ -518,25 +518,25 @@ describe("Staker tests", function () {
     it("Not expired, t=1", async function () {
       await expect(
         insure.unstakeWindowExpiry(owner.address, 0, tokenA.address)
-      ).to.be.revertedWith("CLAIMPERIOD_NOT_EXPIRED");
+      ).to.be.revertedWith("UNSTAKE_WINDOW_NOT_EXPIRED");
     });
     it("Not expired, t=3", async function () {
       await mine(2);
       await expect(
         insure.unstakeWindowExpiry(owner.address, 0, tokenA.address)
-      ).to.be.revertedWith("CLAIMPERIOD_NOT_EXPIRED");
+      ).to.be.revertedWith("UNSTAKE_WINDOW_NOT_EXPIRED");
     });
     it("Not expired, t=4", async function () {
       await mine(3);
       await expect(
         insure.unstakeWindowExpiry(owner.address, 0, tokenA.address)
-      ).to.be.revertedWith("CLAIMPERIOD_NOT_EXPIRED");
+      ).to.be.revertedWith("UNSTAKE_WINDOW_NOT_EXPIRED");
     });
     it("Not expired, t=5", async function () {
       await mine(4);
       await expect(
         insure.unstakeWindowExpiry(owner.address, 0, tokenA.address)
-      ).to.be.revertedWith("CLAIMPERIOD_NOT_EXPIRED");
+      ).to.be.revertedWith("UNSTAKE_WINDOW_NOT_EXPIRED");
     });
     it("Purge twice", async function () {
       await mine(5);
@@ -658,11 +658,11 @@ describe("Staker tests", function () {
         insure.unstake(0, owner.address, tokenA.address)
       ).to.be.revertedWith("COOLDOWN_ACTIVE");
     });
-    it("Claimperiod, t=6", async function () {
+    it("Unstake, t=6", async function () {
       await mine(5);
       await expect(
         insure.unstake(0, owner.address, tokenA.address)
-      ).to.be.revertedWith("CLAIMPERIOD_EXPIRED");
+      ).to.be.revertedWith("UNSTAKE_WINDOW_EXPIRED");
     });
     it("Claim twice", async function () {
       await mine(2);

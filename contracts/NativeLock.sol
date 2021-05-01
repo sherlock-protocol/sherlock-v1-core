@@ -12,6 +12,10 @@ contract NativeLock is ERC20, INativeLock, Ownable {
         ERC20(name_, symbol_)
     {}
 
+    function getOwner() external override view returns (address) {
+        return owner();
+    }
+
     function mint(address _account, uint256 _amount)
         external
         override
@@ -26,9 +30,5 @@ contract NativeLock is ERC20, INativeLock, Ownable {
         onlyOwner
     {
         _burn(_account, _amount);
-    }
-
-    function getOwner() external override view returns (address) {
-        return owner();
     }
 }

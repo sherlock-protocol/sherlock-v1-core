@@ -6,7 +6,7 @@ import "diamond-2/contracts/libraries/LibDiamond.sol";
 import "../interfaces/IGovDev.sol";
 
 contract GovDev is IGovDev {
-    function getGovDev() external override returns (address) {
+    function getGovDev() external override view returns (address) {
         return LibDiamond.contractOwner();
     }
 

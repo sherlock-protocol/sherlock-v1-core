@@ -19,14 +19,6 @@ contract Pool {
     using SafeERC20 for IERC20;
     using SafeERC20 for INativeLock;
 
-    function setCooldownFee(uint256 _fee) external {
-        require(msg.sender == GovStorage.gs().govInsurance, "NOT_GOV");
-        require(_fee <= 10**18, "MAX_VALUE");
-
-        (, PoolStorage.Base storage ps) = baseData();
-        ps.activateCooldownFee = _fee;
-    }
-
     function getCooldownFee() external view returns (uint256) {
         (, PoolStorage.Base storage ps) = baseData();
         return ps.activateCooldownFee;
@@ -88,6 +80,148 @@ contract Pool {
         return ps.protocols;
     }
 
+    function getUnstakeEntry(address _staker, uint256 _id)
+        external
+        view
+        returns (PoolStorage.UnstakeEntry memory)
+    {
+        (, PoolStorage.Base storage ps) = baseData();
+        return ps.unstakeEntries[_staker][_id];
+    }
+
+    function getTotalAccruedDebt() external view returns (uint256) {
+        (IERC20 _token, ) = baseData();
+        return LibPool.getTotalAccruedDebt(_token);
+    }
+
+    function getFirstMoneyOut() external view returns (uint256) {
+        (, PoolStorage.Base storage ps) = baseData();
+        return ps.firstMoneyOut;
+    }
+
+    function getAccruedDebt(bytes32 _protocol) external view returns (uint256) {
+        (IERC20 _token, ) = baseData();
+        return LibPool.accruedDebt(_protocol, _token);
+    }
+
+    function getTotalPremiumPerBlock() external view returns (uint256) {
+        (, PoolStorage.Base storage ps) = baseData();
+        return ps.totalPremiumPerBlock;
+    }
+
+    function getPremiumLastPaid() external view returns (uint256) {
+        (, PoolStorage.Base storage ps) = baseData();
+        return ps.totalPremiumLastPaid;
+    }
+
+    function getUnstakeEntrySize(address _staker)
+        external
+        view
+        returns (uint256)
+    {
+        (, PoolStorage.Base storage ps) = baseData();
+        return ps.unstakeEntries[_staker].length;
+    }
+
+    function getInitialUnstakeEntry(address _staker)
+        external
+        view
+        returns (uint256)
+    {
+        (, PoolStorage.Base storage ps) = baseData();
+        GovStorage.Base storage gs = GovStorage.gs();
+        for (uint256 i = 0; i < ps.unstakeEntries[_staker].length; i++) {
+            if (ps.unstakeEntries[_staker][i].blockInitiated == 0) {
+                continue;
+            }
+            if (
+                ps.unstakeEntries[_staker][i]
+                    .blockInitiated
+                    .add(gs.unstakeCooldown)
+                    .add(gs.unstakeWindow) <= block.number
+            ) {
+                continue;
+            }
+            return i;
+        }
+        return ps.unstakeEntries[_staker].length;
+    }
+
+    function getStakersPoolBalance() public view returns (uint256) {
+        (IERC20 _token, PoolStorage.Base storage ps) = baseData();
+        return ps.stakeBalance;
+    }
+
+    function getStakerPoolBalance(address _staker)
+        external
+        view
+        returns (uint256)
+    {
+        (, PoolStorage.Base storage ps) = baseData();
+        if (ps.lockToken.totalSupply() == 0) {
+            return 0;
+        }
+        return
+            ps.lockToken.balanceOf(_staker).mul(getStakersPoolBalance()).div(
+                ps.lockToken.totalSupply()
+            );
+    }
+
+    function getUnmaterializedSherX() external view returns (uint256) {
+        (, PoolStorage.Base storage ps) = baseData();
+        return ps.unmaterializedSherX;
+    }
+
+    function exchangeRate() external view returns (uint256 rate) {
+        // token to stakedtoken
+        (, PoolStorage.Base storage ps) = baseData();
+        uint256 totalLock = ps.lockToken.totalSupply();
+        require(totalLock > 0, "N0_STAKE");
+        require(ps.stakeBalance > 0, "NO_FUNDS");
+        rate = ps.stakeBalance.mul(10**18).div(totalLock);
+    }
+
+    //
+    // Internal view methods
+    //
+
+    function baseData()
+        internal
+        view
+        returns (IERC20 token, PoolStorage.Base storage ps)
+    {
+        token = bps();
+        ps = PoolStorage.ps(address(token));
+        require(ps.initialized, "INVALID_TOKEN");
+    }
+
+    function bps() internal pure returns (IERC20 rt) {
+        // These fields are not accessible from assembly
+        bytes memory array = msg.data;
+        uint256 index = msg.data.length;
+
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            // Load the 32 bytes word from memory with the address on the lower 20 bytes, and mask those.
+            rt := and(
+                mload(add(array, index)),
+                0xffffffffffffffffffffffffffffffffffffffff
+            )
+        }
+    }
+
+    //
+    // State changing methods
+    //
+
+    function setCooldownFee(uint256 _fee) external {
+        require(msg.sender == GovStorage.gs().govInsurance, "NOT_GOV");
+        require(_fee <= 10**18, "MAX_VALUE");
+
+        (, PoolStorage.Base storage ps) = baseData();
+        ps.activateCooldownFee = _fee;
+    }
+
     function depositProtocolBalance(bytes32 _protocol, uint256 _amount)
         external
     {
@@ -106,43 +240,6 @@ contract Pool {
             ps.isProtocol[_protocol] = true;
             ps.protocols.push(_protocol);
         }
-    }
-
-    function removeProtocol(
-        bytes32 _protocol,
-        uint256 _index,
-        bool _forceDebt,
-        address _receiver
-    ) external {
-        require(msg.sender == GovStorage.gs().govInsurance, "NOT_GOV");
-
-        (IERC20 _token, PoolStorage.Base storage ps) = baseData();
-        require(ps.protocols[_index] == _protocol, "INDEX");
-
-        uint256 accrued = LibPool.accruedDebt(_protocol, _token);
-        if (accrued == 0) {
-            require(ps.protocolPremium[_protocol] == 0, "CAN_NOT_DELETE");
-        } else {
-            require(accrued > ps.protocolBalance[_protocol], "CAN_NOT_DELETE2");
-        }
-
-        if (_forceDebt && accrued > 0) {
-            ps.stakeBalance = ps.stakeBalance.add(
-                ps.protocolBalance[_protocol]
-            );
-            delete ps.protocolBalance[_protocol];
-        }
-
-        if (ps.protocolBalance[_protocol] > 0) {
-            require(_receiver != address(0), "ADDRESS");
-            _token.safeTransfer(_receiver, ps.protocolBalance[_protocol]);
-        }
-
-        // move last index to index of _protocol
-        ps.protocols[_index] = ps.protocols[ps.protocols.length - 1];
-        // remove last index
-        delete ps.protocols[ps.protocols.length - 1];
-        ps.isProtocol[_protocol] = false;
     }
 
     function withdrawProtocolBalance(
@@ -169,60 +266,6 @@ contract Pool {
         ps.protocolBalance[_protocol] = ps.protocolBalance[_protocol].sub(
             _amount
         );
-    }
-
-    function exchangeRate() external view returns (uint256 rate) {
-        // token to stakedtoken
-        (, PoolStorage.Base storage ps) = baseData();
-        uint256 totalLock = ps.lockToken.totalSupply();
-        require(totalLock > 0, "N0_STAKE");
-        require(ps.stakeBalance > 0, "NO_FUNDS");
-        rate = ps.stakeBalance.mul(10**18).div(totalLock);
-    }
-
-    function getTotalAccruedDebt() external view returns (uint256) {
-        (IERC20 _token, ) = baseData();
-        return LibPool.getTotalAccruedDebt(_token);
-    }
-
-    function getAccruedDebt(bytes32 _protocol) external view returns (uint256) {
-        (IERC20 _token, ) = baseData();
-        return LibPool.accruedDebt(_protocol, _token);
-    }
-
-    function payOffDebtAll() external {
-        (IERC20 _token, ) = baseData();
-        LibPool.payOffDebtAll(_token);
-    }
-
-    function getTotalPremiumPerBlock() external view returns (uint256) {
-        (, PoolStorage.Base storage ps) = baseData();
-        return ps.totalPremiumPerBlock;
-    }
-
-    function getFirstMoneyOut() external view returns (uint256) {
-        (, PoolStorage.Base storage ps) = baseData();
-        return ps.firstMoneyOut;
-    }
-
-    function getStakersPoolBalance() public view returns (uint256) {
-        (IERC20 _token, PoolStorage.Base storage ps) = baseData();
-        return ps.stakeBalance;
-    }
-
-    function getStakerPoolBalance(address _staker)
-        external
-        view
-        returns (uint256)
-    {
-        (, PoolStorage.Base storage ps) = baseData();
-        if (ps.lockToken.totalSupply() == 0) {
-            return 0;
-        }
-        return
-            ps.lockToken.balanceOf(_staker).mul(getStakersPoolBalance()).div(
-                ps.lockToken.totalSupply()
-            );
     }
 
     function stake(uint256 _amount, address _receiver)
@@ -291,15 +334,10 @@ contract Pool {
             withdraw.blockInitiated.add(gs.unstakeCooldown).add(
                 gs.unstakeWindow
             ) < block.number,
-            "CLAIMPERIOD_NOT_EXPIRED"
+            "UNSTAKE_WINDOW_NOT_EXPIRED"
         );
         ps.lockToken.safeTransfer(_account, withdraw.lock);
         delete ps.unstakeEntries[_account][_id];
-    }
-
-    function getUnmaterializedSherX() external view returns (uint256) {
-        (, PoolStorage.Base storage ps) = baseData();
-        return ps.unmaterializedSherX;
     }
 
     function unstake(uint256 _id, address _receiver)
@@ -317,12 +355,12 @@ contract Pool {
             withdraw.blockInitiated.add(gs.unstakeCooldown) < block.number,
             "COOLDOWN_ACTIVE"
         );
-        // claim period is including, TODO should it be including?
+        // unstakePeriod period is including, TODO should it be including?
         require(
             withdraw.blockInitiated.add(gs.unstakeCooldown).add(
                 gs.unstakeWindow
             ) > block.number,
-            "CLAIMPERIOD_EXPIRED"
+            "UNSTAKE_WINDOW_EXPIRED"
         );
         amount = withdraw.lock.mul(ps.stakeBalance).div(
             ps.lockToken.totalSupply()
@@ -334,75 +372,45 @@ contract Pool {
         token.safeTransfer(_receiver, amount);
     }
 
-    function getUnstakeEntry(address _staker, uint256 _id)
-        external
-        view
-        returns (PoolStorage.UnstakeEntry memory)
-    {
-        (, PoolStorage.Base storage ps) = baseData();
-        return ps.unstakeEntries[_staker][_id];
+    function payOffDebtAll() external {
+        (IERC20 _token, ) = baseData();
+        LibPool.payOffDebtAll(_token);
     }
 
-    function getPremiumLastPaid() external view returns (uint256) {
-        (, PoolStorage.Base storage ps) = baseData();
-        return ps.totalPremiumLastPaid;
-    }
+    function removeProtocol(
+        bytes32 _protocol,
+        uint256 _index,
+        bool _forceDebt,
+        address _receiver
+    ) external {
+        require(msg.sender == GovStorage.gs().govInsurance, "NOT_GOV");
 
-    function getUnstakeEntrySize(address _staker)
-        external
-        view
-        returns (uint256)
-    {
-        (, PoolStorage.Base storage ps) = baseData();
-        return ps.unstakeEntries[_staker].length;
-    }
+        (IERC20 _token, PoolStorage.Base storage ps) = baseData();
+        require(ps.protocols[_index] == _protocol, "INDEX");
 
-    function getInitialUnstakeEntry(address _staker)
-        external
-        view
-        returns (uint256)
-    {
-        (, PoolStorage.Base storage ps) = baseData();
-        GovStorage.Base storage gs = GovStorage.gs();
-        for (uint256 i = 0; i < ps.unstakeEntries[_staker].length; i++) {
-            if (ps.unstakeEntries[_staker][i].blockInitiated == 0) {
-                continue;
-            }
-            if (
-                ps.unstakeEntries[_staker][i]
-                    .blockInitiated
-                    .add(gs.unstakeCooldown)
-                    .add(gs.unstakeWindow) <= block.number
-            ) {
-                continue;
-            }
-            return i;
+        uint256 accrued = LibPool.accruedDebt(_protocol, _token);
+        if (accrued == 0) {
+            require(ps.protocolPremium[_protocol] == 0, "CAN_NOT_DELETE");
+        } else {
+            require(accrued > ps.protocolBalance[_protocol], "CAN_NOT_DELETE2");
         }
-        return ps.unstakeEntries[_staker].length;
-    }
 
-    function baseData()
-        internal
-        view
-        returns (IERC20 token, PoolStorage.Base storage ps)
-    {
-        token = bps();
-        ps = PoolStorage.ps(address(token));
-        require(ps.initialized, "INVALID_TOKEN");
-    }
-
-    function bps() internal pure returns (IERC20 rt) {
-        // These fields are not accessible from assembly
-        bytes memory array = msg.data;
-        uint256 index = msg.data.length;
-
-        // solhint-disable-next-line no-inline-assembly
-        assembly {
-            // Load the 32 bytes word from memory with the address on the lower 20 bytes, and mask those.
-            rt := and(
-                mload(add(array, index)),
-                0xffffffffffffffffffffffffffffffffffffffff
-            )
+        if (_forceDebt && accrued > 0) {
+            ps.stakeBalance = ps.stakeBalance.add(
+                ps.protocolBalance[_protocol]
+            );
+            delete ps.protocolBalance[_protocol];
         }
+
+        if (ps.protocolBalance[_protocol] > 0) {
+            require(_receiver != address(0), "ADDRESS");
+            _token.safeTransfer(_receiver, ps.protocolBalance[_protocol]);
+        }
+
+        // move last index to index of _protocol
+        ps.protocols[_index] = ps.protocols[ps.protocols.length - 1];
+        // remove last index
+        delete ps.protocols[ps.protocols.length - 1];
+        ps.isProtocol[_protocol] = false;
     }
 }

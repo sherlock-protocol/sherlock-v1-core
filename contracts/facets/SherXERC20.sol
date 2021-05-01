@@ -14,7 +14,44 @@ import "../storage/LibSherXERC20.sol";
 contract SherXERC20 is IERC20, ISherXERC20 {
     using SafeMath for uint256;
 
-    function initialize(
+    //
+    // View methods
+    //
+
+    function name() external override view returns (string memory) {
+        return SherXERC20Storage.sx20().name;
+    }
+
+    function symbol() external override view returns (string memory) {
+        return SherXERC20Storage.sx20().symbol;
+    }
+
+    function decimals() external override pure returns (uint8) {
+        return 18;
+    }
+
+    function allowance(address _owner, address _spender)
+        external
+        override
+        view
+        returns (uint256)
+    {
+        return SherXERC20Storage.sx20().allowances[_owner][_spender];
+    }
+
+    function balanceOf(address _of) external override view returns (uint256) {
+        return SherXERC20Storage.sx20().balances[_of];
+    }
+
+    function totalSupply() external override view returns (uint256) {
+        return SherXERC20Storage.sx20().totalSupply;
+    }
+
+    //
+    // State changing methods
+    //
+
+    function initializeSherXERC20(
         uint256 _initialSupply,
         string memory _name,
         string memory _symbol
@@ -40,26 +77,6 @@ contract SherXERC20 is IERC20, ISherXERC20 {
         sx20.symbol = _symbol;
     }
 
-    function name() external override view returns (string memory) {
-        return SherXERC20Storage.sx20().name;
-    }
-
-    function setName(string calldata _name) external override {
-        SherXERC20Storage.sx20().name = _name;
-    }
-
-    function symbol() external override view returns (string memory) {
-        return SherXERC20Storage.sx20().symbol;
-    }
-
-    function setSymbol(string calldata _symbol) external override {
-        SherXERC20Storage.sx20().symbol = _symbol;
-    }
-
-    function decimals() external override pure returns (uint8) {
-        return 18;
-    }
-
     function mint(address _receiver, uint256 _amount) external override {
         LibSherXERC20.mint(_receiver, _amount);
     }
@@ -68,14 +85,12 @@ contract SherXERC20 is IERC20, ISherXERC20 {
         LibSherXERC20.burn(_from, _amount);
     }
 
-    function approve(address _spender, uint256 _amount)
-        external
-        override
-        returns (bool)
-    {
-        require(_spender != address(0), "SPENDER_INVALID");
-        emit Approval(msg.sender, _spender, _amount);
-        return LibSherXERC20.approve(msg.sender, _spender, _amount);
+    function setName(string calldata _name) external override {
+        SherXERC20Storage.sx20().name = _name;
+    }
+
+    function setSymbol(string calldata _symbol) external override {
+        SherXERC20Storage.sx20().symbol = _symbol;
     }
 
     function increaseApproval(address _spender, uint256 _amount)
@@ -117,6 +132,16 @@ contract SherXERC20 is IERC20, ISherXERC20 {
         return true;
     }
 
+    function approve(address _spender, uint256 _amount)
+        external
+        override
+        returns (bool)
+    {
+        require(_spender != address(0), "SPENDER_INVALID");
+        emit Approval(msg.sender, _spender, _amount);
+        return LibSherXERC20.approve(msg.sender, _spender, _amount);
+    }
+
     function transfer(address _to, uint256 _amount)
         external
         override
@@ -145,23 +170,6 @@ contract SherXERC20 is IERC20, ISherXERC20 {
 
         _transfer(_from, _to, _amount);
         return true;
-    }
-
-    function allowance(address _owner, address _spender)
-        external
-        override
-        view
-        returns (uint256)
-    {
-        return SherXERC20Storage.sx20().allowances[_owner][_spender];
-    }
-
-    function balanceOf(address _of) external override view returns (uint256) {
-        return SherXERC20Storage.sx20().balances[_of];
-    }
-
-    function totalSupply() external override view returns (uint256) {
-        return SherXERC20Storage.sx20().totalSupply;
     }
 
     function _transfer(
