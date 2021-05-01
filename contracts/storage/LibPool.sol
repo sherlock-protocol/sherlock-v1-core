@@ -47,7 +47,7 @@ library PoolStorage {
 
     struct UnstakeEntry {
         uint256 blockInitiated;
-        uint256 stake;
+        uint256 lock;
     }
 
     function ps(address _token) internal pure returns (Base storage bs) {

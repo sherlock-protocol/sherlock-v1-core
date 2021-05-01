@@ -275,7 +275,7 @@ contract Pool {
             withdraw.blockInitiated.add(gs.unstakeCooldown) >= block.number,
             "COOLDOWN_EXPIRED"
         );
-        ps.lockToken.safeTransfer(msg.sender, withdraw.stake);
+        ps.lockToken.safeTransfer(msg.sender, withdraw.lock);
         delete ps.unstakeEntries[msg.sender][_id];
     }
 
@@ -293,7 +293,7 @@ contract Pool {
             ) < block.number,
             "CLAIMPERIOD_NOT_EXPIRED"
         );
-        ps.lockToken.safeTransfer(_account, withdraw.stake);
+        ps.lockToken.safeTransfer(_account, withdraw.lock);
         delete ps.unstakeEntries[_account][_id];
     }
 
@@ -324,12 +324,12 @@ contract Pool {
             ) > block.number,
             "CLAIMPERIOD_EXPIRED"
         );
-        amount = withdraw.stake.mul(ps.stakeBalance).div(
+        amount = withdraw.lock.mul(ps.stakeBalance).div(
             ps.lockToken.totalSupply()
         );
 
         ps.stakeBalance = ps.stakeBalance.sub(amount);
-        ps.lockToken.burn(address(this), withdraw.stake);
+        ps.lockToken.burn(address(this), withdraw.lock);
         delete ps.unstakeEntries[msg.sender][_id];
         token.safeTransfer(_receiver, amount);
     }
