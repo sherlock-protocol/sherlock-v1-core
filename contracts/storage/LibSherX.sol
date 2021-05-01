@@ -3,7 +3,7 @@ pragma solidity ^0.7.0;
 
 import "hardhat/console.sol";
 
-import "../interfaces/stake/INativeStake.sol";
+import "../interfaces/lock/INativeLock.sol";
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -19,7 +19,7 @@ library SherXStorage {
         uint256 totalUsdLastSettled;
 
         uint256 sherXPerBlock;
-        uint256 sherXLastAccrued; 
+        uint256 sherXLastAccrued;
     }
 
     function sx() internal pure returns (Base storage sx) {

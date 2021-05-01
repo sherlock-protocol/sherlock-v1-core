@@ -8,8 +8,8 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 import "../interfaces/ISherX.sol";
-import "../interfaces/stake/INativeStake.sol";
-import "../interfaces/stake/IForeignStake.sol";
+import "../interfaces/lock/INativeLock.sol";
+import "../interfaces/lock/IForeignLock.sol";
 
 import "../libraries/LibPool.sol";
 import "../libraries/LibSherX.sol";
@@ -40,7 +40,7 @@ contract SherX is ISherX {
             harvestForMultiple(_token[i], _users);
         }
         for (uint256 i; i < _debtTokens.length; i++) {
-            address underlying = IForeignStake(_debtTokens[i]).underlying();
+            address underlying = IForeignLock(_debtTokens[i]).underlying();
             LibPool.payOffDebtAll(IERC20(underlying));
         }
     }
@@ -49,7 +49,7 @@ contract SherX is ISherX {
         public
         override
     {
-        address underlying = IForeignStake(_token).underlying();
+        address underlying = IForeignLock(_token).underlying();
         LibPool.payOffDebtAll(IERC20(underlying));
         for (uint256 i; i < _users.length; i++) {
             doYield(_token, _users[i], _users[i], 0);
@@ -218,10 +218,10 @@ contract SherX is ISherX {
         address to,
         uint256 amount
     ) private {
-        address underlying = IForeignStake(token).underlying();
+        address underlying = IForeignLock(token).underlying();
         PoolStorage.Base storage ps = PoolStorage.ps(underlying);
         require(address(ps.stakeToken) == token, "Unexpected sender");
-        
+
         LibSherX.accrueSherX();
 
         uint256 userAmount = ps.stakeToken.balanceOf(from);

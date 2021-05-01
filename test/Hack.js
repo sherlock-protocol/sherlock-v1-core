@@ -47,8 +47,8 @@ describe("Hack tests", function () {
     await tokenA.connect(alice).approve(insure.address, constants.MaxUint256);
     await tokenA.connect(carol).approve(insure.address, constants.MaxUint256);
 
-    const Stake = await ethers.getContractFactory("ForeignStake");
-    const StakeFee = await ethers.getContractFactory("NativeStake");
+    const Stake = await ethers.getContractFactory("ForeignLock");
+    const StakeFee = await ethers.getContractFactory("NativeLock");
     [stakeA, stakeB, stakeC] = [
       await Stake.deploy("Stake TokenA", "stkA", tokenA.address),
       await Stake.deploy("Stake TokenB", "stkB", tokenB.address),

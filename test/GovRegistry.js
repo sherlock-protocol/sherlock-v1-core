@@ -24,7 +24,7 @@ describe("Gov Registry tests", function () {
       await Token.deploy("TokenC", "C", parseEther("1000")),
     ];
 
-    const Stake = await ethers.getContractFactory("ForeignStake");
+    const Stake = await ethers.getContractFactory("ForeignLock");
     [stakeA, stakeB, stakeC] = [
       await Stake.deploy("Stake TokenA", "stkA", tokenA.address),
       await Stake.deploy("Stake TokenB", "stkB", tokenB.address),

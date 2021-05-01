@@ -8,14 +8,14 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "../interfaces/stake/INativeStake.sol";
-import "../interfaces/stake/IForeignStake.sol";
+import "../interfaces/lock/INativeLock.sol";
+import "../interfaces/lock/IForeignLock.sol";
 import "../interfaces/ISolution.sol";
 
 contract SherlockSwap {
     using SafeERC20 for IERC20;
-    using SafeERC20 for INativeStake;
-    using SafeERC20 for IForeignStake;
+    using SafeERC20 for INativeLock;
+    using SafeERC20 for IForeignLock;
     IUniswapV2Router02 router = IUniswapV2Router02(
         0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D
     );
@@ -27,21 +27,21 @@ contract SherlockSwap {
 
     struct withdrawal {
         address user;
-        IForeignStake token;
+        IForeignLock token;
         uint256 tokenID;
         uint256 SherXID;
     }
 
     withdrawal[] withdrawals;
     ISolution public sherlock;
-    INativeStake public lockSherX;
+    INativeLock public lockSherX;
 
-    constructor(ISolution _sherlock, INativeStake _lockSherX) public {
+    constructor(ISolution _sherlock, INativeLock _lockSherX) public {
         sherlock = _sherlock;
         lockSherX = _lockSherX;
     }
 
-    function activateCooldown(uint256 _amount, IForeignStake _token)
+    function activateCooldown(uint256 _amount, IForeignLock _token)
         external
         returns (uint256 index)
     {

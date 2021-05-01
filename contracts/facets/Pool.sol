@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
-import "../interfaces/stake/INativeStake.sol";
+import "../interfaces/lock/INativeLock.sol";
 
 import "../libraries/LibPool.sol";
 
@@ -17,7 +17,7 @@ contract Pool {
 
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
-    using SafeERC20 for INativeStake;
+    using SafeERC20 for INativeLock;
 
     function setCooldownFee(uint256 _fee) external {
         require(msg.sender == GovStorage.gs().govInsurance, "NOT_GOV");
@@ -210,7 +210,11 @@ contract Pool {
         return ps.stakeBalance;
     }
 
-    function getStakerPoolBalance(address _staker) external view returns (uint256) {
+    function getStakerPoolBalance(address _staker)
+        external
+        view
+        returns (uint256)
+    {
         (, PoolStorage.Base storage ps) = baseData();
         if (ps.stakeToken.totalSupply() == 0) {
             return 0;

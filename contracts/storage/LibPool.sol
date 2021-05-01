@@ -3,7 +3,7 @@ pragma solidity ^0.7.0;
 
 import "hardhat/console.sol";
 
-import "../interfaces/stake/INativeStake.sol";
+import "../interfaces/lock/INativeLock.sol";
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -37,7 +37,7 @@ library PoolStorage {
 
         mapping(address => UnstakeEntry[]) unstakeEntries;
 
-        INativeStake stakeToken;
+        INativeLock stakeToken;
 
         mapping(bytes32 => bool) isProtocol;
         bytes32[] protocols;

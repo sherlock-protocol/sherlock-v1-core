@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.7.4;
 
-import "../interfaces/stake/INativeStake.sol";
+import "../interfaces/lock/INativeLock.sol";
 
 interface IGov {
     function setInitialGovInsurance(address _govInsurance) external;
@@ -35,7 +35,7 @@ interface IGov {
         view
         returns (address agent);
 
-    event TokenAdded(IERC20 _token, INativeStake _stake);
+    event TokenAdded(IERC20 _token, INativeLock _stake);
 
     function protocolAdd(
         bytes32 _protocol,
@@ -54,7 +54,7 @@ interface IGov {
     // TODO transfer govpool role
     function tokenAdd(
         IERC20 _token,
-        INativeStake _stake,
+        INativeLock _stake,
         address _govPool
     ) external;
 
