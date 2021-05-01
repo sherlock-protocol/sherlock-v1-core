@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.7.4;
 
-import "../storage/LibPool.sol";
-import "../storage/LibGov.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 interface IManager {
     function setProtocolPremiums(

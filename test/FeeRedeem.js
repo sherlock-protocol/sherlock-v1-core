@@ -123,7 +123,6 @@ describe("Fee tests", function () {
         .connect(alice)
         .withdrawClaim(0, alice.address, insure.address);
 
-      console.log(owner.address);
       expect(await insure.totalSupply()).to.eq(parseEther("24"));
       expect(await insure.balanceOf(owner.address)).to.eq(parseEther("12"));
       expect(await insure.balanceOf(alice.address)).to.eq(parseEther("12"));

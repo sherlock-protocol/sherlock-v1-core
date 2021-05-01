@@ -21,3 +21,7 @@ library LibERC20Storage {
     }
   }
 }
+
+// TODO
+// move this in to LibFee.sol storage
+// Rename FeeStorage to SherXStorage

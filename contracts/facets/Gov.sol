@@ -11,13 +11,10 @@ import "diamond-2/contracts/libraries/LibDiamond.sol";
 
 import "../interfaces/IGov.sol";
 
-import "../storage/LibPool.sol";
-import "../storage/LibGov.sol";
-import "../storage/LibFee.sol";
-import "../storage/LibERC20Storage.sol";
-
 import "../libraries/LibFee.sol";
 import "../libraries/LibERC20.sol";
+
+import "../storage/LibERC20Storage.sol";
 
 contract Gov is IGov {
     using SafeMath for uint256;

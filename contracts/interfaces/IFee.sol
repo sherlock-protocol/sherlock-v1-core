@@ -1,13 +1,11 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.7.4;
-pragma abicoder v2;
 
-import "hardhat/console.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import "../storage/LibPool.sol";
-import "../storage/LibGov.sol";
-
+// ISherX
 interface IFee {
+    // TODO remove?
     function getTotalFeePool() external view returns (uint256);
 
     function _beforeTokenTransfer(
@@ -56,6 +54,7 @@ interface IFee {
 
     function redeem(uint256 _amount, address _receiver) external;
 
+    // getUnmaterializedSherX()
     function getWithdrawableFeeAmount(address _user, address _token)
         external
         view

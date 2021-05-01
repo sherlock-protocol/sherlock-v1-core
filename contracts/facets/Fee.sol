@@ -7,10 +7,6 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
-import "../storage/LibPool.sol";
-import "../storage/LibGov.sol";
-import "../storage/LibERC20Storage.sol";
-
 import "../interfaces/IFee.sol";
 import "../interfaces/IStake.sol";
 import "../interfaces/IStakePlus.sol";
@@ -18,6 +14,8 @@ import "../interfaces/IStakePlus.sol";
 import "../libraries/LibPool.sol";
 import "../libraries/LibFee.sol";
 import "../libraries/LibERC20.sol";
+
+import "../storage/LibERC20Storage.sol";
 
 contract Fee is IFee {
     using SafeMath for uint256;

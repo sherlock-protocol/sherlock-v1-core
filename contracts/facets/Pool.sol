@@ -8,13 +8,9 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
-import "../storage/LibPool.sol";
-import "../storage/LibGov.sol";
-
 import "../interfaces/IStake.sol";
 
 import "../libraries/LibPool.sol";
-import "../libraries/LibERC20.sol";
 
 contract Pool {
     // TODO, ability to activate assets (in different facet)
@@ -152,6 +148,7 @@ contract Pool {
         uint256 _amount,
         address _receiver
     ) external {
+        // TODO check if suprise withdrawals have negative effects on other parts of the logic
         require(
             msg.sender == GovStorage.gs().protocolAgents[_protocol],
             "SENDER"
@@ -239,7 +236,28 @@ contract Pool {
         require(_amount > 0, "AMOUNT");
         (IERC20 token, PoolStorage.Base storage ps) = baseData();
 
-        return LibPool.withdraw(ps, _amount, msg.sender);
+        ps.stakeToken.safeTransferFrom(msg.sender, address(this), _amount);
+        uint256 stakeTokenExitFee = _amount.mul(ps.exitFee).div(10**18);
+        if (stakeTokenExitFee > 0) {
+            // stake of user gets burned
+            // representative amount token get added to first money out pool
+            uint256 tokenAmount = stakeTokenExitFee.mul(ps.poolBalance).div(
+                ps.stakeToken.totalSupply()
+            );
+            ps.poolBalance = ps.poolBalance.sub(tokenAmount);
+            ps.firstMoneyOut = ps.firstMoneyOut.add(tokenAmount);
+
+            ps.stakeToken.burn(address(this), stakeTokenExitFee);
+        }
+
+        ps.stakesWithdraw[msg.sender].push(
+            PoolStorage.StakeWithdraw(
+                block.number,
+                _amount.sub(stakeTokenExitFee)
+            )
+        );
+
+        return ps.stakesWithdraw[msg.sender].length - 1;
     }
 
     function withdrawCancel(uint256 _id) external {
@@ -287,7 +305,30 @@ contract Pool {
     {
         (IERC20 token, PoolStorage.Base storage ps) = baseData();
 
-        amount = LibPool.withdrawClaim(ps, msg.sender, _id);
+        GovStorage.Base storage gs = GovStorage.gs();
+        PoolStorage.StakeWithdraw memory withdraw = ps.stakesWithdraw[msg
+            .sender][_id];
+        require(withdraw.blockInitiated != 0, "WITHDRAW_NOT_ACTIVE");
+        // timelock is including
+        require(
+            withdraw.blockInitiated.add(gs.withdrawTimeLock) < block.number,
+            "TIMELOCK_ACTIVE"
+        );
+        // claim period is including, TODO should it be including?
+        require(
+            withdraw.blockInitiated.add(gs.withdrawTimeLock).add(
+                gs.withdrawClaimPeriod
+            ) > block.number,
+            "CLAIMPERIOD_EXPIRED"
+        );
+        amount = withdraw.stake.mul(ps.poolBalance).div(
+            ps.stakeToken.totalSupply()
+        );
+        // TODO get fee tokens from timelock (and swap for native) (in timelock lib)
+        ps.poolBalance = ps.poolBalance.sub(amount);
+        ps.stakeToken.burn(address(this), withdraw.stake);
+        // TODO send fee tokens
+        delete ps.stakesWithdraw[msg.sender][_id];
         token.safeTransfer(_receiver, amount);
     }
 

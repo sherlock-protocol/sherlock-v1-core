@@ -7,10 +7,6 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 
 import "../interfaces/IManager.sol";
 
-import "../storage/LibPool.sol";
-import "../storage/LibGov.sol";
-import "../storage/LibFee.sol";
-
 import "../libraries/LibFee.sol";
 import "../libraries/LibPool.sol";
 

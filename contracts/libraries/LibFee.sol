@@ -30,6 +30,8 @@ library LibFee {
         fs.lastPremiumChange = block.number;
     }
 
+
+    // TODO remove?
     function getOutstandingFeeTokens(address _token)
         external
         view

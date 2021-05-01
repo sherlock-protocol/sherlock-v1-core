@@ -6,8 +6,10 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "diamond-2/contracts/libraries/LibDiamond.sol";
 
 import "../interfaces/IERC20Facet.sol";
-import "../storage/LibERC20Storage.sol";
+
 import "../libraries/LibERC20.sol";
+
+import "../storage/LibERC20Storage.sol";
 
 contract ERC20Facet is IERC20, IERC20Facet {
     using SafeMath for uint256;

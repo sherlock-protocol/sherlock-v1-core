@@ -7,40 +7,44 @@ import "../interfaces/IStake.sol";
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+// TokenStorage
 library PoolStorage {
 
     struct Base {
         address govPool;
 
         bool initialized;
+        // TODO sherx token? Not able to deposit? e.g. alchemix token
+        // stakes
         bool deposits;
 
-        uint256 poolBalance;
+        uint256 poolBalance; // stakeBalance
         uint256 firstMoneyOut;
-        uint256 unmaterializedFee;
+        uint256 unmaterializedFee; // sherx
         mapping(bytes32 => uint256) protocolBalance;
         mapping(bytes32 => uint256) protocolPremium;
         uint256 totalPremiumPerBlock;
         uint256 totalPremiumLastPaid;
 
         // how much token (this) is available for fee holders
-        uint256 underlyingForFee;
+        uint256 underlyingForFee; // sherXUnderlying
 
         // non-native variables
-        mapping(address => uint256) feeWithdrawn;
-        uint256 feeWeight;
-        uint256 totalFeePoolWeight;
+        mapping(address => uint256) feeWithdrawn; // sherXWithdrawn
+        uint256 feeWeight; // sherXWeight
+        uint256 totalFeePoolWeight; // sherXWeight
 
-        mapping(address => StakeWithdraw[]) stakesWithdraw;
+        mapping(address => StakeWithdraw[]) stakesWithdraw; // unstakeEntry
 
         IStake stakeToken;
 
         mapping(bytes32 => bool) isProtocol;
         bytes32[] protocols;
 
-        uint256 exitFee;
+        uint256 exitFee; // activateCooldownFee
     }
 
+    // TODO use uint256[2] instead of struct
     struct StakeWithdraw {
         uint256 blockInitiated;
         uint256 stake;

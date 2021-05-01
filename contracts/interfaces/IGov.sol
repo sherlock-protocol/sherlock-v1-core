@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.7.4;
 
-import "../storage/LibPool.sol";
-import "../storage/LibGov.sol";
+import "../interfaces/IStake.sol";
 
 interface IGov {
     function setInitialGovInsurance(address _govInsurance) external;
@@ -11,12 +10,16 @@ interface IGov {
 
     function getGovInsurance() external view returns (address);
 
+    // setUnstakeWindow()
     function setClaimPeriod(uint256 _claimPeriod) external;
 
+    // setCooldown()
     function setTimeLock(uint256 _timeLock) external;
 
+    // same
     function getClaimPeriod() external view returns (uint256 claimPeriod);
 
+    // same
     function getTimeLock() external view returns (uint256 timeLock);
 
     function getTokens() external view returns (IERC20[] memory tokens);
@@ -52,6 +55,7 @@ interface IGov {
 
     function protocolRemove(bytes32 _protocol) external;
 
+    // TODO transfer govpool role
     function tokenAdd(
         IERC20 _token,
         IStake _stake,

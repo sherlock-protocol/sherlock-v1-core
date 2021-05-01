@@ -14,13 +14,14 @@ library FeeStorage {
 
     struct Base {
         mapping(IERC20 => uint256) tokenUSD;
-        uint256 totalBlockIncrement;
+        uint256 totalBlockIncrement; // totalUsdPerBlock
         uint256 totalUsdPool;
-        uint256 feePerBlock;
-        uint256 feeLastAccrued;
+        uint256 lastPremiumChange; // totalUsdLastSettled
 
-        uint256 lastPremiumChange;
-        uint256 totalFeePool;
+        uint256 feePerBlock; // sherXPerBlock
+        uint256 feeLastAccrued; // sherXLastAccrued
+
+        uint256 totalFeePool; // TODO remove?
     }
 
     function fs() internal pure returns (Base storage fs) {
