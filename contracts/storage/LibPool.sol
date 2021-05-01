@@ -10,6 +10,8 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 // TokenStorage
 library PoolStorage {
 
+    string constant POOL_STORAGE_PREFIX = "diamond.sherlock.pool.";
+
     struct Base {
         address govPool;
 
@@ -51,7 +53,7 @@ library PoolStorage {
     }
 
     function ps(address _token) internal pure returns (Base storage bs) {
-        bytes32 position = keccak256(abi.encode("diamond.sherlock.pool.", _token));
+        bytes32 position = keccak256(abi.encode(POOL_STORAGE_PREFIX, _token));
         assembly {
             bs.slot := position
         }

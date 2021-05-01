@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 library SherXStorage {
     bytes32 constant SHERX_STORAGE_POSITION = keccak256(
-        abi.encode("diamond.sherlock.x")
+        "diamond.sherlock.x"
     );
 
     struct Base {
