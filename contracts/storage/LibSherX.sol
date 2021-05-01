@@ -14,12 +14,12 @@ library SherXStorage {
 
     struct Base {
         mapping(IERC20 => uint256) tokenUSD;
-        uint256 totalBlockIncrement; // totalUsdPerBlock
+        uint256 totalUsdPerBlock;
         uint256 totalUsdPool;
-        uint256 lastPremiumChange; // totalUsdLastSettled
+        uint256 totalUsdLastSettled;
 
-        uint256 feePerBlock; // sherXPerBlock
-        uint256 feeLastAccrued; // sherXLastAccrued
+        uint256 sherXPerBlock;
+        uint256 sherXLastAccrued; 
     }
 
     function sx() internal pure returns (Base storage sx) {

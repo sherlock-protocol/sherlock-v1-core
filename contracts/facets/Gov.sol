@@ -180,7 +180,7 @@ contract Gov is IGov {
 
         gs.tokens.push(_token);
         ps.initialized = true;
-        ps.deposits = true;
+        ps.stakes = true;
         ps.stakeToken = _stake;
         ps.govPool = _govPool;
         emit TokenAdded(_token, _stake);
@@ -190,8 +190,8 @@ contract Gov is IGov {
         PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
         require(ps.initialized, "NOT_INITIALIZED");
         require(ps.totalPremiumPerBlock == 0, "ACTIVE_PREMIUM");
-        require(ps.deposits, "ALREADY_DISABLED");
-        ps.deposits = false;
+        require(ps.stakes, "ALREADY_DISABLED");
+        ps.stakes = false;
     }
 
     function tokenRemove(
@@ -220,19 +220,19 @@ contract Gov is IGov {
         // 27/3, I think it is cool, as balance+premium+isProtocol will be reset (as all protocols need to be deleted)
         // stakeWithdraw is kept, only results in withdraws potentially having index > 0
         delete ps.initialized;
-        delete ps.deposits;
-        delete ps.poolBalance;
+        delete ps.stakes;
+        delete ps.stakeBalance;
         //delete ps.protocolBalance;
         //delete ps.protocolPremium;
         delete ps.totalPremiumPerBlock;
         delete ps.totalPremiumLastPaid;
-        //delete ps.stakesWithdraw;
+        //delete ps.unstakeEntries;
         delete ps.stakeToken;
         //delete ps.isProtocol;
         delete ps.protocols;
         delete ps.govPool;
-        if (ps.poolBalance > 0) {
-            _token.safeTransfer(_to, ps.poolBalance);
+        if (ps.stakeBalance > 0) {
+            _token.safeTransfer(_to, ps.stakeBalance);
         }
     }
 
@@ -241,11 +241,11 @@ contract Gov is IGov {
         IERC20[] memory _tokens,
         uint256[] memory _firstMoneyOut,
         uint256[] memory _amounts,
-        uint256[] memory _unmaterializedFee
+        uint256[] memory _unmaterializedSherX
     ) external override {
         // all pools (including fee pool) can be deducted fmo and balance
         // deducting balance will reduce the users underlying value of stake token
-        // for every pool, _unmaterializedFee can be deducted, this will decrease outstanding fee rewards
+        // for every pool, _unmaterializedSherX can be deducted, this will decrease outstanding fee rewards
         // for users that did not claim them (e.g materialized them and included in fee pool)
 
         SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
@@ -253,21 +253,21 @@ contract Gov is IGov {
 
         // todo require all equal lengths
 
-        LibSherX.accrueFeeToken();
+        LibSherX.accrueSherX();
         uint256 totalUnmaterializedFee = 0;
 
         for (uint256 i; i < _tokens.length; i++) {
             PoolStorage.Base storage ps = PoolStorage.ps(address(_tokens[i]));
             require(
-                ps.unmaterializedFee >= _unmaterializedFee[i],
+                ps.unmaterializedSherX >= _unmaterializedSherX[i],
                 "ERR_UNMAT_FEE"
             );
-            ps.feeWeight = ps.feeWeight.sub(_unmaterializedFee[i]);
+            ps.sWeight = ps.sWeight.sub(_unmaterializedSherX[i]);
             ps.firstMoneyOut = ps.firstMoneyOut.sub(_firstMoneyOut[i]);
-            ps.poolBalance = ps.poolBalance.sub(_amounts[i]);
+            ps.stakeBalance = ps.stakeBalance.sub(_amounts[i]);
 
             totalUnmaterializedFee = totalUnmaterializedFee.add(
-                _unmaterializedFee[i]
+                _unmaterializedSherX[i]
             );
 
             uint256 total = _firstMoneyOut[i].add(_amounts[i]);

@@ -19,42 +19,41 @@ import "./LibPool.sol";
 library LibSherX {
     using SafeMath for uint256;
 
-    // TODO accureFeeToken(address token), to just accrue for a certain token
-    // do accrueFeeToken() to loop over all if updating weights
+    // TODO accrueSherX(address token), to just accrue for a certain token
+    // do accrueSherX() to loop over all if updating weights
 
     function accrueUSDPool() external {
         SherXStorage.Base storage sx = SherXStorage.sx();
         sx.totalUsdPool = sx.totalUsdPool.add(
-            block.number.sub(sx.lastPremiumChange).mul(sx.totalBlockIncrement)
+            block.number.sub(sx.totalUsdLastSettled).mul(sx.totalUsdPerBlock)
         );
-        sx.lastPremiumChange = block.number;
+        sx.totalUsdLastSettled = block.number;
     }
 
-    // TODO remove?
-    function getOutstandingFeeTokens(address _token)
+    function getUnmintedSherX(address _token)
         external
         view
-        returns (uint256 fee)
+        returns (uint256 amount)
     {
         SherXStorage.Base storage sx = SherXStorage.sx();
-        uint256 amount = block.number.sub(sx.feeLastAccrued).mul(
-            sx.feePerBlock
+        uint256 total = block.number.sub(sx.sherXLastAccrued).mul(
+            sx.sherXPerBlock
         );
 
         PoolStorage.Base storage ps = PoolStorage.ps(_token);
-        fee = amount.mul(ps.totalFeePoolWeight).div(10**18);
+        amount = total.mul(ps.sherXWeight).div(10**18);
     }
 
-    function accrueFeeToken() external {
+    function accrueSherX() external {
         // loop over pools, increase the pool + pool_weight based on the distribution weights
 
         GovStorage.Base storage gs = GovStorage.gs();
         SherXStorage.Base storage sx = SherXStorage.sx();
 
-        // mint fee tokens op basis van (sx.feePerBlock) diff
+        // mint sherX tokens op basis van (sx.sherXPerBlock) diff
 
-        uint256 amount = block.number.sub(sx.feeLastAccrued).mul(
-            sx.feePerBlock
+        uint256 amount = block.number.sub(sx.sherXLastAccrued).mul(
+            sx.sherXPerBlock
         );
         if (amount == 0) {
             return;
@@ -65,15 +64,15 @@ library LibSherX {
 
             PoolStorage.Base storage ps = PoolStorage.ps(address(token));
 
-            uint256 fee = amount.mul(ps.totalFeePoolWeight).div(10**18);
+            uint256 sherX = amount.mul(ps.sherXWeight).div(10**18);
             if (address(token) == address(this)) {
-                ps.poolBalance = ps.poolBalance.add(fee);
+                ps.stakeBalance = ps.stakeBalance.add(sherX);
             } else {
-                ps.unmaterializedFee = ps.unmaterializedFee.add(fee);
-                ps.feeWeight = ps.feeWeight.add(fee);
+                ps.unmaterializedSherX = ps.unmaterializedSherX.add(sherX);
+                ps.sWeight = ps.sWeight.add(sherX);
             }
         }
         LibSherXERC20.mint(address(this), amount);
-        sx.feeLastAccrued = block.number;
+        sx.sherXLastAccrued = block.number;
     }
 }

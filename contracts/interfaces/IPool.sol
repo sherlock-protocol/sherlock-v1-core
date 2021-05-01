@@ -86,7 +86,7 @@ interface IPool {
         address _staker,
         uint256 _id,
         address _token
-    ) external view returns (PoolStorage.StakeWithdraw memory); // uint256[2]
+    ) external view returns (PoolStorage.UnstakeEntry memory); // uint256[2]
 
     function getTotalAccruedDebt(address _token)
         external

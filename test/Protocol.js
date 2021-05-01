@@ -68,7 +68,7 @@ describe("Protocol tests", function () {
           parseEther("1"),
           tokenA.address
         )
-      ).to.be.revertedWith("NO_DEPOSITS");
+      ).to.be.revertedWith("NO_STAKES");
     });
     it("Deposit", async function () {
       await insure.depositProtocolBalance(

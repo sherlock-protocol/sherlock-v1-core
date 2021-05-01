@@ -24,9 +24,9 @@ library LibPool {
             stake = 10**18;
         } else {
             // mint stake based on funds in pool
-            stake = _amount.mul(totalStake).div(ps.poolBalance);
+            stake = _amount.mul(totalStake).div(ps.stakeBalance);
         }
-        ps.poolBalance = ps.poolBalance.add(_amount);
+        ps.stakeBalance = ps.stakeBalance.add(_amount);
         ps.stakeToken.mint(_receiver, stake);
     }
 
@@ -38,7 +38,7 @@ library LibPool {
 
         uint256 totalAccruedDebt = getTotalAccruedDebt(_token);
         // move funds to the fee pool
-        ps.underlyingForFee = ps.underlyingForFee.add(totalAccruedDebt);
+        ps.sherXUnderlying = ps.sherXUnderlying.add(totalAccruedDebt);
 
         SherXStorage.Base storage sx = SherXStorage.sx();
         // changes the sx.totalUsdPool

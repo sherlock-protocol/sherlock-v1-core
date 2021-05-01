@@ -75,6 +75,6 @@ interface IGov {
         IERC20[] memory _tokens,
         uint256[] memory _firstMoneyOut,
         uint256[] memory _amounts,
-        uint256[] memory _unmaterializedFee
+        uint256[] memory _unmaterializedSherX
     ) external;
 }

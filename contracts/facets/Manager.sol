@@ -45,22 +45,22 @@ contract Manager is IManager {
         require(ps.initialized, "WHITELIST");
 
         LibPool.payOffDebtAll(IERC20(_token));
-        if (sx.feeLastAccrued == 0) {
-            sx.feeLastAccrued = block.number;
+        if (sx.sherXLastAccrued == 0) {
+            sx.sherXLastAccrued = block.number;
         }
 
         require(gs.protocolIsCovered[_protocol], "NOT_COVERED");
         require(gs.protocolManagers[_protocol] == msg.sender, "NOT_MANAGER");
 
         LibSherX.accrueUSDPool();
-        LibSherX.accrueFeeToken();
+        LibSherX.accrueSherX();
         uint256 curUsd = sx.tokenUSD[_token];
         // sub old premium in usd, add new premium in usdd
         // TODO optimize, writing to times to storage
-        sx.totalBlockIncrement = sx.totalBlockIncrement.sub(
+        sx.totalUsdPerBlock = sx.totalUsdPerBlock.sub(
             ps.protocolPremium[_protocol].mul(curUsd).div(10**18)
         );
-        sx.totalBlockIncrement = sx.totalBlockIncrement.add(
+        sx.totalUsdPerBlock = sx.totalUsdPerBlock.add(
             _premium.mul(_price).div(10**18)
         );
 
@@ -68,8 +68,8 @@ contract Manager is IManager {
         // if (sx.tokenUSD[_token] != _price) {
         sx.totalUsdPool = sx
             .totalUsdPool
-            .sub(ps.underlyingForFee.mul(curUsd).div(10**18))
-            .add(ps.underlyingForFee.mul(_price).div(10**18));
+            .sub(ps.sherXUnderlying.mul(curUsd).div(10**18))
+            .add(ps.sherXUnderlying.mul(_price).div(10**18));
         // recalcs current poolbalance
 
         // update price
@@ -83,11 +83,11 @@ contract Manager is IManager {
             .add(_premium);
         ps.protocolPremium[_protocol] = _premium;
 
-        if (sx.feePerBlock == 0) {
-            sx.feePerBlock = 10**18;
+        if (sx.sherXPerBlock == 0) {
+            sx.sherXPerBlock = 10**18;
         } else if (sx.totalUsdPool > 0) {
             // TODO validate when sx.totalUsdPool
-            sx.feePerBlock = sx20.totalSupply.mul(sx.totalBlockIncrement).div(
+            sx.sherXPerBlock = sx20.totalSupply.mul(sx.totalUsdPerBlock).div(
                 sx.totalUsdPool
             );
         }

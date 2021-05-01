@@ -82,7 +82,7 @@ describe("Staker tests", function () {
       await insure.tokenDisable(tokenA.address);
       await expect(
         insure.stake(parseEther("10"), owner.address, tokenA.address)
-      ).to.be.revertedWith("NO_DEPOSITS");
+      ).to.be.revertedWith("NO_STAKES");
     });
   });
   describe("stake(), scenario 1", function () {
