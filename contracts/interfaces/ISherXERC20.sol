@@ -35,41 +35,11 @@ interface ISherXERC20 {
 
     /**
         @notice Sets up the metadata and initial supply. Can be called by the contract owner
-        @param _initialSupply Initial supply of the token
         @param _name Name of the token
         @param _symbol Symbol of the token
     */
-    function initializeSherXERC20(
-        uint256 _initialSupply,
-        string memory _name,
-        string memory _symbol
-    ) external;
-
-    /**
-        @notice Mints tokens. Can only be called by the contract owner or the contract itself
-        @param _receiver Address receiving the tokens
-        @param _amount Amount to mint
-    */
-    function mint(address _receiver, uint256 _amount) external;
-
-    /**
-        @notice Burns tokens. Can only be called by the contract owner or the contract itself
-        @param _from Address to burn from
-        @param _amount Amount to burn
-    */
-    function burn(address _from, uint256 _amount) external;
-
-    /**
-        @notice Set the token name of the contract. Can only be called by the contract owner or the contract itself
-        @param _name New token name
-    */
-    function setName(string calldata _name) external;
-
-    /**
-        @notice Set the token symbol of the contract. Can only be called by the contract owner or the contract itself
-        @param _symbol New token symbol
-    */
-    function setSymbol(string calldata _symbol) external;
+    function initializeSherXERC20(string memory _name, string memory _symbol)
+        external;
 
     /**
         @notice Increase the amount of tokens another address can spend

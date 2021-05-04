@@ -30,12 +30,12 @@ contract Payout is IPayout {
     //
 
     modifier onlyGovInsurance() {
-        require(msg.sender == GovStorage.gs().govInsurance, "NOT_GOV");
+        require(msg.sender == GovStorage.gs().govInsurance, "NOT_GOV_INS");
         _;
     }
 
     modifier onlyGovPayout() {
-        require(msg.sender == PayoutStorage.ps().govPayout, "NOT_GOV");
+        require(msg.sender == PayoutStorage.ps().govPayout, "NOT_GOV_PAY");
         _;
     }
 
@@ -54,8 +54,8 @@ contract Payout is IPayout {
     function setInitialGovPayout(address _govPayout) external override {
         PayoutStorage.Base storage ps = PayoutStorage.ps();
 
+        require(msg.sender == LibDiamond.contractOwner(), "NOT_DEV");
         require(_govPayout != address(0), "ZERO_GOV");
-        require(msg.sender == LibDiamond.contractOwner(), "NOT_OWNER");
         require(ps.govPayout == address(0), "ALREADY_SET");
 
         ps.govPayout = _govPayout;
@@ -83,13 +83,18 @@ contract Payout is IPayout {
         // for every pool, _unmaterializedSherX can be deducted, this will decrease outstanding SherX rewards
         // for users that did not claim them (e.g materialized them and included in SherX pool)
 
-        // todo require all equal lengths
+        require(address(_payout) != address(0), "ZERO_PAY");
+        require(address(_payout) != address(this), "THIS_PAY");
+        require(_tokens.length == _firstMoneyOut.length, "LENGTH_1");
+        require(_tokens.length == _amounts.length, "LENGTH_2");
+        require(_tokens.length == _unmaterializedSherX.length, "LENGTH_3");
 
         LibSherX.accrueSherX();
         uint256 totalUnmaterializedFee = 0;
 
         for (uint256 i; i < _tokens.length; i++) {
             PoolStorage.Base storage ps = PoolStorage.ps(address(_tokens[i]));
+            require(ps.initialized, "INIT");
             require(
                 ps.unmaterializedSherX >= _unmaterializedSherX[i],
                 "ERR_UNMAT_FEE"

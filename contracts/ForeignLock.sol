@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interfaces/lock/IForeignLock.sol";
 import "./interfaces/lock/INativeLock.sol";
-import "./interfaces/ISolution.sol";
+import "./interfaces/ISherlock.sol";
 
 import "./NativeLock.sol";
 
@@ -18,10 +18,11 @@ contract ForeignLock is NativeLock, IForeignLock {
     address public override underlying;
 
     constructor(
-        string memory name_,
-        string memory symbol_,
+        string memory _name,
+        string memory _symbol,
+        address _sherlock,
         address _underlying
-    ) public NativeLock(name_, symbol_) {
+    ) public NativeLock(_name, _symbol, _sherlock) {
         underlying = _underlying;
     }
 
@@ -30,6 +31,6 @@ contract ForeignLock is NativeLock, IForeignLock {
         address to,
         uint256 amount
     ) internal override {
-        ISolution(owner())._beforeTokenTransfer(from, to, amount);
+        ISherlock(owner())._beforeTokenTransfer(from, to, amount);
     }
 }

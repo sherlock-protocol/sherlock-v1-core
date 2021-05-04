@@ -433,7 +433,7 @@ contract Pool is IPool {
         address _token
     ) external override returns (uint256 amount) {
         (IERC20 token, PoolStorage.Base storage ps) = baseData();
-
+        require(_receiver != address(0), "RECEIVER");
         GovStorage.Base storage gs = GovStorage.gs();
         PoolStorage.UnstakeEntry memory withdraw = ps.unstakeEntries[msg
             .sender][_id];
@@ -473,6 +473,7 @@ contract Pool is IPool {
         address _token
     ) external override {
         require(msg.sender == GovStorage.gs().govInsurance, "NOT_GOV_INS");
+        require(_receiver != address(0), "RECEIVER");
 
         (IERC20 _token, PoolStorage.Base storage ps) = baseData();
         require(ps.protocols[_index] == _protocol, "INDEX");
@@ -492,7 +493,6 @@ contract Pool is IPool {
         }
 
         if (ps.protocolBalance[_protocol] > 0) {
-            require(_receiver != address(0), "ADDRESS");
             _token.safeTransfer(_receiver, ps.protocolBalance[_protocol]);
         }
 

@@ -34,15 +34,10 @@ interface ISherX {
 
     function calcUnderlyingInStoredUSD() external view returns (uint256 usd);
 
-    function calcUnderlyingInStoredUSDFor(uint256 _amount)
+    function calcUnderlyingInStoredUSD(uint256 _amount)
         external
         view
         returns (uint256 usd);
-
-    function getTotalUnmaterializedSherX(address _user, address _token)
-        external
-        view
-        returns (uint256 withdrawable_amount);
 
     //
     // State changing methods
@@ -56,18 +51,19 @@ interface ISherX {
         uint256 amount
     ) external;
 
+    function harvest() external;
+
     function harvest(address _token) external;
 
-    function harvestFor(address _token, address _user) external;
+    function harvest(address[] calldata _tokens) external;
 
-    function harvestForMultipleMulti(
-        address[] memory _token,
-        address[] memory _users,
-        address[] memory _debtTokens
-    ) external;
+    function harvestFor(address _user) external;
 
-    function harvestForMultiple(address _token, address[] memory _users)
-        external;
+    function harvestFor(address _user, address _token) external;
+
+    function harvestFor(address _user, address[] calldata _tokens) external;
+
+    function setInitialWeight(address _token) external;
 
     function setWeights(address[] memory _tokens, uint256[] memory _weights)
         external;

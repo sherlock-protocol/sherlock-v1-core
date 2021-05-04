@@ -9,13 +9,15 @@ pragma solidity ^0.7.4;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interfaces/lock/INativeLock.sol";
-import "./interfaces/ISolution.sol";
 
 contract NativeLock is ERC20, INativeLock, Ownable {
-    constructor(string memory name_, string memory symbol_)
-        public
-        ERC20(name_, symbol_)
-    {}
+    constructor(
+        string memory _name,
+        string memory _symbol,
+        address _sherlock
+    ) public ERC20(_name, _symbol) {
+        transferOwnership(_sherlock);
+    }
 
     function getOwner() external override view returns (address) {
         return owner();

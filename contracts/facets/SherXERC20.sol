@@ -56,43 +56,19 @@ contract SherXERC20 is IERC20, ISherXERC20 {
     // State changing methods
     //
 
-    function initializeSherXERC20(
-        uint256 _initialSupply,
-        string memory _name,
-        string memory _symbol
-    ) external override {
+    function initializeSherXERC20(string memory _name, string memory _symbol)
+        external
+        override
+    {
         SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
 
-        LibDiamond.enforceIsContractOwner();
-        require(
-            bytes(sx20.name).length == 0 && bytes(sx20.symbol).length == 0,
-            "INIT"
-        );
+        require(msg.sender == LibDiamond.contractOwner(), "NOT_DEV");
 
         require(bytes(_name).length != 0, "NAME");
         require(bytes(_symbol).length != 0, "SYMBOL");
 
-        if (_initialSupply > 0) {
-            LibSherXERC20.mint(msg.sender, _initialSupply);
-        }
         sx20.name = _name;
         sx20.symbol = _symbol;
-    }
-
-    function mint(address _receiver, uint256 _amount) external override {
-        LibSherXERC20.mint(_receiver, _amount);
-    }
-
-    function burn(address _from, uint256 _amount) external override {
-        LibSherXERC20.burn(_from, _amount);
-    }
-
-    function setName(string calldata _name) external override {
-        SherXERC20Storage.sx20().name = _name;
-    }
-
-    function setSymbol(string calldata _symbol) external override {
-        SherXERC20Storage.sx20().symbol = _symbol;
     }
 
     function increaseApproval(address _spender, uint256 _amount)
@@ -101,6 +77,7 @@ contract SherXERC20 is IERC20, ISherXERC20 {
         returns (bool)
     {
         require(_spender != address(0), "SPENDER");
+        require(_amount != 0, "AMOUNT");
         SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
         sx20.allowances[msg.sender][_spender] = sx20.allowances[msg
             .sender][_spender]
@@ -119,6 +96,7 @@ contract SherXERC20 is IERC20, ISherXERC20 {
         returns (bool)
     {
         require(_spender != address(0), "SPENDER");
+        require(_amount != 0, "AMOUNT");
         SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
         uint256 oldValue = sx20.allowances[msg.sender][_spender];
         if (_amount > oldValue) {

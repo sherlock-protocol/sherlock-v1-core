@@ -16,7 +16,8 @@ contract GovDev is IGovDev {
     }
 
     function transferGovDev(address _govDev) external override {
-        LibDiamond.enforceIsContractOwner();
+        require(msg.sender == LibDiamond.contractOwner(), "NOT_DEV");
+        require(_govDev != LibDiamond.contractOwner(), "SAME_DEV");
         LibDiamond.setContractOwner(_govDev);
     }
 
@@ -25,7 +26,7 @@ contract GovDev is IGovDev {
         address _init,
         bytes memory _calldata
     ) external override {
-        LibDiamond.enforceIsContractOwner();
+        require(msg.sender == LibDiamond.contractOwner(), "NOT_DEV");
         return LibDiamond.diamondCut(_diamondCut, _init, _calldata);
     }
 }

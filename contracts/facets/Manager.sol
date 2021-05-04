@@ -18,6 +18,8 @@ import "../libraries/LibPool.sol";
 contract Manager is IManager {
     using SafeMath for uint256;
 
+    // Once transaction has been mined, protocol is officialy insured.
+
     // TODO
     // split updating
     // prices, premiums (and make it easy to do both)

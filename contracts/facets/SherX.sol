@@ -62,7 +62,13 @@ contract SherX is ISherX {
             tokens[i] = token;
             // TODO add sherXUnderlying and blockIncrement
             // TODO add totalSupply rolling amount (per block)
-            amounts[i] = ps.sherXUnderlying.mul(_amount).div(sx20.totalSupply);
+            if (sx20.totalSupply > 0) {
+                amounts[i] = ps.sherXUnderlying.mul(_amount).div(
+                    sx20.totalSupply
+                );
+            } else {
+                amounts[i] = 0;
+            }
         }
     }
 
@@ -81,13 +87,13 @@ contract SherX is ISherX {
         external
         override
         view
-        returns (uint256 usd)
+        returns (uint256)
     {
         SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
-        usd = calcUnderlyingInStoredUSDFor(sx20.balances[msg.sender]);
+        return calcUnderlyingInStoredUSD(sx20.balances[msg.sender]);
     }
 
-    function calcUnderlyingInStoredUSDFor(uint256 _amount)
+    function calcUnderlyingInStoredUSD(uint256 _amount)
         public
         override
         view
@@ -112,32 +118,14 @@ contract SherX is ISherX {
         }
     }
 
-    // TODO need to make sure this matches the actual fee amount
-    function getTotalUnmaterializedSherX(address _user, address _token)
-        external
-        override
-        view
-        returns (uint256 withdrawable_amount)
-    {
-        PoolStorage.Base storage ps = PoolStorage.ps(_token);
-
-        uint256 userAmount = ps.lockToken.balanceOf(_user);
-        uint256 totalAmount = ps.lockToken.totalSupply();
-        if (totalAmount == 0) {
-            return 0;
-        }
-        uint256 outstanding = LibSherX.getUnmintedSherX(_token);
-        uint256 raw_amount = ps.sWeight.add(outstanding).mul(userAmount).div(
-            totalAmount
-        );
-        withdrawable_amount = raw_amount.sub(ps.sWithdrawn[_user]);
-    }
-
     //
     // State changing methods
     //
 
     function redeem(uint256 _amount, address _receiver) external override {
+        require(_amount > 0, "AMOUNT");
+        require(_receiver != address(0), "RECEIVER");
+
         SherXStorage.Base storage sx = SherXStorage.sx();
         LibSherX.accrueUSDPool();
         // TODO get last amount of FEE tokens (accrue)
@@ -171,58 +159,87 @@ contract SherX is ISherX {
         doYield(msg.sender, from, to, amount);
     }
 
-    // todo harvest(address[]), loop over all tokens user holds and redeem SherXs
+    function harvest() external override {
+        harvestFor(msg.sender);
+    }
 
     function harvest(address _token) external override {
-        harvestFor(_token, msg.sender);
+        harvestFor(msg.sender, _token);
     }
 
-    function harvestFor(address _token, address _user) public override {
-        doYield(_token, _user, _user, 0);
-    }
-
-    function harvestForMultipleMulti(
-        address[] memory _token,
-        address[] memory _users,
-        address[] memory _debtTokens
-    ) external override {
-        for (uint256 i; i < _token.length; i++) {
-            harvestForMultiple(_token[i], _users);
-        }
-        for (uint256 i; i < _debtTokens.length; i++) {
-            address underlying = IForeignLock(_debtTokens[i]).underlying();
-            LibPool.payOffDebtAll(IERC20(underlying));
+    function harvest(address[] calldata _tokens) external override {
+        for (uint256 i; i < _tokens.length; i++) {
+            harvestFor(msg.sender, _tokens[i]);
         }
     }
 
-    function harvestForMultiple(address _token, address[] memory _users)
-        public
+    function harvestFor(address _user) public override {
+        GovStorage.Base storage gs = GovStorage.gs();
+        for (uint256 i; i < gs.tokens.length; i++) {
+            PoolStorage.Base storage ps = PoolStorage.ps(address(gs.tokens[i]));
+            harvestFor(_user, address(ps.lockToken));
+        }
+    }
+
+    function harvestFor(address _user, address _token) public override {
+        // could potentially call harvest function for token that are not in the pool
+        // if balance > 0, tx will revert
+        uint256 stakeBalance = IERC20(_token).balanceOf(_user);
+        if (stakeBalance > 0) {
+            doYield(_token, _user, _user, 0);
+        }
+    }
+
+    function harvestFor(address _user, address[] calldata _tokens)
+        external
         override
     {
-        address underlying = IForeignLock(_token).underlying();
-        LibPool.payOffDebtAll(IERC20(underlying));
-        for (uint256 i; i < _users.length; i++) {
-            doYield(_token, _users[i], _users[i], 0);
+        for (uint256 i; i < _tokens.length; i++) {
+            harvestFor(_user, _tokens[i]);
         }
+    }
+
+    function setInitialWeight(address _token) external override {
+        require(_token != address(0), "TOKEN");
+
+        GovStorage.Base storage gs = GovStorage.gs();
+        bool set;
+
+        for (uint256 i; i < gs.tokens.length; i++) {
+            address token = address(gs.tokens[i]);
+            PoolStorage.Base storage ps = PoolStorage.ps(token);
+            require(ps.sherXWeight == 0, "ALREADY_INIT");
+
+            if (token == _token) {
+                // 100% to token
+                set = true;
+                ps.sherXWeight = 10**18;
+            }
+        }
+
+        require(set, "SET");
     }
 
     function setWeights(address[] memory _tokens, uint256[] memory _weights)
         external
         override
     {
-        // TODO
-        // setInitialWeight (set single pool to 100)
-        // makes it easier to this loop, as the difference in weights has to be zero. (sums should still be 100)
-        // or just do total weight (e.g not 100 total)
+        require(_tokens.length == _weights.length, "LENGTH");
         LibSherX.accrueSherX();
 
-        require(_tokens.length == _weights.length, "L2");
+        uint256 weightAdd;
+        uint256 weightSub;
 
         for (uint256 i; i < _tokens.length; i++) {
             PoolStorage.Base storage ps = PoolStorage.ps(_tokens[i]);
+            require(ps.initialized, "INIT");
 
+            weightAdd = weightAdd.add(_weights[i]);
+            weightSub = weightSub.add(ps.sherXWeight);
             ps.sherXWeight = _weights[i];
         }
+
+        require(weightAdd == weightSub, "SUM");
     }
 
     function doYield(

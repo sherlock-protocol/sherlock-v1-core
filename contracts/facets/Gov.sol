@@ -15,6 +15,7 @@ import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "diamond-2/contracts/libraries/LibDiamond.sol";
 
 import "../interfaces/IGov.sol";
+import "../interfaces/lock/IForeignLock.sol";
 
 import "../storage/LibGov.sol";
 import "../storage/LibPool.sol";
@@ -28,7 +29,7 @@ contract Gov is IGov {
     //
 
     modifier onlyGovInsurance() {
-        require(msg.sender == GovStorage.gs().govInsurance, "NOT_GOV");
+        require(msg.sender == GovStorage.gs().govInsurance, "NOT_GOV_INS");
         _;
     }
 
@@ -99,7 +100,7 @@ contract Gov is IGov {
         GovStorage.Base storage gs = GovStorage.gs();
 
         require(_govInsurance != address(0), "ZERO_GOV");
-        require(msg.sender == LibDiamond.contractOwner(), "NOT_OWNER");
+        require(msg.sender == LibDiamond.contractOwner(), "NOT_DEV");
         require(gs.govInsurance == address(0), "ALREADY_SET");
 
         gs.govInsurance = _govInsurance;
@@ -192,6 +193,13 @@ contract Gov is IGov {
         require(_lock.getOwner() == address(this), "OWNER");
         require(_govPool != address(0), "ZERO_GOV");
         require(_lock.totalSupply() == 0, "SUPPLY");
+        // If not native (e.g. NOT SherX), verify underlying mapping
+        if (address(_token) != address(this)) {
+            require(
+                IForeignLock(address(_lock)).underlying() == address(_token),
+                "UNDERLYING"
+            );
+        }
 
         gs.tokens.push(_token);
         ps.initialized = true;
@@ -204,11 +212,13 @@ contract Gov is IGov {
     function tokenDisable(IERC20 _token) external override onlyGovInsurance {
         PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
         require(ps.initialized, "NOT_INITIALIZED");
+        // TODO test this line
         require(ps.totalPremiumPerBlock == 0, "ACTIVE_PREMIUM");
         require(ps.stakes, "ALREADY_DISABLED");
         ps.stakes = false;
     }
 
+    // TODO needs to be expanded
     function tokenRemove(
         IERC20 _token,
         uint256 _index,
@@ -221,7 +231,9 @@ contract Gov is IGov {
 
         PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
         require(ps.initialized, "NOT_INITIALIZED");
+        require(ps.sherXWeight == 0, "SHERX");
         require(ps.protocols.length == 0, "ACTIVE_PROTOCOLS");
+        require(!ps.stakes, "DISABLE_FIRST");
 
         // move last index to index of _token
         gs.tokens[_index] = gs.tokens[gs.tokens.length - 1];

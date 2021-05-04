@@ -19,7 +19,7 @@ import "./IPayout.sol";
 import "./IManager.sol";
 import "./IPool.sol";
 
-interface ISolution is
+interface ISherlock is
     IERC173,
     IDiamondLoupe,
     IDiamondCut,
