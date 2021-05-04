@@ -4,7 +4,7 @@ const { parseEther, parseUnits } = require('ethers/lib/utils');
 
 const { prepare, deploy, solution } = require('./utilities');
 
-describe.only('Stateless', function () {
+describe('Stateless', function () {
   before(async function () {
     await prepare(this, ['ERC20Mock', 'NativeLock', 'ForeignLock']);
     await solution(this, 'sl', this.gov);
@@ -609,38 +609,38 @@ describe.only('Stateless', function () {
         await this.sl.payOffDebtAll(this.tokenA.address);
       });
     });
-    describe('removeProtocol()', function () {
+    describe('cleanProtocol()', function () {
       it('Invalid sender', async function () {
         await expect(
-          this.sl.removeProtocol(this.protocolX, 0, false, this.bob.address, this.tokenA.address),
+          this.sl.cleanProtocol(this.protocolX, 0, false, this.bob.address, this.tokenA.address),
         ).to.be.revertedWith('NOT_GOV_INS');
       });
       it('Invalid receiver', async function () {
         await expect(
           this.sl
             .c(this.gov)
-            .removeProtocol(this.protocolX, 0, false, constants.AddressZero, this.tokenA.address),
+            .cleanProtocol(this.protocolX, 0, false, constants.AddressZero, this.tokenA.address),
         ).to.be.revertedWith('RECEIVER');
       });
       it('Invalid token', async function () {
         await expect(
           this.sl
             .c(this.gov)
-            .removeProtocol(this.protocolX, 0, false, this.bob.address, this.tokenB.address),
+            .cleanProtocol(this.protocolX, 0, false, this.bob.address, this.tokenB.address),
         ).to.be.revertedWith('INVALID_TOKEN');
       });
       it('Invalid token (zero)', async function () {
         await expect(
           this.sl
             .c(this.gov)
-            .removeProtocol(this.protocolX, 0, false, this.bob.address, constants.AddressZero),
+            .cleanProtocol(this.protocolX, 0, false, this.bob.address, constants.AddressZero),
         ).to.be.revertedWith('INVALID_TOKEN');
       });
       it('Success', async function () {
         await expect(
           this.sl
             .c(this.gov)
-            .removeProtocol(this.protocolX, 0, false, this.bob.address, this.tokenA.address),
+            .cleanProtocol(this.protocolX, 0, false, this.bob.address, this.tokenA.address),
         ).to.be.reverted;
       });
     });

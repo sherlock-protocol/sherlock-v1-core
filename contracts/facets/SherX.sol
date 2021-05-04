@@ -211,6 +211,7 @@ contract SherX is ISherX {
             require(ps.sherXWeight == 0, "ALREADY_INIT");
 
             if (token == _token) {
+                require(ps.stakes, "DISABLED");
                 // 100% to token
                 set = true;
                 ps.sherXWeight = 10**18;
@@ -233,6 +234,8 @@ contract SherX is ISherX {
         for (uint256 i; i < _tokens.length; i++) {
             PoolStorage.Base storage ps = PoolStorage.ps(_tokens[i]);
             require(ps.initialized, "INIT");
+            // Disabled tokens can not have ps.sherXWeight > 0
+            require(ps.stakes, "DISABLED");
 
             weightAdd = weightAdd.add(_weights[i]);
             weightSub = weightSub.add(ps.sherXWeight);

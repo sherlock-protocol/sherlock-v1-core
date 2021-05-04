@@ -153,7 +153,7 @@ interface IPool {
 
     function payOffDebtAll(address _token) external;
 
-    function removeProtocol(
+    function cleanProtocol(
         bytes32 _protocol,
         uint256 _index,
         bool _forceDebt,

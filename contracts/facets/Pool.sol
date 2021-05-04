@@ -465,7 +465,7 @@ contract Pool is IPool {
         LibPool.payOffDebtAll(_token);
     }
 
-    function removeProtocol(
+    function cleanProtocol(
         bytes32 _protocol,
         uint256 _index,
         bool _forceDebt,
@@ -478,6 +478,9 @@ contract Pool is IPool {
         (IERC20 _token, PoolStorage.Base storage ps) = baseData();
         require(ps.protocols[_index] == _protocol, "INDEX");
 
+        // If protocol has 0 accrued debt, the premium should also be 0
+        // If protocol has >0 accrued debt, needs to be bigger then balance
+        // Otherwise just update premium to 0 for the protocol first and then delete
         uint256 accrued = LibPool.accruedDebt(_protocol, _token);
         if (accrued == 0) {
             require(ps.protocolPremium[_protocol] == 0, "CAN_NOT_DELETE");
@@ -485,6 +488,7 @@ contract Pool is IPool {
             require(accrued > ps.protocolBalance[_protocol], "CAN_NOT_DELETE2");
         }
 
+        // send the remained of the protocol balance to the stkaer pool
         if (_forceDebt && accrued > 0) {
             ps.stakeBalance = ps.stakeBalance.add(
                 ps.protocolBalance[_protocol]
@@ -492,6 +496,7 @@ contract Pool is IPool {
             delete ps.protocolBalance[_protocol];
         }
 
+        // send any leftovers back to the protocol receiver
         if (ps.protocolBalance[_protocol] > 0) {
             _token.safeTransfer(_receiver, ps.protocolBalance[_protocol]);
         }

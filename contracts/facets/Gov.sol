@@ -172,7 +172,7 @@ contract Gov is IGov {
             PoolStorage.Base storage ps = PoolStorage.ps(address(token));
             // basically need to check if accruedDebt > 0, but this is true in case premium > 0
             require(ps.protocolPremium[_protocol] == 0, "DEBT");
-            require(!ps.isProtocol[_protocol], "NOT_PROTOCOL");
+            require(!ps.isProtocol[_protocol], "POOL_PROTOCOL");
         }
         delete gs.protocolIsCovered[_protocol];
         delete gs.protocolManagers[_protocol];
@@ -212,13 +212,13 @@ contract Gov is IGov {
     function tokenDisable(IERC20 _token) external override onlyGovInsurance {
         PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
         require(ps.initialized, "NOT_INITIALIZED");
-        // TODO test this line
         require(ps.totalPremiumPerBlock == 0, "ACTIVE_PREMIUM");
+        require(ps.sherXWeight == 0, "ACTIVE_WEIGHT");
+
         require(ps.stakes, "ALREADY_DISABLED");
         ps.stakes = false;
     }
 
-    // TODO needs to be expanded
     function tokenRemove(
         IERC20 _token,
         uint256 _index,
@@ -230,8 +230,8 @@ contract Gov is IGov {
         require(gs.tokens[_index] == _token, "INDEX");
 
         PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
+        // Can this line cause a revert?
         require(ps.initialized, "NOT_INITIALIZED");
-        require(ps.sherXWeight == 0, "SHERX");
         require(ps.protocols.length == 0, "ACTIVE_PROTOCOLS");
         require(!ps.stakes, "DISABLE_FIRST");
 
@@ -246,6 +246,7 @@ contract Gov is IGov {
         // or make it possible to overwrite storage? (not prefered)
         // 27/3, I think it is cool, as balance+premium+isProtocol will be reset (as all protocols need to be deleted)
         // stakeWithdraw is kept, only results in withdraws potentially having index > 0
+        delete ps.govPool;
         delete ps.initialized;
         delete ps.stakes;
         delete ps.stakeBalance;
@@ -253,13 +254,22 @@ contract Gov is IGov {
         //delete ps.protocolPremium;
         delete ps.totalPremiumPerBlock;
         delete ps.totalPremiumLastPaid;
+        delete ps.sherXUnderlying;
+        //delete ps.sWithdrawn
+        delete ps.sWeight;
+        delete ps.sherXWeight;
         //delete ps.unstakeEntries;
         delete ps.lockToken;
-        //delete ps.isProtocol;
+        //delete ps.isProtocol
         delete ps.protocols;
-        delete ps.govPool;
-        if (ps.stakeBalance > 0) {
-            _token.safeTransfer(_to, ps.stakeBalance);
+        delete ps.activateCooldownFee;
+        uint256 totalToken = ps.stakeBalance.add(ps.firstMoneyOut);
+        if (totalToken > 0) {
+            _token.safeTransfer(_to, totalToken);
+        }
+        uint256 totalFee = ps.unmaterializedSherX.add(ps.sherXUnderlying);
+        if (totalToken > 0) {
+            IERC20(address(this)).safeTransfer(_to, totalFee);
         }
     }
 }

@@ -1,4 +1,5 @@
 const { utils } = require('ethers/lib');
+const { BigNumber } = require('ethers');
 
 FacetCutAction = {
   Add: 0,
@@ -103,5 +104,8 @@ module.exports = {
     await sherlock.c(gov).initializeSherXERC20('Sherlock ETF', 'SherX');
 
     thisObject[thisName] = sherlock;
+  },
+  blockNumber: async (tx) => {
+    return BigNumber.from(await (await tx).blockNumber);
   },
 };
