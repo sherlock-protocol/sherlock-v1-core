@@ -16,7 +16,7 @@
     "@openzeppelin/contracts": "^3.2.1-solc-0.7",
     "@uniswap/v2-core": "^1.0.1",
     "@uniswap/v2-periphery": "^1.1.0-beta.0",
-    "diamond-2": "git://github.com/Evert0x/diamond-2",
+    "diamond-2": "git://github.com/mudgen/diamond-2",
     "dotenv": "^8.2.0"
   }
 }
