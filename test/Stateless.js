@@ -35,7 +35,9 @@ describe('Stateless', function () {
     await this.sl.c(this.gov).tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address);
 
     // Add protocolX as valid protocol
-    await this.sl.c(this.gov).protocolAdd(this.protocolX, this.gov.address, this.gov.address);
+    await this.sl
+      .c(this.gov)
+      .protocolAdd(this.protocolX, this.gov.address, this.gov.address, [this.tokenA.address]);
 
     // Setting up tokenDisable
     await this.sl
@@ -105,37 +107,50 @@ describe('Stateless', function () {
     describe('protocolAdd()', function () {
       it('Invalid sender', async function () {
         await expect(
-          this.sl.protocolAdd(this.nonProtocol1, this.gov.address, this.gov.address),
+          this.sl.protocolAdd(this.nonProtocol1, this.gov.address, this.gov.address, []),
         ).to.be.revertedWith('NOT_GOV_INS');
       });
       it('Invalid protocol', async function () {
         await expect(
-          this.sl.c(this.gov).protocolAdd(this.protocolX, this.gov.address, this.gov.address),
+          this.sl.c(this.gov).protocolAdd(this.protocolX, this.gov.address, this.gov.address, []),
         ).to.be.revertedWith('COVERED');
       });
       it('Invalid protocol (zero)', async function () {
         await expect(
-          this.sl.c(this.gov).protocolAdd(constants.HashZero, this.gov.address, this.gov.address),
+          this.sl
+            .c(this.gov)
+            .protocolAdd(constants.HashZero, this.gov.address, this.gov.address, []),
         ).to.be.revertedWith('ZERO_PROTOCOL');
       });
       it('Invalid agent (zero)', async function () {
         await expect(
           this.sl
             .c(this.gov)
-            .protocolAdd(this.nonProtocol1, constants.AddressZero, this.gov.address),
+            .protocolAdd(this.nonProtocol1, constants.AddressZero, this.gov.address, []),
         ).to.be.revertedWith('ZERO_AGENT');
       });
       it('Invalid manager (zero)', async function () {
         await expect(
           this.sl
             .c(this.gov)
-            .protocolAdd(this.nonProtocol1, this.gov.address, constants.AddressZero),
+            .protocolAdd(this.nonProtocol1, this.gov.address, constants.AddressZero, []),
         ).to.be.revertedWith('ZERO_MANAGER');
+      });
+      it('Invalid token', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            .protocolAdd(this.nonProtocol1, this.gov.address, this.gov.address, [
+              this.tokenB.address,
+            ]),
+        ).to.be.revertedWith('INIT');
       });
       it('Success', async function () {
         await this.sl
           .c(this.gov)
-          .protocolAdd(this.nonProtocol1, this.gov.address, this.gov.address);
+          .protocolAdd(this.nonProtocol1, this.gov.address, this.gov.address, [
+            this.tokenA.address,
+          ]);
       });
     });
     describe('protocolUpdate()', function () {
@@ -174,6 +189,42 @@ describe('Stateless', function () {
         await this.sl
           .c(this.gov)
           .protocolUpdate(this.protocolX, this.gov.address, this.gov.address);
+      });
+    });
+    describe('protocolDepositUpdate()', function () {
+      it('Invalid sender', async function () {
+        await expect(
+          this.sl.protocolDepositUpdate(this.protocolX, [this.tokenA.address], [true]),
+        ).to.be.revertedWith('NOT_GOV_INS');
+      });
+      it('Invalid protocol', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            .protocolDepositUpdate(this.nonProtocol2, [this.tokenA.address], [true]),
+        ).to.be.revertedWith('NOT_COVERED');
+      });
+      it('Invalid protocol (zero)', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            .protocolDepositUpdate(constants.HashZero, [this.tokenA.address], [true]),
+        ).to.be.revertedWith('ZERO_PROTOCOL');
+      });
+      it('Unequal lengths', async function () {
+        await expect(
+          this.sl.c(this.gov).protocolDepositUpdate(this.nonProtocol2, [this.tokenA.address], []),
+        ).to.be.revertedWith('LENGTH');
+      });
+      it('Invalid lengths (zero)', async function () {
+        await expect(
+          this.sl.c(this.gov).protocolDepositUpdate(this.nonProtocol2, [], []),
+        ).to.be.revertedWith('ZERO');
+      });
+      it('Invalid token', async function () {
+        await expect(
+          this.sl.c(this.gov).protocolDepositUpdate(this.protocolX, [this.tokenB.address], [true]),
+        ).to.be.revertedWith('INIT');
       });
     });
     describe('protocolRemove()', function () {

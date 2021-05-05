@@ -133,13 +133,19 @@ contract Gov is IGov {
     function protocolAdd(
         bytes32 _protocol,
         address _eoaProtocolAgent,
-        address _eoaManager
+        address _eoaManager,
+        IERC20[] memory _tokens
     ) external override onlyGovInsurance {
         GovStorage.Base storage gs = GovStorage.gs();
         require(!gs.protocolIsCovered[_protocol], "COVERED");
         gs.protocolIsCovered[_protocol] = true;
 
+        bool[] memory deposits = new bool[](_tokens.length);
+        for (uint256 i; i < deposits.length; i++) {
+            deposits[i] = true;
+        }
         protocolUpdate(_protocol, _eoaProtocolAgent, _eoaManager);
+        protocolDepositUpdate(_protocol, _tokens, deposits);
     }
 
     function protocolUpdate(
@@ -158,6 +164,26 @@ contract Gov is IGov {
         gs.protocolAgents[_protocol] = _eoaProtocolAgent;
     }
 
+    function protocolDepositUpdate(
+        bytes32 _protocol,
+        IERC20[] memory _tokens,
+        bool[] memory _deposits
+    ) public override onlyGovInsurance {
+        require(_protocol != bytes32(0), "ZERO_PROTOCOL");
+        require(_tokens.length == _deposits.length, "LENGTH");
+        require(_tokens.length > 0, "ZERO");
+
+        GovStorage.Base storage gs = GovStorage.gs();
+        require(gs.protocolIsCovered[_protocol], "NOT_COVERED");
+
+        for (uint256 i; i < _tokens.length; i++) {
+            PoolStorage.Base storage ps = PoolStorage.ps(address(_tokens[i]));
+            require(ps.initialized, "INIT");
+
+            ps.protocolDeposit[_protocol] = _deposits[i];
+        }
+    }
+
     function protocolRemove(bytes32 _protocol)
         external
         override
@@ -170,6 +196,8 @@ contract Gov is IGov {
             IERC20 token = gs.tokens[i];
 
             PoolStorage.Base storage ps = PoolStorage.ps(address(token));
+            // if protocol never deposited, storage is kept
+            delete ps.protocolDeposit[_protocol];
             // basically need to check if accruedDebt > 0, but this is true in case premium > 0
             require(ps.protocolPremium[_protocol] == 0, "DEBT");
             require(!ps.isProtocol[_protocol], "POOL_PROTOCOL");

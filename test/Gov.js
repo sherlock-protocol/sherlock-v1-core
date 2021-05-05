@@ -77,38 +77,63 @@ describe('Gov', function () {
   describe('protocolAdd()', function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
+      await this.sl.c(this.gov).tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address);
     });
     it('Do', async function () {
-      await this.sl.c(this.gov).protocolAdd(this.protocolX, this.alice.address, this.bob.address);
+      await this.sl
+        .c(this.gov)
+        .protocolAdd(this.protocolX, this.alice.address, this.bob.address, [this.tokenA.address]);
       expect(await this.sl.getProtocolIsCovered(this.protocolX)).to.eq(true);
       expect(await this.sl.getProtocolAgent(this.protocolX)).to.eq(this.alice.address);
       expect(await this.sl.getProtocolManager(this.protocolX)).to.eq(this.bob.address);
+      expect(await this.sl.getProtocolDeposit(this.protocolX, this.tokenA.address)).to.eq(true);
     });
   });
   describe('protocolUpdate()', function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
-      await this.sl.c(this.gov).protocolAdd(this.protocolX, this.alice.address, this.bob.address);
+      await this.sl.c(this.gov).tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address);
+      await this.sl
+        .c(this.gov)
+        .protocolAdd(this.protocolX, this.alice.address, this.bob.address, [this.tokenA.address]);
     });
     it('Do', async function () {
       await this.sl
         .c(this.gov)
         .protocolUpdate(this.protocolX, this.gov.address, this.carol.address);
-      expect(await this.sl.getProtocolIsCovered(this.protocolX)).to.eq(true);
       expect(await this.sl.getProtocolAgent(this.protocolX)).to.eq(this.gov.address);
       expect(await this.sl.getProtocolManager(this.protocolX)).to.eq(this.carol.address);
+    });
+  });
+  describe('protocolDepositUpdate()', function () {
+    before(async function () {
+      await timeTraveler.revertSnapshot();
+      await this.sl.c(this.gov).tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address);
+      await this.sl
+        .c(this.gov)
+        .protocolAdd(this.protocolX, this.alice.address, this.bob.address, [this.tokenA.address]);
+    });
+    it('Do', async function () {
+      await this.sl
+        .c(this.gov)
+        .protocolDepositUpdate(this.protocolX, [this.tokenA.address], [false]);
+      expect(await this.sl.getProtocolDeposit(this.protocolX, this.tokenA.address)).to.eq(false);
     });
   });
   describe('protocolRemove()', function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
-      await this.sl.c(this.gov).protocolAdd(this.protocolX, this.alice.address, this.bob.address);
+      await this.sl.c(this.gov).tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address);
+      await this.sl
+        .c(this.gov)
+        .protocolAdd(this.protocolX, this.alice.address, this.bob.address, [this.tokenA.address]);
     });
     it('Do', async function () {
       await this.sl.c(this.gov).protocolRemove(this.protocolX);
       expect(await this.sl.getProtocolIsCovered(this.protocolX)).to.eq(false);
       expect(await this.sl.getProtocolManager(this.protocolX)).to.eq(constants.AddressZero);
       expect(await this.sl.getProtocolAgent(this.protocolX)).to.eq(constants.AddressZero);
+      expect(await this.sl.getProtocolDeposit(this.protocolX, this.tokenA.address)).to.eq(false);
     });
   });
   describe('protocolRemove() ─ Debt', function () {
@@ -116,8 +141,10 @@ describe('Gov', function () {
       await timeTraveler.revertSnapshot();
       await this.tokenA.approve(this.sl.address, parseEther('10000'));
 
-      await this.sl.c(this.gov).protocolAdd(this.protocolX, this.gov.address, this.gov.address);
       await this.sl.c(this.gov).tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address);
+      await this.sl
+        .c(this.gov)
+        .protocolAdd(this.protocolX, this.gov.address, this.gov.address, [this.tokenA.address]);
       await this.sl.depositProtocolBalance(this.protocolX, parseEther('100'), this.tokenA.address);
       t0 = await blockNumber(
         this.sl
@@ -133,7 +160,7 @@ describe('Gov', function () {
     it('Remove fail', async function () {
       await expect(this.sl.c(this.gov).protocolRemove(this.protocolX)).to.be.revertedWith('DEBT');
     });
-    it('Remove fail, poolManager did not remove', async function () {
+    it('Remove fail, not removed from pool', async function () {
       t1 = await blockNumber(
         this.sl.c(this.gov).setProtocolPremiums(this.protocolX, [this.tokenA.address], [0], [0]),
       );
@@ -153,6 +180,7 @@ describe('Gov', function () {
       expect(await this.sl.getProtocolIsCovered(this.protocolX)).to.eq(false);
       expect(await this.sl.getProtocolManager(this.protocolX)).to.eq(constants.AddressZero);
       expect(await this.sl.getProtocolAgent(this.protocolX)).to.eq(constants.AddressZero);
+      expect(await this.sl.getProtocolDeposit(this.protocolX, this.tokenA.address)).to.eq(false);
     });
   });
   describe('tokenAdd()', function () {
@@ -195,7 +223,9 @@ describe('Gov', function () {
       await timeTraveler.revertSnapshot();
 
       await this.sl.c(this.gov).tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address);
-      await this.sl.c(this.gov).protocolAdd(this.protocolX, this.gov.address, this.gov.address);
+      await this.sl
+        .c(this.gov)
+        .protocolAdd(this.protocolX, this.gov.address, this.gov.address, [this.tokenA.address]);
       await this.sl
         .c(this.gov)
         .setProtocolPremiums(this.protocolX, [this.tokenA.address], [1], [1]);
@@ -211,7 +241,9 @@ describe('Gov', function () {
       await timeTraveler.revertSnapshot();
 
       await this.sl.c(this.gov).tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address);
-      await this.sl.c(this.gov).protocolAdd(this.protocolX, this.gov.address, this.gov.address);
+      await this.sl
+        .c(this.gov)
+        .protocolAdd(this.protocolX, this.gov.address, this.gov.address, [this.tokenA.address]);
       await this.sl.c(this.gov).setInitialWeight(this.tokenA.address);
     });
     it('Do', async function () {

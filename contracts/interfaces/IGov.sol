@@ -57,13 +57,20 @@ interface IGov {
     function protocolAdd(
         bytes32 _protocol,
         address _eoaProtocolAgent,
-        address _eoaManager
+        address _eoaManager,
+        IERC20[] memory _tokens
     ) external;
 
     function protocolUpdate(
         bytes32 _protocol,
         address _eoaProtocolAgent,
         address _eoaManager
+    ) external;
+
+    function protocolDepositUpdate(
+        bytes32 _protocol,
+        IERC20[] memory _tokens,
+        bool[] memory _deposits
     ) external;
 
     function protocolRemove(bytes32 _protocol) external;

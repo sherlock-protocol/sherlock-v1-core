@@ -27,6 +27,7 @@ library PoolStorage {
         uint256 stakeBalance;
         uint256 firstMoneyOut;
         uint256 unmaterializedSherX;
+        mapping(bytes32 => bool) protocolDeposit;
         mapping(bytes32 => uint256) protocolBalance;
         mapping(bytes32 => uint256) protocolPremium;
         uint256 totalPremiumPerBlock;
