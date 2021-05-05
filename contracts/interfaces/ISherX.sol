@@ -40,13 +40,15 @@ interface ISherX {
   // State changing methods
   //
 
-  function redeem(uint256 _amount, address _receiver) external;
-
   function _beforeTokenTransfer(
     address from,
     address to,
     uint256 amount
   ) external;
+
+  function setInitialWeight(address _token) external;
+
+  function setWeights(address[] memory _tokens, uint256[] memory _weights) external;
 
   function harvest() external;
 
@@ -60,7 +62,5 @@ interface ISherX {
 
   function harvestFor(address _user, address[] calldata _tokens) external;
 
-  function setInitialWeight(address _token) external;
-
-  function setWeights(address[] memory _tokens, uint256[] memory _weights) external;
+  function redeem(uint256 _amount, address _receiver) external;
 }

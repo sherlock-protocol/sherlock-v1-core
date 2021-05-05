@@ -108,74 +108,12 @@ contract SherX is ISherX {
   // State changing methods
   //
 
-  function redeem(uint256 _amount, address _receiver) external override {
-    require(_amount > 0, 'AMOUNT');
-    require(_receiver != address(0), 'RECEIVER');
-
-    SherXStorage.Base storage sx = SherXStorage.sx();
-    LibSherX.accrueUSDPool();
-    // TODO get last amount of FEE tokens (accrue)
-    // TODO get last amount sherXUnderlying
-
-    (IERC20[] memory tokens, uint256[] memory amounts) = calcUnderlying(_amount);
-
-    for (uint256 i; i < tokens.length; i++) {
-      PoolStorage.Base storage ps = PoolStorage.ps(address(tokens[i]));
-      ps.sherXUnderlying = ps.sherXUnderlying.sub(amounts[i]);
-
-      LibPool.payOffDebtAll(tokens[i]);
-      // TODO, deduct?
-      // ps.sWeight
-      sx.totalUsdPool = sx.totalUsdPool.sub(amounts[i].mul(sx.tokenUSD[tokens[i]]).div(10**18));
-
-      tokens[i].safeTransfer(_receiver, amounts[i]);
-    }
-    LibSherXERC20.burn(msg.sender, _amount);
-  }
-
   function _beforeTokenTransfer(
     address from,
     address to,
     uint256 amount
   ) external override {
     doYield(msg.sender, from, to, amount);
-  }
-
-  function harvest() external override {
-    harvestFor(msg.sender);
-  }
-
-  function harvest(address _token) external override {
-    harvestFor(msg.sender, _token);
-  }
-
-  function harvest(address[] calldata _tokens) external override {
-    for (uint256 i; i < _tokens.length; i++) {
-      harvestFor(msg.sender, _tokens[i]);
-    }
-  }
-
-  function harvestFor(address _user) public override {
-    GovStorage.Base storage gs = GovStorage.gs();
-    for (uint256 i; i < gs.tokens.length; i++) {
-      PoolStorage.Base storage ps = PoolStorage.ps(address(gs.tokens[i]));
-      harvestFor(_user, address(ps.lockToken));
-    }
-  }
-
-  function harvestFor(address _user, address _token) public override {
-    // could potentially call harvest function for token that are not in the pool
-    // if balance > 0, tx will revert
-    uint256 stakeBalance = IERC20(_token).balanceOf(_user);
-    if (stakeBalance > 0) {
-      doYield(_token, _user, _user, 0);
-    }
-  }
-
-  function harvestFor(address _user, address[] calldata _tokens) external override {
-    for (uint256 i; i < _tokens.length; i++) {
-      harvestFor(_user, _tokens[i]);
-    }
   }
 
   function setInitialWeight(address _token) external override {
@@ -219,6 +157,68 @@ contract SherX is ISherX {
     }
 
     require(weightAdd == weightSub, 'SUM');
+  }
+
+  function harvest() external override {
+    harvestFor(msg.sender);
+  }
+
+  function harvest(address _token) external override {
+    harvestFor(msg.sender, _token);
+  }
+
+  function harvest(address[] calldata _tokens) external override {
+    for (uint256 i; i < _tokens.length; i++) {
+      harvestFor(msg.sender, _tokens[i]);
+    }
+  }
+
+  function harvestFor(address _user) public override {
+    GovStorage.Base storage gs = GovStorage.gs();
+    for (uint256 i; i < gs.tokens.length; i++) {
+      PoolStorage.Base storage ps = PoolStorage.ps(address(gs.tokens[i]));
+      harvestFor(_user, address(ps.lockToken));
+    }
+  }
+
+  function harvestFor(address _user, address _token) public override {
+    // could potentially call harvest function for token that are not in the pool
+    // if balance > 0, tx will revert
+    uint256 stakeBalance = IERC20(_token).balanceOf(_user);
+    if (stakeBalance > 0) {
+      doYield(_token, _user, _user, 0);
+    }
+  }
+
+  function harvestFor(address _user, address[] calldata _tokens) external override {
+    for (uint256 i; i < _tokens.length; i++) {
+      harvestFor(_user, _tokens[i]);
+    }
+  }
+
+  function redeem(uint256 _amount, address _receiver) external override {
+    require(_amount > 0, 'AMOUNT');
+    require(_receiver != address(0), 'RECEIVER');
+
+    SherXStorage.Base storage sx = SherXStorage.sx();
+    LibSherX.accrueUSDPool();
+    // TODO get last amount of FEE tokens (accrue)
+    // TODO get last amount sherXUnderlying
+
+    (IERC20[] memory tokens, uint256[] memory amounts) = calcUnderlying(_amount);
+
+    for (uint256 i; i < tokens.length; i++) {
+      PoolStorage.Base storage ps = PoolStorage.ps(address(tokens[i]));
+      ps.sherXUnderlying = ps.sherXUnderlying.sub(amounts[i]);
+
+      LibPool.payOffDebtAll(tokens[i]);
+      // TODO, deduct?
+      // ps.sWeight
+      sx.totalUsdPool = sx.totalUsdPool.sub(amounts[i].mul(sx.tokenUSD[tokens[i]]).div(10**18));
+
+      tokens[i].safeTransfer(_receiver, amounts[i]);
+    }
+    LibSherXERC20.burn(msg.sender, _amount);
   }
 
   function doYield(

@@ -727,23 +727,29 @@ describe('Stateless', function () {
     describe('exchangeRate()', function () {});
   });
   describe('ISherX ─ State Changing', function () {
-    describe('redeem()', function () {
-      it('Invalid amount', async function () {
-        await expect(this.sl.redeem(0, this.bob.address)).to.be.revertedWith('AMOUNT');
-      });
-      it('Invalid receiver', async function () {
-        await expect(this.sl.redeem(1, constants.AddressZero)).to.be.revertedWith('RECEIVER');
-      });
-      it('Success', async function () {
-        await expect(this.sl.redeem(1, this.bob.address)).to.be.revertedWith(
-          'SafeMath: subtraction overflow',
-        );
-      });
-    });
     describe('_beforeTokenTransfer()', function () {
       it('Invalid sender', async function () {
         await expect(this.sl._beforeTokenTransfer(this.alice.address, this.bob.address, 1)).to.be
           .reverted;
+      });
+    });
+    describe('setInitialWeight()', function () {
+      it('Invalid token (zero)', async function () {
+        await expect(this.sl.setInitialWeight(constants.AddressZero)).to.be.revertedWith('TOKEN');
+      });
+      it('Success', async function () {
+        await expect(this.sl.setInitialWeight(this.tokenA.address));
+      });
+    });
+    describe('setWeights()', function () {
+      it('Invalid token', async function () {
+        await expect(this.sl.setWeights([this.tokenB.address], [1])).to.be.revertedWith('INIT');
+      });
+      it('Invalid lengths', async function () {
+        await expect(this.sl.setWeights([], [1])).to.be.revertedWith('LENGTH');
+      });
+      it('Success', async function () {
+        await this.sl.setWeights([this.tokenA.address], [parseEther('1')]);
       });
     });
     describe('harvest()', function () {
@@ -779,23 +785,17 @@ describe('Stateless', function () {
         ]);
       });
     });
-    describe('setInitialWeight()', function () {
-      it('Invalid token (zero)', async function () {
-        await expect(this.sl.setInitialWeight(constants.AddressZero)).to.be.revertedWith('TOKEN');
+    describe('redeem()', function () {
+      it('Invalid amount', async function () {
+        await expect(this.sl.redeem(0, this.bob.address)).to.be.revertedWith('AMOUNT');
+      });
+      it('Invalid receiver', async function () {
+        await expect(this.sl.redeem(1, constants.AddressZero)).to.be.revertedWith('RECEIVER');
       });
       it('Success', async function () {
-        await expect(this.sl.setInitialWeight(this.tokenA.address));
-      });
-    });
-    describe('setWeights()', function () {
-      it('Invalid token', async function () {
-        await expect(this.sl.setWeights([this.tokenB.address], [1])).to.be.revertedWith('INIT');
-      });
-      it('Invalid lengths', async function () {
-        await expect(this.sl.setWeights([], [1])).to.be.revertedWith('LENGTH');
-      });
-      it('Success', async function () {
-        await this.sl.setWeights([this.tokenA.address], [parseEther('1')]);
+        await expect(this.sl.redeem(1, this.bob.address)).to.be.revertedWith(
+          'SafeMath: subtraction overflow',
+        );
       });
     });
   });
