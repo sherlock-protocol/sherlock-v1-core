@@ -54,6 +54,8 @@ interface IPool {
 
   function getPremiumLastPaid(address _token) external view returns (uint256);
 
+  function getSherXUnderlying(address _token) external view returns (uint256);
+
   function getUnstakeEntrySize(address _staker, address _token) external view returns (uint256);
 
   function getInitialUnstakeEntry(address _staker, address _token) external view returns (uint256);
@@ -64,15 +66,13 @@ interface IPool {
 
   function getUnmaterializedSherX(address _token) external view returns (uint256);
 
-  // function stakeToToken(uint256 _amount, address _token)
-  //     external
-  //     view
-  //     returns (uint256);
+  function LockToTokenXRate(address _token) external view returns (uint256);
 
-  // TODO
-  // xRateLockToToken
-  // xRateTokenToLock
-  function exchangeRate(address _token) external view returns (uint256);
+  function LockToToken(uint256 _amount, address _token) external view returns (uint256);
+
+  function TokenToLockXRate(address _token) external view returns (uint256);
+
+  function TokenToLock(uint256 _amount, address _token) external view returns (uint256);
 
   //
   // State changing methods

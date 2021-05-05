@@ -129,6 +129,11 @@ contract Pool is IPool {
     return ps.totalPremiumLastPaid;
   }
 
+  function getSherXUnderlying(address _token) external view override returns (uint256) {
+    (, PoolStorage.Base storage ps) = baseData();
+    return ps.sherXUnderlying;
+  }
+
   function getUnstakeEntrySize(address _staker, address _token)
     external
     view
@@ -189,13 +194,30 @@ contract Pool is IPool {
     return ps.unmaterializedSherX;
   }
 
-  function exchangeRate(address _token) external view override returns (uint256 rate) {
-    // token to stakedtoken
+  function LockToTokenXRate(address _token) external view override returns (uint256) {
+    return LockToToken(10**18, _token);
+  }
+
+  function LockToToken(uint256 _amount, address _token) public view override returns (uint256) {
     (, PoolStorage.Base storage ps) = baseData();
     uint256 totalLock = ps.lockToken.totalSupply();
-    require(totalLock > 0, 'N0_STAKE');
-    require(ps.stakeBalance > 0, 'NO_FUNDS');
-    rate = ps.stakeBalance.mul(10**18).div(totalLock);
+    if (totalLock == 0 || ps.stakeBalance == 0) {
+      revert('NO_DATA');
+    }
+    return ps.stakeBalance.mul(_amount).div(totalLock);
+  }
+
+  function TokenToLockXRate(address _token) external view override returns (uint256) {
+    return TokenToLock(10**18, _token);
+  }
+
+  function TokenToLock(uint256 _amount, address _token) public view override returns (uint256) {
+    (, PoolStorage.Base storage ps) = baseData();
+    uint256 totalLock = ps.lockToken.totalSupply();
+    if (totalLock == 0 || ps.stakeBalance == 0) {
+      return 10**18;
+    }
+    return totalLock.mul(_amount).div(ps.stakeBalance);
   }
 
   //
@@ -352,9 +374,8 @@ contract Pool is IPool {
     require(withdraw.blockInitiated != 0, 'WITHDRAW_NOT_ACTIVE');
     // period is including
     require(withdraw.blockInitiated.add(gs.unstakeCooldown) < block.number, 'COOLDOWN_ACTIVE');
-    // unstakePeriod period is including, TODO should it be including?
     require(
-      withdraw.blockInitiated.add(gs.unstakeCooldown).add(gs.unstakeWindow) > block.number,
+      withdraw.blockInitiated.add(gs.unstakeCooldown).add(gs.unstakeWindow) >= block.number,
       'UNSTAKE_WINDOW_EXPIRED'
     );
     amount = withdraw.lock.mul(ps.stakeBalance).div(ps.lockToken.totalSupply());
@@ -402,12 +423,13 @@ contract Pool is IPool {
     // send any leftovers back to the protocol receiver
     if (ps.protocolBalance[_protocol] > 0) {
       _token.safeTransfer(_receiver, ps.protocolBalance[_protocol]);
+      delete ps.protocolBalance[_protocol];
     }
 
     // move last index to index of _protocol
     ps.protocols[_index] = ps.protocols[ps.protocols.length - 1];
     // remove last index
-    delete ps.protocols[ps.protocols.length - 1];
+    ps.protocols.pop();
     ps.isProtocol[_protocol] = false;
     // could still be >0, if accrued more debt than needed.
     delete ps.protocolPremium[_protocol];
