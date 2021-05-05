@@ -6,65 +6,61 @@ pragma solidity ^0.7.4;
 * Sherlock Protocol: https://sherlock.xyz
 /******************************************************************************/
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
 interface ISherX {
-    //
-    // Events
-    //
+  //
+  // Events
+  //
 
-    //
-    // View methods
-    //
+  //
+  // View methods
+  //
 
-    function calcUnderlying()
-        external
-        view
-        returns (IERC20[] memory tokens, uint256[] memory amounts);
+  function calcUnderlying()
+    external
+    view
+    returns (IERC20[] memory tokens, uint256[] memory amounts);
 
-    function calcUnderlying(uint256 _amount)
-        external
-        view
-        returns (IERC20[] memory tokens, uint256[] memory amounts);
+  function calcUnderlying(uint256 _amount)
+    external
+    view
+    returns (IERC20[] memory tokens, uint256[] memory amounts);
 
-    function calcUnderlying(address _user)
-        external
-        view
-        returns (IERC20[] memory tokens, uint256[] memory amounts);
+  function calcUnderlying(address _user)
+    external
+    view
+    returns (IERC20[] memory tokens, uint256[] memory amounts);
 
-    function calcUnderlyingInStoredUSD() external view returns (uint256 usd);
+  function calcUnderlyingInStoredUSD() external view returns (uint256 usd);
 
-    function calcUnderlyingInStoredUSD(uint256 _amount)
-        external
-        view
-        returns (uint256 usd);
+  function calcUnderlyingInStoredUSD(uint256 _amount) external view returns (uint256 usd);
 
-    //
-    // State changing methods
-    //
+  //
+  // State changing methods
+  //
 
-    function redeem(uint256 _amount, address _receiver) external;
+  function redeem(uint256 _amount, address _receiver) external;
 
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 amount
-    ) external;
+  function _beforeTokenTransfer(
+    address from,
+    address to,
+    uint256 amount
+  ) external;
 
-    function harvest() external;
+  function harvest() external;
 
-    function harvest(address _token) external;
+  function harvest(address _token) external;
 
-    function harvest(address[] calldata _tokens) external;
+  function harvest(address[] calldata _tokens) external;
 
-    function harvestFor(address _user) external;
+  function harvestFor(address _user) external;
 
-    function harvestFor(address _user, address _token) external;
+  function harvestFor(address _user, address _token) external;
 
-    function harvestFor(address _user, address[] calldata _tokens) external;
+  function harvestFor(address _user, address[] calldata _tokens) external;
 
-    function setInitialWeight(address _token) external;
+  function setInitialWeight(address _token) external;
 
-    function setWeights(address[] memory _tokens, uint256[] memory _weights)
-        external;
+  function setWeights(address[] memory _tokens, uint256[] memory _weights) external;
 }

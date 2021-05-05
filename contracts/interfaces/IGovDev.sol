@@ -7,16 +7,16 @@ pragma abicoder v2;
 * Sherlock Protocol: https://sherlock.xyz
 /******************************************************************************/
 
-import "diamond-2/contracts/libraries/LibDiamond.sol";
+import 'diamond-2/contracts/libraries/LibDiamond.sol';
 
 interface IGovDev {
-    function getGovDev() external view returns (address);
+  function getGovDev() external view returns (address);
 
-    function transferGovDev(address _govDev) external;
+  function transferGovDev(address _govDev) external;
 
-    function updateSolution(
-        IDiamondCut.FacetCut[] memory _diamondCut,
-        address _init,
-        bytes memory _calldata
-    ) external;
+  function updateSolution(
+    IDiamondCut.FacetCut[] memory _diamondCut,
+    address _init,
+    bytes memory _calldata
+  ) external;
 }

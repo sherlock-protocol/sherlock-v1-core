@@ -6,8 +6,8 @@ pragma solidity ^0.7.4;
 * Sherlock Protocol: https://sherlock.xyz
 /******************************************************************************/
 
-import "./INativeLock.sol";
+import './INativeLock.sol';
 
 interface IForeignLock is INativeLock {
-    function underlying() external view returns (address);
+  function underlying() external view returns (address);
 }

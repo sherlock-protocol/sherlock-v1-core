@@ -1,6 +1,8 @@
 {
   "name": "hardhat-project",
   "scripts": {
+    "prettier": "prettier --write contracts/*.sol contracts/**/*.sol contracts/**/**/*.sol",
+    "prettier-diff": "prettier --list-different  contracts/*.sol contracts/**/*.sol contracts/**/**/*.sol",
     "forktest": "npx hardhat node & P1=$! sleep 3 && npx hardhat --network localhost run scripts/frontend.js & wait $P1"
   },
   "prettier": {
@@ -26,6 +28,7 @@
     "@uniswap/v2-core": "^1.0.1",
     "@uniswap/v2-periphery": "^1.1.0-beta.0",
     "diamond-2": "git://github.com/mudgen/diamond-2",
-    "dotenv": "^8.2.0"
+    "dotenv": "^8.2.0",
+    "prettier-plugin-solidity": "^1.0.0-beta.10"
   }
 }

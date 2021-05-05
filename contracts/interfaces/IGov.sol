@@ -6,87 +6,78 @@ pragma solidity ^0.7.4;
 * Sherlock Protocol: https://sherlock.xyz
 /******************************************************************************/
 
-import "../interfaces/lock/INativeLock.sol";
+import '../interfaces/lock/INativeLock.sol';
 
 interface IGov {
-    //
-    // Events
-    //
+  //
+  // Events
+  //
 
-    event TokenAdded(IERC20 _token, INativeLock _lock);
+  event TokenAdded(IERC20 _token, INativeLock _lock);
 
-    //
-    // View methods
-    //
+  //
+  // View methods
+  //
 
-    function getGovInsurance() external view returns (address);
+  function getGovInsurance() external view returns (address);
 
-    function getUnstakeWindow() external view returns (uint256 unstakeWindow);
+  function getUnstakeWindow() external view returns (uint256 unstakeWindow);
 
-    function getCooldown() external view returns (uint256 period);
+  function getCooldown() external view returns (uint256 period);
 
-    function getTokens() external view returns (IERC20[] memory tokens);
+  function getTokens() external view returns (IERC20[] memory tokens);
 
-    function getProtocolIsCovered(bytes32 _protocol)
-        external
-        view
-        returns (bool);
+  function getProtocolIsCovered(bytes32 _protocol) external view returns (bool);
 
-    function getProtocolManager(bytes32 _protocol)
-        external
-        view
-        returns (address manager);
+  function getProtocolManager(bytes32 _protocol) external view returns (address manager);
 
-    function getProtocolAgent(bytes32 _protocol)
-        external
-        view
-        returns (address agent);
+  function getProtocolAgent(bytes32 _protocol) external view returns (address agent);
 
-    //
-    // State changing methods
-    //
+  //
+  // State changing methods
+  //
 
-    function setInitialGovInsurance(address _govInsurance) external;
+  function setInitialGovInsurance(address _govInsurance) external;
 
-    function transferGovInsurance(address _govInsurance) external;
+  function transferGovInsurance(address _govInsurance) external;
 
-    function setUnstakeWindow(uint256 _unstakeWindow) external;
+  function setUnstakeWindow(uint256 _unstakeWindow) external;
 
-    function setCooldown(uint256 _period) external;
+  function setCooldown(uint256 _period) external;
 
-    function protocolAdd(
-        bytes32 _protocol,
-        address _eoaProtocolAgent,
-        address _eoaManager,
-        IERC20[] memory _tokens
-    ) external;
+  function protocolAdd(
+    bytes32 _protocol,
+    address _eoaProtocolAgent,
+    address _eoaManager,
+    IERC20[] memory _tokens
+  ) external;
 
-    function protocolUpdate(
-        bytes32 _protocol,
-        address _eoaProtocolAgent,
-        address _eoaManager
-    ) external;
+  function protocolUpdate(
+    bytes32 _protocol,
+    address _eoaProtocolAgent,
+    address _eoaManager
+  ) external;
 
-    function protocolDepositUpdate(
-        bytes32 _protocol,
-        IERC20[] memory _tokens,
-        bool[] memory _deposits
-    ) external;
+  function protocolDepositUpdate(
+    bytes32 _protocol,
+    IERC20[] memory _tokens,
+    bool[] memory _deposits
+  ) external;
 
-    function protocolRemove(bytes32 _protocol) external;
+  function protocolRemove(bytes32 _protocol) external;
 
-    // TODO transfer govpool role
-    function tokenAdd(
-        IERC20 _token,
-        INativeLock _lock,
-        address _govPool
-    ) external;
+  // TODO transfer govpool role
+  function tokenAdd(
+    IERC20 _token,
+    INativeLock _lock,
+    address _govPool
+  ) external;
 
-    function tokenDisable(IERC20 _token) external;
+  function tokenDisable(IERC20 _token) external;
 
-    function tokenRemove(
-        IERC20 _token,
-        uint256 _index,
-        address _to
-    ) external;
+  function tokenRemove(
+    IERC20 _token,
+    uint256 _index,
+    address _to
+  ) external;
 }

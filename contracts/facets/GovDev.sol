@@ -7,26 +7,26 @@ pragma abicoder v2;
 * Sherlock Protocol: https://sherlock.xyz
 /******************************************************************************/
 
-import "diamond-2/contracts/libraries/LibDiamond.sol";
-import "../interfaces/IGovDev.sol";
+import 'diamond-2/contracts/libraries/LibDiamond.sol';
+import '../interfaces/IGovDev.sol';
 
 contract GovDev is IGovDev {
-    function getGovDev() external override view returns (address) {
-        return LibDiamond.contractOwner();
-    }
+  function getGovDev() external view override returns (address) {
+    return LibDiamond.contractOwner();
+  }
 
-    function transferGovDev(address _govDev) external override {
-        require(msg.sender == LibDiamond.contractOwner(), "NOT_DEV");
-        require(_govDev != LibDiamond.contractOwner(), "SAME_DEV");
-        LibDiamond.setContractOwner(_govDev);
-    }
+  function transferGovDev(address _govDev) external override {
+    require(msg.sender == LibDiamond.contractOwner(), 'NOT_DEV');
+    require(_govDev != LibDiamond.contractOwner(), 'SAME_DEV');
+    LibDiamond.setContractOwner(_govDev);
+  }
 
-    function updateSolution(
-        IDiamondCut.FacetCut[] memory _diamondCut,
-        address _init,
-        bytes memory _calldata
-    ) external override {
-        require(msg.sender == LibDiamond.contractOwner(), "NOT_DEV");
-        return LibDiamond.diamondCut(_diamondCut, _init, _calldata);
-    }
+  function updateSolution(
+    IDiamondCut.FacetCut[] memory _diamondCut,
+    address _init,
+    bytes memory _calldata
+  ) external override {
+    require(msg.sender == LibDiamond.contractOwner(), 'NOT_DEV');
+    return LibDiamond.diamondCut(_diamondCut, _init, _calldata);
+  }
 }
