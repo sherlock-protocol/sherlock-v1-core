@@ -240,7 +240,6 @@ contract Pool is IPool {
     require(_amount > 0, 'AMOUNT');
     require(GovStorage.gs().protocolIsCovered[_protocol], 'PROTOCOL');
     (IERC20 token, PoolStorage.Base storage ps) = baseData();
-    require(ps.stakes, 'NO_STAKES');
     require(ps.protocolDeposit[_protocol], 'NO_DEPOSIT');
 
     token.safeTransferFrom(msg.sender, address(this), _amount);

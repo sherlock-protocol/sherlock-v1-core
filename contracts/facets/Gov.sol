@@ -173,7 +173,8 @@ contract Gov is IGov {
   function tokenAdd(
     IERC20 _token,
     INativeLock _lock,
-    address _govPool
+    address _govPool,
+    bool _stakes
   ) external override onlyGovInsurance {
     GovStorage.Base storage gs = GovStorage.gs();
     PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
@@ -191,7 +192,7 @@ contract Gov is IGov {
 
     gs.tokens.push(_token);
     ps.initialized = true;
-    ps.stakes = true;
+    ps.stakes = _stakes;
     ps.lockToken = _lock;
     ps.govPool = _govPool;
     emit TokenAdded(_token, _lock);
@@ -200,7 +201,6 @@ contract Gov is IGov {
   function tokenDisable(IERC20 _token) external override onlyGovInsurance {
     PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
     require(ps.initialized, 'NOT_INITIALIZED');
-    require(ps.totalPremiumPerBlock == 0, 'ACTIVE_PREMIUM');
     require(ps.sherXWeight == 0, 'ACTIVE_WEIGHT');
 
     require(ps.stakes, 'ALREADY_DISABLED');
@@ -218,8 +218,12 @@ contract Gov is IGov {
     require(gs.tokens[_index] == _token, 'INDEX');
 
     PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
+    // Moved from disable to remove, as disable can be skipped
+    // in case protocol only pay premium with this token
+    require(ps.totalPremiumPerBlock == 0, 'ACTIVE_PREMIUM');
     // Can this line cause a revert?
     require(ps.initialized, 'NOT_INITIALIZED');
+    // should all be removed, just as the balances
     require(ps.protocols.length == 0, 'ACTIVE_PROTOCOLS');
     require(!ps.stakes, 'DISABLE_FIRST');
 

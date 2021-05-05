@@ -32,7 +32,9 @@ describe('Stateless', function () {
       ],
     ]);
     // Add tokenA as valid token
-    await this.sl.c(this.gov).tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address);
+    await this.sl
+      .c(this.gov)
+      .tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address, true);
 
     // Add protocolX as valid protocol
     await this.sl
@@ -42,7 +44,7 @@ describe('Stateless', function () {
     // Setting up tokenDisable
     await this.sl
       .c(this.gov)
-      .tokenAdd(this.tokenDisable.address, this.lockDisable.address, this.gov.address);
+      .tokenAdd(this.tokenDisable.address, this.lockDisable.address, this.gov.address, true);
     await this.sl.c(this.gov).tokenDisable(this.tokenDisable.address);
 
     // Setting up lockWSupply
@@ -248,56 +250,62 @@ describe('Stateless', function () {
     describe('tokenAdd()', function () {
       it('Invalid sender', async function () {
         await expect(
-          this.sl.tokenAdd(this.tokenB.address, this.lockB.address, this.gov.address),
+          this.sl.tokenAdd(this.tokenB.address, this.lockB.address, this.gov.address, true),
         ).to.be.revertedWith('NOT_GOV_INS');
       });
       it('Invalid token', async function () {
         await expect(
-          this.sl.c(this.gov).tokenAdd(this.tokenA.address, this.lockB.address, this.gov.address),
+          this.sl
+            .c(this.gov)
+            .tokenAdd(this.tokenA.address, this.lockB.address, this.gov.address, true),
         ).to.be.revertedWith('INITIALIZED');
       });
       it('Invalid token (zero)', async function () {
         await expect(
-          this.sl.c(this.gov).tokenAdd(constants.AddressZero, this.lockB.address, this.gov.address),
+          this.sl
+            .c(this.gov)
+            .tokenAdd(constants.AddressZero, this.lockB.address, this.gov.address, true),
         ).to.be.revertedWith('ZERO_TOKEN');
       });
       it('Invalid stake (zero)', async function () {
         await expect(
           this.sl
             .c(this.gov)
-            .tokenAdd(this.tokenB.address, constants.AddressZero, this.gov.address),
+            .tokenAdd(this.tokenB.address, constants.AddressZero, this.gov.address, true),
         ).to.be.revertedWith('ZERO_LOCK');
       });
       it('Invalid stake (owner)', async function () {
         await expect(
           this.sl
             .c(this.gov)
-            .tokenAdd(this.tokenC.address, this.lockWGov.address, this.gov.address),
+            .tokenAdd(this.tokenC.address, this.lockWGov.address, this.gov.address, true),
         ).to.be.revertedWith('OWNER');
       });
       it('Invalid govpool (zero)', async function () {
         await expect(
           this.sl
             .c(this.gov)
-            .tokenAdd(this.tokenB.address, this.lockB.address, constants.AddressZero),
+            .tokenAdd(this.tokenB.address, this.lockB.address, constants.AddressZero, true),
         ).to.be.revertedWith('ZERO_GOV');
       });
       it('Invalid supply', async function () {
         await expect(
           this.sl
             .c(this.gov)
-            .tokenAdd(this.tokenC.address, this.lockWSupply.address, this.gov.address),
+            .tokenAdd(this.tokenC.address, this.lockWSupply.address, this.gov.address, true),
         ).to.be.revertedWith('SUPPLY');
       });
       it('Invalid underlying', async function () {
         await expect(
-          this.sl.c(this.gov).tokenAdd(this.tokenB.address, this.lockA.address, this.gov.address),
+          this.sl
+            .c(this.gov)
+            .tokenAdd(this.tokenB.address, this.lockA.address, this.gov.address, true),
         ).to.be.revertedWith('UNDERLYING');
       });
       it('Success', async function () {
         await this.sl
           .c(this.gov)
-          .tokenAdd(this.tokenB.address, this.lockB.address, this.gov.address);
+          .tokenAdd(this.tokenB.address, this.lockB.address, this.gov.address, true);
       });
     });
     describe('tokenDisable()', function () {
@@ -518,7 +526,7 @@ describe('Stateless', function () {
       it('Invalid token (disabled)', async function () {
         await expect(
           this.sl.depositProtocolBalance(this.protocolX, 1, this.tokenDisable.address),
-        ).to.be.revertedWith('NO_STAKES');
+        ).to.be.revertedWith('NO_DEPOSIT');
       });
       it('Success', async function () {
         await expect(

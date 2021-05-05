@@ -70,7 +70,8 @@ interface IGov {
   function tokenAdd(
     IERC20 _token,
     INativeLock _lock,
-    address _govPool
+    address _govPool,
+    bool _stakes
   ) external;
 
   function tokenDisable(IERC20 _token) external;

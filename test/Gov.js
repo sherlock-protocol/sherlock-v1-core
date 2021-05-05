@@ -77,7 +77,9 @@ describe('Gov', function () {
   describe('protocolAdd()', function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
-      await this.sl.c(this.gov).tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address);
+      await this.sl
+        .c(this.gov)
+        .tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address, true);
     });
     it('Do', async function () {
       await this.sl
@@ -92,7 +94,9 @@ describe('Gov', function () {
   describe('protocolUpdate()', function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
-      await this.sl.c(this.gov).tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address);
+      await this.sl
+        .c(this.gov)
+        .tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address, true);
       await this.sl
         .c(this.gov)
         .protocolAdd(this.protocolX, this.alice.address, this.bob.address, [this.tokenA.address]);
@@ -108,7 +112,9 @@ describe('Gov', function () {
   describe('protocolDepositUpdate()', function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
-      await this.sl.c(this.gov).tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address);
+      await this.sl
+        .c(this.gov)
+        .tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address, true);
       await this.sl
         .c(this.gov)
         .protocolAdd(this.protocolX, this.alice.address, this.bob.address, [this.tokenA.address]);
@@ -123,7 +129,9 @@ describe('Gov', function () {
   describe('protocolRemove()', function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
-      await this.sl.c(this.gov).tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address);
+      await this.sl
+        .c(this.gov)
+        .tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address, true);
       await this.sl
         .c(this.gov)
         .protocolAdd(this.protocolX, this.alice.address, this.bob.address, [this.tokenA.address]);
@@ -141,7 +149,9 @@ describe('Gov', function () {
       await timeTraveler.revertSnapshot();
       await this.tokenA.approve(this.sl.address, parseEther('10000'));
 
-      await this.sl.c(this.gov).tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address);
+      await this.sl
+        .c(this.gov)
+        .tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address, true);
       await this.sl
         .c(this.gov)
         .protocolAdd(this.protocolX, this.gov.address, this.gov.address, [this.tokenA.address]);
@@ -188,7 +198,9 @@ describe('Gov', function () {
       await timeTraveler.revertSnapshot();
     });
     it('Do', async function () {
-      await this.sl.c(this.gov).tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address);
+      await this.sl
+        .c(this.gov)
+        .tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address, true);
 
       const tokens = await this.sl.getTokens();
       expect(tokens.length).to.eq(1);
@@ -199,11 +211,25 @@ describe('Gov', function () {
       expect(await this.sl.getGovPool(this.tokenA.address)).to.eq(this.gov.address);
       expect(await this.sl.getLockToken(this.tokenA.address)).to.eq(this.lockA.address);
     });
+    it('Do 2', async function () {
+      await this.sl
+        .c(this.gov)
+        .tokenAdd(this.tokenB.address, this.lockB.address, this.gov.address, false);
+
+      const tokens = await this.sl.getTokens();
+      expect(tokens.length).to.eq(2);
+      expect(tokens[0]).to.eq(this.tokenA.address);
+      expect(tokens[1]).to.eq(this.tokenB.address);
+
+      expect(await this.sl.isStake(this.tokenB.address)).to.eq(false);
+    });
   });
   describe('tokenDisable()', function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
-      await this.sl.c(this.gov).tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address);
+      await this.sl
+        .c(this.gov)
+        .tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address, true);
     });
     it('Do', async function () {
       await this.sl.c(this.gov).tokenDisable(this.tokenA.address);
@@ -218,29 +244,13 @@ describe('Gov', function () {
       expect(await this.sl.getLockToken(this.tokenA.address)).to.eq(this.lockA.address);
     });
   });
-  describe('tokenDisable() ─ Active premium', function () {
-    before(async function () {
-      await timeTraveler.revertSnapshot();
-
-      await this.sl.c(this.gov).tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address);
-      await this.sl
-        .c(this.gov)
-        .protocolAdd(this.protocolX, this.gov.address, this.gov.address, [this.tokenA.address]);
-      await this.sl
-        .c(this.gov)
-        .setProtocolPremiums(this.protocolX, [this.tokenA.address], [1], [1]);
-    });
-    it('Do', async function () {
-      await expect(this.sl.c(this.gov).tokenDisable(this.tokenA.address)).to.be.revertedWith(
-        'ACTIVE_PREMIUM',
-      );
-    });
-  });
   describe('tokenDisable() ─ Active weight', function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
 
-      await this.sl.c(this.gov).tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address);
+      await this.sl
+        .c(this.gov)
+        .tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address, true);
       await this.sl
         .c(this.gov)
         .protocolAdd(this.protocolX, this.gov.address, this.gov.address, [this.tokenA.address]);
@@ -255,7 +265,9 @@ describe('Gov', function () {
   describe('tokenRemove()', function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
-      await this.sl.c(this.gov).tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address);
+      await this.sl
+        .c(this.gov)
+        .tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address, true);
       await await this.sl.c(this.gov).tokenDisable(this.tokenA.address);
     });
     it('Do', async function () {
@@ -265,6 +277,26 @@ describe('Gov', function () {
       expect(tokens.length).to.eq(0);
 
       await expect(this.sl.isInitialized(this.tokenA.address)).to.be.revertedWith('INVALID_TOKEN');
+    });
+  });
+  describe('tokenRemove()  ─ Active premium', function () {
+    before(async function () {
+      await timeTraveler.revertSnapshot();
+
+      await this.sl
+        .c(this.gov)
+        .tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address, true);
+      await this.sl
+        .c(this.gov)
+        .protocolAdd(this.protocolX, this.gov.address, this.gov.address, [this.tokenA.address]);
+      await this.sl
+        .c(this.gov)
+        .setProtocolPremiums(this.protocolX, [this.tokenA.address], [1], [1]);
+    });
+    it('Do', async function () {
+      await expect(
+        this.sl.c(this.gov).tokenRemove(this.tokenA.address, 0, this.alice.address),
+      ).to.be.revertedWith('ACTIVE_PREMIUM');
     });
   });
 });
