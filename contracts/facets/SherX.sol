@@ -27,6 +27,15 @@ contract SherX is ISherX {
   using SafeERC20 for IERC20;
 
   //
+  // Modifiers
+  //
+
+  modifier onlyGovInsurance() {
+    require(msg.sender == GovStorage.gs().govInsurance, 'NOT_GOV_INS');
+    _;
+  }
+
+  //
   // View methods
   //
 
@@ -116,7 +125,7 @@ contract SherX is ISherX {
     doYield(msg.sender, from, to, amount);
   }
 
-  function setInitialWeight(address _token) external override {
+  function setInitialWeight(address _token) external override onlyGovInsurance {
     require(_token != address(0), 'TOKEN');
 
     GovStorage.Base storage gs = GovStorage.gs();
@@ -138,7 +147,11 @@ contract SherX is ISherX {
     require(set, 'SET');
   }
 
-  function setWeights(address[] memory _tokens, uint256[] memory _weights) external override {
+  function setWeights(address[] memory _tokens, uint256[] memory _weights)
+    external
+    override
+    onlyGovInsurance
+  {
     require(_tokens.length == _weights.length, 'LENGTH');
     LibSherX.accrueSherX();
 

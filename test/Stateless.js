@@ -734,22 +734,36 @@ describe('Stateless', function () {
       });
     });
     describe('setInitialWeight()', function () {
+      it('Invalid sender', async function () {
+        await expect(this.sl.setInitialWeight(this.tokenA.address)).to.be.revertedWith(
+          'NOT_GOV_INS',
+        );
+      });
       it('Invalid token (zero)', async function () {
-        await expect(this.sl.setInitialWeight(constants.AddressZero)).to.be.revertedWith('TOKEN');
+        await expect(
+          this.sl.c(this.gov).setInitialWeight(constants.AddressZero),
+        ).to.be.revertedWith('TOKEN');
       });
       it('Success', async function () {
-        await expect(this.sl.setInitialWeight(this.tokenA.address));
+        await expect(this.sl.c(this.gov).setInitialWeight(this.tokenA.address));
       });
     });
     describe('setWeights()', function () {
+      it('Invalid sender', async function () {
+        await expect(this.sl.setWeights([this.tokenB.address], [1])).to.be.revertedWith(
+          'NOT_GOV_INS',
+        );
+      });
       it('Invalid token', async function () {
-        await expect(this.sl.setWeights([this.tokenB.address], [1])).to.be.revertedWith('INIT');
+        await expect(this.sl.c(this.gov).setWeights([this.tokenB.address], [1])).to.be.revertedWith(
+          'INIT',
+        );
       });
       it('Invalid lengths', async function () {
-        await expect(this.sl.setWeights([], [1])).to.be.revertedWith('LENGTH');
+        await expect(this.sl.c(this.gov).setWeights([], [1])).to.be.revertedWith('LENGTH');
       });
       it('Success', async function () {
-        await this.sl.setWeights([this.tokenA.address], [parseEther('1')]);
+        await this.sl.c(this.gov).setWeights([this.tokenA.address], [parseEther('1')]);
       });
     });
     describe('harvest()', function () {
