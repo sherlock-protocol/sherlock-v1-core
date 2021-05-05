@@ -34,7 +34,7 @@ describe('Gov', function () {
     });
     it('Do', async function () {
       await expect(this.sl.c(this.gov).setInitialGovInsurance(this.gov.address)).to.be.revertedWith(
-        'ALREADY_SET',
+        'ALREADY_SET'
       );
     });
   });
@@ -163,8 +163,8 @@ describe('Gov', function () {
             this.protocolX,
             [this.tokenA.address],
             [parseEther('1')],
-            [parseEther('1')],
-          ),
+            [parseEther('1')]
+          )
       );
     });
     it('Remove fail', async function () {
@@ -172,10 +172,10 @@ describe('Gov', function () {
     });
     it('Remove fail, not removed from pool', async function () {
       t1 = await blockNumber(
-        this.sl.c(this.gov).setProtocolPremiums(this.protocolX, [this.tokenA.address], [0], [0]),
+        this.sl.c(this.gov).setProtocolPremiums(this.protocolX, [this.tokenA.address], [0], [0])
       );
       await expect(this.sl.c(this.gov).protocolRemove(this.protocolX)).to.be.revertedWith(
-        'POOL_PROTOCOL',
+        'POOL_PROTOCOL'
       );
     });
     it('Remove success', async function () {
@@ -258,7 +258,7 @@ describe('Gov', function () {
     });
     it('Do', async function () {
       await expect(this.sl.c(this.gov).tokenDisable(this.tokenA.address)).to.be.revertedWith(
-        'ACTIVE_WEIGHT',
+        'ACTIVE_WEIGHT'
       );
     });
   });
@@ -295,7 +295,7 @@ describe('Gov', function () {
     });
     it('Do', async function () {
       await expect(
-        this.sl.c(this.gov).tokenRemove(this.tokenA.address, 0, this.alice.address),
+        this.sl.c(this.gov).tokenRemove(this.tokenA.address, 0, this.alice.address)
       ).to.be.revertedWith('ACTIVE_PREMIUM');
     });
   });
