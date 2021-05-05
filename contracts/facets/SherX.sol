@@ -13,8 +13,8 @@ import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 
 import '../interfaces/ISherX.sol';
-import '../interfaces/lock/INativeLock.sol';
-import '../interfaces/lock/IForeignLock.sol';
+import '../interfaces/ILock.sol';
+import '../interfaces/ILock.sol';
 
 import '../libraries/LibPool.sol';
 import '../libraries/LibSherX.sol';
@@ -227,7 +227,7 @@ contract SherX is ISherX {
     address to,
     uint256 amount
   ) private {
-    address underlying = IForeignLock(token).underlying();
+    address underlying = ILock(token).underlying();
     PoolStorage.Base storage ps = PoolStorage.ps(underlying);
     require(address(ps.lockToken) == token, 'Unexpected sender');
 

@@ -15,7 +15,6 @@ import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 import 'diamond-2/contracts/libraries/LibDiamond.sol';
 
 import '../interfaces/IGov.sol';
-import '../interfaces/lock/IForeignLock.sol';
 
 import '../storage/LibGov.sol';
 import '../storage/LibPool.sol';
@@ -167,7 +166,7 @@ contract Gov is IGov {
 
   function tokenAdd(
     IERC20 _token,
-    INativeLock _lock,
+    ILock _lock,
     address _govPool,
     bool _stakes
   ) external override onlyGovInsurance {
@@ -182,7 +181,7 @@ contract Gov is IGov {
     require(_lock.totalSupply() == 0, 'SUPPLY');
     // If not native (e.g. NOT SherX), verify underlying mapping
     if (address(_token) != address(this)) {
-      require(IForeignLock(address(_lock)).underlying() == address(_token), 'UNDERLYING');
+      require(_lock.underlying() == address(_token), 'UNDERLYING');
     }
 
     gs.tokens.push(_token);

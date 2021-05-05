@@ -6,14 +6,14 @@ pragma solidity ^0.7.4;
 * Sherlock Protocol: https://sherlock.xyz
 /******************************************************************************/
 
-import '../interfaces/lock/INativeLock.sol';
+import '../interfaces/ILock.sol';
 
 interface IGov {
   //
   // Events
   //
 
-  event TokenAdded(IERC20 _token, INativeLock _lock);
+  event TokenAdded(IERC20 _token, ILock _lock);
 
   //
   // View methods
@@ -65,7 +65,7 @@ interface IGov {
   // TODO transfer govpool role
   function tokenAdd(
     IERC20 _token,
-    INativeLock _lock,
+    ILock _lock,
     address _govPool,
     bool _stakes
   ) external;

@@ -13,7 +13,7 @@ import '@openzeppelin/contracts/math/SafeMath.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 
-import '../interfaces/lock/INativeLock.sol';
+import '../interfaces/ILock.sol';
 import '../interfaces/IPool.sol';
 
 import '../libraries/LibPool.sol';
@@ -23,7 +23,7 @@ contract Pool is IPool {
 
   using SafeMath for uint256;
   using SafeERC20 for IERC20;
-  using SafeERC20 for INativeLock;
+  using SafeERC20 for ILock;
 
   function getCooldownFee(address _token) external view override returns (uint256) {
     (, PoolStorage.Base storage ps) = baseData();

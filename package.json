@@ -1,8 +1,8 @@
 {
   "name": "hardhat-project",
   "scripts": {
-    "prettier": "prettier --write contracts/*.sol contracts/**/*.sol contracts/**/**/*.sol",
-    "prettier-diff": "prettier --list-different  contracts/*.sol contracts/**/*.sol contracts/**/**/*.sol",
+    "prettier": "prettier --write contracts/*.sol contracts/**/*.sol",
+    "prettier-diff": "prettier --list-different  contracts/*.sol contracts/**/*.sol",
     "forktest": "npx hardhat node & P1=$! sleep 3 && npx hardhat --network localhost run scripts/frontend.js & wait $P1"
   },
   "prettier": {

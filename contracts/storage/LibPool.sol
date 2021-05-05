@@ -8,7 +8,7 @@ pragma solidity ^0.7.0;
 
 import 'hardhat/console.sol';
 
-import '../interfaces/lock/INativeLock.sol';
+import '../interfaces/ILock.sol';
 
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
@@ -35,7 +35,7 @@ library PoolStorage {
     uint256 sWeight;
     uint256 sherXWeight;
     mapping(address => UnstakeEntry[]) unstakeEntries;
-    INativeLock lockToken;
+    ILock lockToken;
     mapping(bytes32 => bool) isProtocol;
     bytes32[] protocols;
     uint256 activateCooldownFee;

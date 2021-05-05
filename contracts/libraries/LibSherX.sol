@@ -17,7 +17,7 @@ import '../libraries/LibSherXERC20.sol';
 import '../storage/LibGov.sol';
 
 import '../interfaces/ISherX.sol';
-import '../interfaces/lock/INativeLock.sol';
+import '../interfaces/ILock.sol';
 
 import './LibPool.sol';
 

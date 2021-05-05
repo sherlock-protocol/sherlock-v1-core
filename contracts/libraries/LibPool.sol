@@ -19,7 +19,7 @@ import '../storage/LibSherX.sol';
 library LibPool {
   using SafeMath for uint256;
   using SafeERC20 for IERC20;
-  using SafeERC20 for INativeLock;
+  using SafeERC20 for ILock;
 
   function stake(
     PoolStorage.Base storage ps,

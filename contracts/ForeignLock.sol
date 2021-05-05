@@ -8,15 +8,11 @@ pragma solidity ^0.7.4;
 
 import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
-import './interfaces/lock/IForeignLock.sol';
-import './interfaces/lock/INativeLock.sol';
 import './interfaces/ISherlock.sol';
 
 import './NativeLock.sol';
 
-contract ForeignLock is NativeLock, IForeignLock {
-  address public override underlying;
-
+contract ForeignLock is NativeLock {
   constructor(
     string memory _name,
     string memory _symbol,

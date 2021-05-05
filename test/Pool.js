@@ -711,5 +711,4 @@ describe('Pool', function () {
       );
     });
   });
-  // TODO seperate tests for exchange rate
 });
