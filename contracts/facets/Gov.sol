@@ -240,7 +240,6 @@ contract Gov is IGov {
     //delete ps.protocolPremium;
     delete ps.totalPremiumPerBlock;
     delete ps.totalPremiumLastPaid;
-    delete ps.sherXUnderlying;
     //delete ps.sWithdrawn
     delete ps.sWeight;
     delete ps.sherXWeight;
@@ -249,13 +248,23 @@ contract Gov is IGov {
     //delete ps.isProtocol
     delete ps.protocols;
     delete ps.activateCooldownFee;
-    uint256 totalToken = ps.stakeBalance.add(ps.firstMoneyOut);
+    // TODO how do we remove token from ETF? (e.g. sherXUnderlying)
+    // IDEA create interfaces and add extra token params
+    // interface does swap(token). it returns a uint256 value of the new swapped token value (+transfers tokens to sherlock)
+    // complexity is handled in swap contract
+    uint256 totalToken = ps.stakeBalance.add(ps.firstMoneyOut).add(ps.sherXUnderlying);
+
     if (totalToken > 0) {
       _token.safeTransfer(_to, totalToken);
     }
-    uint256 totalFee = ps.unmaterializedSherX.add(ps.sherXUnderlying);
-    if (totalToken > 0) {
+    // todo accruelatest fees
+    uint256 totalFee = ps.unmaterializedSherX;
+    if (totalFee > 0) {
       IERC20(address(this)).safeTransfer(_to, totalFee);
     }
+    delete ps.sherXUnderlying;
+    delete ps.unmaterializedSherX;
+    delete ps.firstMoneyOut;
+    delete ps.stakeBalance;
   }
 }
