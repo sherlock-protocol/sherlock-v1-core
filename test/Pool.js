@@ -60,7 +60,7 @@ describe('Pool', function () {
 
       expect(await this.tokenA.balanceOf(this.alice.address)).to.eq(parseEther('990'));
       expect(await this.sl.getProtocolBalance(this.protocolX, this.tokenA.address)).to.eq(
-        parseEther('10')
+        parseEther('10'),
       );
     });
     it('Do twice', async function () {
@@ -68,7 +68,7 @@ describe('Pool', function () {
 
       expect(await this.tokenA.balanceOf(this.alice.address)).to.eq(parseEther('980'));
       expect(await this.sl.getProtocolBalance(this.protocolX, this.tokenA.address)).to.eq(
-        parseEther('20')
+        parseEther('20'),
       );
     });
   });
@@ -83,7 +83,7 @@ describe('Pool', function () {
       expect(await this.sl.getSherXUnderlying(this.tokenA.address)).to.eq(0);
       expect(await this.sl.getPremiumLastPaid(this.tokenA.address)).to.eq(0);
       expect(await this.sl.getProtocolBalance(this.protocolX, this.tokenA.address)).to.eq(
-        parseEther('100')
+        parseEther('100'),
       );
       expect(await this.tokenA.balanceOf(this.alice.address)).to.eq(parseEther('900'));
     });
@@ -95,14 +95,14 @@ describe('Pool', function () {
             this.protocolX,
             parseEther('30'),
             this.alice.address,
-            this.tokenA.address
-          )
+            this.tokenA.address,
+          ),
       );
 
       expect(await this.sl.getSherXUnderlying(this.tokenA.address)).to.eq(0);
       expect(await this.sl.getPremiumLastPaid(this.tokenA.address)).to.eq(b0);
       expect(await this.sl.getProtocolBalance(this.protocolX, this.tokenA.address)).to.eq(
-        parseEther('70')
+        parseEther('70'),
       );
       expect(await this.tokenA.balanceOf(this.alice.address)).to.eq(parseEther('930'));
     });
@@ -114,8 +114,8 @@ describe('Pool', function () {
             this.protocolX,
             parseEther('71'),
             this.alice.address,
-            this.tokenA.address
-          )
+            this.tokenA.address,
+          ),
       ).to.be.revertedWith('revert ERC20: transfer amount exceeds balance');
     });
     it('Do full', async function () {
@@ -126,14 +126,14 @@ describe('Pool', function () {
             this.protocolX,
             constants.MaxUint256,
             this.alice.address,
-            this.tokenA.address
-          )
+            this.tokenA.address,
+          ),
       );
 
       expect(await this.sl.getSherXUnderlying(this.tokenA.address)).to.eq(0);
       expect(await this.sl.getPremiumLastPaid(this.tokenA.address)).to.eq(b1);
       expect(await this.sl.getProtocolBalance(this.protocolX, this.tokenA.address)).to.eq(
-        parseEther('0')
+        parseEther('0'),
       );
       expect(await this.tokenA.balanceOf(this.alice.address)).to.eq(parseEther('1000'));
     });
@@ -171,7 +171,7 @@ describe('Pool', function () {
       // sherlock contract state
       expect(await this.sl.getStakersPoolBalance(this.tokenA.address)).to.eq(parseEther('10'));
       expect(await this.sl.getStakerPoolBalance(this.alice.address, this.tokenA.address)).to.eq(
-        parseEther('10')
+        parseEther('10'),
       );
     });
     it('Do bob', async function () {
@@ -190,10 +190,10 @@ describe('Pool', function () {
       // sherlock contract state
       expect(await this.sl.getStakersPoolBalance(this.tokenA.address)).to.eq(parseEther('30'));
       expect(await this.sl.getStakerPoolBalance(this.alice.address, this.tokenA.address)).to.eq(
-        parseEther('10')
+        parseEther('10'),
       );
       expect(await this.sl.getStakerPoolBalance(this.bob.address, this.tokenA.address)).to.eq(
-        parseEther('20')
+        parseEther('20'),
       );
     });
   });
@@ -215,17 +215,17 @@ describe('Pool', function () {
       // sherlock contract state
       expect(await this.sl.getStakersPoolBalance(this.tokenA.address)).to.eq(parseEther('10'));
       expect(await this.sl.getStakerPoolBalance(this.alice.address, this.tokenA.address)).to.eq(
-        parseEther('10')
+        parseEther('10'),
       );
 
       expect(await this.sl.getInitialUnstakeEntry(this.alice.address, this.tokenA.address)).to.eq(
-        0
+        0,
       );
       expect(await this.sl.getUnstakeEntrySize(this.alice.address, this.tokenA.address)).to.eq(0);
     });
     it('Do', async function () {
       const b0 = await blockNumber(
-        this.sl.activateCooldown(parseEther('0.2'), this.tokenA.address)
+        this.sl.activateCooldown(parseEther('0.2'), this.tokenA.address),
       );
 
       // alice state
@@ -238,11 +238,11 @@ describe('Pool', function () {
       // sherlock contract state
       expect(await this.sl.getStakersPoolBalance(this.tokenA.address)).to.eq(parseEther('10'));
       expect(await this.sl.getStakerPoolBalance(this.alice.address, this.tokenA.address)).to.eq(
-        parseEther('8')
+        parseEther('8'),
       );
 
       expect(await this.sl.getInitialUnstakeEntry(this.alice.address, this.tokenA.address)).to.eq(
-        1
+        1,
       );
       expect(await this.sl.getUnstakeEntrySize(this.alice.address, this.tokenA.address)).to.eq(1);
       const w = await this.sl.getUnstakeEntry(this.alice.address, 0, this.tokenA.address);
@@ -270,23 +270,23 @@ describe('Pool', function () {
       // sherlock contract state
       expect(await this.sl.getStakersPoolBalance(this.tokenA.address)).to.eq(parseEther('10'));
       expect(await this.sl.getStakerPoolBalance(this.alice.address, this.tokenA.address)).to.eq(
-        parseEther('10')
+        parseEther('10'),
       );
 
       expect(await this.sl.getFirstMoneyOut(this.tokenA.address)).to.eq(0);
       expect(await this.sl.getInitialUnstakeEntry(this.alice.address, this.tokenA.address)).to.eq(
-        0
+        0,
       );
       expect(await this.sl.getUnstakeEntrySize(this.alice.address, this.tokenA.address)).to.eq(0);
     });
     it('Do too much', async function () {
       await expect(
-        this.sl.activateCooldown(parseEther('1.01'), this.tokenA.address)
+        this.sl.activateCooldown(parseEther('1.01'), this.tokenA.address),
       ).to.be.revertedWith('revert SafeMath: subtraction overflow');
     });
     it('Do', async function () {
       const b0 = await blockNumber(
-        this.sl.activateCooldown(parseEther('0.5'), this.tokenA.address)
+        this.sl.activateCooldown(parseEther('0.5'), this.tokenA.address),
       );
 
       // alice state
@@ -300,13 +300,13 @@ describe('Pool', function () {
       // 10% of alice 5 tokens is moved to first money out pool
       expect(await this.sl.getStakersPoolBalance(this.tokenA.address)).to.eq(parseEther('9.5'));
       expect(await this.sl.getStakerPoolBalance(this.alice.address, this.tokenA.address)).to.eq(
-        parseEther('5')
+        parseEther('5'),
       );
 
       expect(await this.sl.getFirstMoneyOut(this.tokenA.address)).to.eq(parseEther('0.5'));
 
       expect(await this.sl.getInitialUnstakeEntry(this.alice.address, this.tokenA.address)).to.eq(
-        1
+        1,
       );
       expect(await this.sl.getUnstakeEntrySize(this.alice.address, this.tokenA.address)).to.eq(1);
       const w = await this.sl.getUnstakeEntry(this.alice.address, 0, this.tokenA.address);
@@ -333,7 +333,7 @@ describe('Pool', function () {
       expect(await this.lockA.balanceOf(this.sl.address)).to.eq(parseEther('0.5'));
 
       expect(await this.sl.getInitialUnstakeEntry(this.alice.address, this.tokenA.address)).to.eq(
-        0
+        0,
       );
       expect(await this.sl.getUnstakeEntrySize(this.alice.address, this.tokenA.address)).to.eq(1);
       const w = await this.sl.getUnstakeEntry(this.alice.address, 0, this.tokenA.address);
@@ -351,7 +351,7 @@ describe('Pool', function () {
       expect(await this.lockA.balanceOf(this.sl.address)).to.eq(parseEther('0'));
 
       expect(await this.sl.getInitialUnstakeEntry(this.alice.address, this.tokenA.address)).to.eq(
-        1
+        1,
       );
       expect(await this.sl.getUnstakeEntrySize(this.alice.address, this.tokenA.address)).to.eq(1);
       const w = await this.sl.getUnstakeEntry(this.alice.address, 0, this.tokenA.address);
@@ -360,7 +360,7 @@ describe('Pool', function () {
     });
     it('Do twice', async function () {
       await expect(this.sl.cancelCooldown(0, this.tokenA.address)).to.be.revertedWith(
-        'WITHDRAW_NOT_ACTIVE'
+        'WITHDRAW_NOT_ACTIVE',
       );
     });
   });
@@ -377,7 +377,7 @@ describe('Pool', function () {
     it('Do', async function () {
       await timeTraveler.mine(1);
       await expect(this.sl.cancelCooldown(0, this.tokenA.address)).to.be.revertedWith(
-        'COOLDOWN_EXPIRED'
+        'COOLDOWN_EXPIRED',
       );
     });
   });
@@ -401,7 +401,7 @@ describe('Pool', function () {
       expect(await this.lockA.balanceOf(this.sl.address)).to.eq(parseEther('0.5'));
 
       expect(await this.sl.getInitialUnstakeEntry(this.alice.address, this.tokenA.address)).to.eq(
-        0
+        0,
       );
       expect(await this.sl.getUnstakeEntrySize(this.alice.address, this.tokenA.address)).to.eq(1);
       const w = await this.sl.getUnstakeEntry(this.alice.address, 0, this.tokenA.address);
@@ -410,12 +410,12 @@ describe('Pool', function () {
     });
     it('Not expired, t=1', async function () {
       await expect(
-        this.sl.c(this.bob).unstakeWindowExpiry(this.alice.address, 0, this.tokenA.address)
+        this.sl.c(this.bob).unstakeWindowExpiry(this.alice.address, 0, this.tokenA.address),
       ).to.be.revertedWith('UNSTAKE_WINDOW_NOT_EXPIRED');
     });
     it('Not expired, t=2', async function () {
       await expect(
-        this.sl.c(this.bob).unstakeWindowExpiry(this.alice.address, 0, this.tokenA.address)
+        this.sl.c(this.bob).unstakeWindowExpiry(this.alice.address, 0, this.tokenA.address),
       ).to.be.revertedWith('UNSTAKE_WINDOW_NOT_EXPIRED');
     });
     it('Do', async function () {
@@ -429,7 +429,7 @@ describe('Pool', function () {
       expect(await this.lockA.balanceOf(this.sl.address)).to.eq(parseEther('0'));
 
       expect(await this.sl.getInitialUnstakeEntry(this.alice.address, this.tokenA.address)).to.eq(
-        1
+        1,
       );
       expect(await this.sl.getUnstakeEntrySize(this.alice.address, this.tokenA.address)).to.eq(1);
       const w = await this.sl.getUnstakeEntry(this.alice.address, 0, this.tokenA.address);
@@ -438,7 +438,7 @@ describe('Pool', function () {
     });
     it('Do twice', async function () {
       await expect(
-        this.sl.c(this.bob).unstakeWindowExpiry(this.alice.address, 0, this.tokenA.address)
+        this.sl.c(this.bob).unstakeWindowExpiry(this.alice.address, 0, this.tokenA.address),
       ).to.be.revertedWith('WITHDRAW_NOT_ACTIVE');
     });
   });
@@ -467,11 +467,11 @@ describe('Pool', function () {
       // sherlock contract state
       expect(await this.sl.getStakersPoolBalance(this.tokenA.address)).to.eq(parseEther('10'));
       expect(await this.sl.getStakerPoolBalance(this.alice.address, this.tokenA.address)).to.eq(
-        parseEther('5')
+        parseEther('5'),
       );
 
       expect(await this.sl.getInitialUnstakeEntry(this.alice.address, this.tokenA.address)).to.eq(
-        0
+        0,
       );
       expect(await this.sl.getUnstakeEntrySize(this.alice.address, this.tokenA.address)).to.eq(1);
       const w = await this.sl.getUnstakeEntry(this.alice.address, 0, this.tokenA.address);
@@ -496,11 +496,11 @@ describe('Pool', function () {
       // sherlock contract state
       expect(await this.sl.getStakersPoolBalance(this.tokenA.address)).to.eq(parseEther('5'));
       expect(await this.sl.getStakerPoolBalance(this.alice.address, this.tokenA.address)).to.eq(
-        parseEther('5')
+        parseEther('5'),
       );
 
       expect(await this.sl.getInitialUnstakeEntry(this.alice.address, this.tokenA.address)).to.eq(
-        1
+        1,
       );
       expect(await this.sl.getUnstakeEntrySize(this.alice.address, this.tokenA.address)).to.eq(1);
       const w = await this.sl.getUnstakeEntry(this.alice.address, 0, this.tokenA.address);
@@ -509,7 +509,7 @@ describe('Pool', function () {
     });
     it('Do twice', async function () {
       await expect(this.sl.unstake(0, this.bob.address, this.tokenA.address)).to.be.revertedWith(
-        'WITHDRAW_NOT_ACTIVE'
+        'WITHDRAW_NOT_ACTIVE',
       );
     });
   });
@@ -526,7 +526,7 @@ describe('Pool', function () {
     });
     it('Cooldown active, t=1', async function () {
       await expect(this.sl.unstake(0, this.alice.address, this.tokenA.address)).to.be.revertedWith(
-        'COOLDOWN_ACTIVE'
+        'COOLDOWN_ACTIVE',
       );
     });
     it('Window of opportunity, t=2', async function () {
@@ -534,7 +534,7 @@ describe('Pool', function () {
     });
     it('Expired, t=3', async function () {
       await expect(this.sl.unstake(0, this.alice.address, this.tokenA.address)).to.be.revertedWith(
-        'UNSTAKE_WINDOW_EXPIRED'
+        'UNSTAKE_WINDOW_EXPIRED',
       );
     });
   });
@@ -647,7 +647,7 @@ describe('Pool', function () {
       await expect(
         this.sl
           .c(this.gov)
-          .cleanProtocol(this.protocolX, 0, true, this.alice.address, this.tokenA.address)
+          .cleanProtocol(this.protocolX, 0, true, this.alice.address, this.tokenA.address),
       ).to.be.revertedWith('CAN_NOT_DELETE');
     });
   });
@@ -664,8 +664,51 @@ describe('Pool', function () {
       await expect(
         this.sl
           .c(this.gov)
-          .cleanProtocol(this.protocolX, 0, true, this.alice.address, this.tokenA.address)
+          .cleanProtocol(this.protocolX, 0, true, this.alice.address, this.tokenA.address),
       ).to.be.revertedWith('CAN_NOT_DELETE2');
+    });
+  });
+  describe('Exchange rates', function () {
+    before(async function () {
+      await timeTraveler.revertSnapshot();
+      await this.tokenA.approve(this.sl.address, parseEther('10000'));
+    });
+    it('Initial state', async function () {
+      await expect(this.sl.LockToTokenXRate(this.tokenA.address)).to.be.revertedWith('NO_DATA');
+      await expect(this.sl.LockToToken(parseEther('2'), this.tokenA.address)).to.be.revertedWith(
+        'NO_DATA',
+      );
+      expect(await this.sl.TokenToLockXRate(this.tokenA.address)).to.be.eq(parseEther('1'));
+      expect(await this.sl.TokenToLock(parseEther('2'), this.tokenA.address)).to.be.eq(
+        parseEther('1'),
+      );
+    });
+    it('Initial user stake', async function () {
+      await this.sl.stake(parseEther('10'), this.alice.address, this.tokenA.address);
+
+      expect(await this.sl.LockToTokenXRate(this.tokenA.address)).to.be.eq(parseEther('10'));
+      expect(await this.sl.LockToToken(parseEther('2'), this.tokenA.address)).to.be.eq(
+        parseEther('20'),
+      );
+      expect(await this.sl.TokenToLockXRate(this.tokenA.address)).to.be.eq(parseEther('0.1'));
+      expect(await this.sl.TokenToLock(parseEther('2'), this.tokenA.address)).to.be.eq(
+        parseEther('0.2'),
+      );
+    });
+    it('payout', async function () {
+      await this.sl
+        .c(this.gov)
+        .payout(this.alice.address, [this.tokenA.address], [0], [parseEther('5')], [0]);
+    });
+    it('After payout exchange rates', async function () {
+      expect(await this.sl.LockToTokenXRate(this.tokenA.address)).to.be.eq(parseEther('5'));
+      expect(await this.sl.LockToToken(parseEther('2'), this.tokenA.address)).to.be.eq(
+        parseEther('10'),
+      );
+      expect(await this.sl.TokenToLockXRate(this.tokenA.address)).to.be.eq(parseEther('0.2'));
+      expect(await this.sl.TokenToLock(parseEther('2'), this.tokenA.address)).to.be.eq(
+        parseEther('0.4'),
+      );
     });
   });
   // TODO seperate tests for exchange rate
