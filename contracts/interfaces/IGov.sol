@@ -58,11 +58,7 @@ interface IGov {
     address _eoaManager
   ) external;
 
-  function protocolDepositUpdate(
-    bytes32 _protocol,
-    IERC20[] memory _tokens,
-    bool[] memory _deposits
-  ) external;
+  function protocolDepositAdd(bytes32 _protocol, IERC20[] memory _tokens) external;
 
   function protocolRemove(bytes32 _protocol) external;
 

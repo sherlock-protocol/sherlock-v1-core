@@ -107,12 +107,8 @@ contract Gov is IGov {
     require(!gs.protocolIsCovered[_protocol], 'COVERED');
     gs.protocolIsCovered[_protocol] = true;
 
-    bool[] memory deposits = new bool[](_tokens.length);
-    for (uint256 i; i < deposits.length; i++) {
-      deposits[i] = true;
-    }
     protocolUpdate(_protocol, _eoaProtocolAgent, _eoaManager);
-    protocolDepositUpdate(_protocol, _tokens, deposits);
+    protocolDepositAdd(_protocol, _tokens);
   }
 
   function protocolUpdate(
@@ -131,13 +127,12 @@ contract Gov is IGov {
     gs.protocolAgents[_protocol] = _eoaProtocolAgent;
   }
 
-  function protocolDepositUpdate(
-    bytes32 _protocol,
-    IERC20[] memory _tokens,
-    bool[] memory _deposits
-  ) public override onlyGovInsurance {
+  function protocolDepositAdd(bytes32 _protocol, IERC20[] memory _tokens)
+    public
+    override
+    onlyGovInsurance
+  {
     require(_protocol != bytes32(0), 'ZERO_PROTOCOL');
-    require(_tokens.length == _deposits.length, 'LENGTH');
     require(_tokens.length > 0, 'ZERO');
 
     GovStorage.Base storage gs = GovStorage.gs();
@@ -146,8 +141,10 @@ contract Gov is IGov {
     for (uint256 i; i < _tokens.length; i++) {
       PoolStorage.Base storage ps = PoolStorage.ps(address(_tokens[i]));
       require(ps.initialized, 'INIT');
+      require(!ps.isProtocol[_protocol], 'ALREADY_ADDED');
 
-      ps.protocolDeposit[_protocol] = _deposits[i];
+      ps.isProtocol[_protocol] = true;
+      ps.protocols.push(_protocol);
     }
   }
 
@@ -159,8 +156,6 @@ contract Gov is IGov {
       IERC20 token = gs.tokens[i];
 
       PoolStorage.Base storage ps = PoolStorage.ps(address(token));
-      // if protocol never deposited, storage is kept
-      delete ps.protocolDeposit[_protocol];
       // basically need to check if accruedDebt > 0, but this is true in case premium > 0
       require(ps.protocolPremium[_protocol] == 0, 'DEBT');
       require(!ps.isProtocol[_protocol], 'POOL_PROTOCOL');
@@ -224,8 +219,8 @@ contract Gov is IGov {
     // Can this line cause a revert?
     require(ps.initialized, 'NOT_INITIALIZED');
     // should all be removed, just as the balances
-    require(ps.protocols.length == 0, 'ACTIVE_PROTOCOLS');
     require(!ps.stakes, 'DISABLE_FIRST');
+    require(ps.protocols.length == 0, 'ACTIVE_PROTOCOLS');
 
     // move last index to index of _token
     gs.tokens[_index] = gs.tokens[gs.tokens.length - 1];

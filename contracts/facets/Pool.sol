@@ -45,16 +45,6 @@ contract Pool is IPool {
     return ps.stakes;
   }
 
-  function getProtocolDeposit(bytes32 _protocol, address _token)
-    external
-    view
-    override
-    returns (bool)
-  {
-    (, PoolStorage.Base storage ps) = baseData();
-    return ps.protocolDeposit[_protocol];
-  }
-
   function getProtocolBalance(bytes32 _protocol, address _token)
     external
     view
@@ -262,16 +252,10 @@ contract Pool is IPool {
     require(_amount > 0, 'AMOUNT');
     require(GovStorage.gs().protocolIsCovered[_protocol], 'PROTOCOL');
     (IERC20 token, PoolStorage.Base storage ps) = baseData();
-    require(ps.protocolDeposit[_protocol], 'NO_DEPOSIT');
+    require(ps.isProtocol[_protocol], 'NO_DEPOSIT');
 
     token.safeTransferFrom(msg.sender, address(this), _amount);
     ps.protocolBalance[_protocol] = ps.protocolBalance[_protocol].add(_amount);
-
-    if (!ps.isProtocol[_protocol]) {
-      // initial deposit
-      ps.isProtocol[_protocol] = true;
-      ps.protocols.push(_protocol);
-    }
   }
 
   function withdrawProtocolBalance(
@@ -433,6 +417,5 @@ contract Pool is IPool {
     ps.isProtocol[_protocol] = false;
     // could still be >0, if accrued more debt than needed.
     delete ps.protocolPremium[_protocol];
-    delete ps.protocolDeposit[_protocol];
   }
 }

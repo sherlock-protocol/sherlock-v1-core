@@ -34,7 +34,7 @@ describe('Gov', function () {
     });
     it('Do', async function () {
       await expect(this.sl.c(this.gov).setInitialGovInsurance(this.gov.address)).to.be.revertedWith(
-        'ALREADY_SET'
+        'ALREADY_SET',
       );
     });
   });
@@ -81,6 +81,14 @@ describe('Gov', function () {
         .c(this.gov)
         .tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address, true);
     });
+    it('Initial state', async function () {
+      expect(await this.sl.getProtocolIsCovered(this.protocolX)).to.eq(false);
+      expect(await this.sl.getProtocolAgent(this.protocolX)).to.eq(constants.AddressZero);
+      expect(await this.sl.getProtocolManager(this.protocolX)).to.eq(constants.AddressZero);
+      expect(await this.sl.isProtocol(this.protocolX, this.tokenA.address)).to.eq(false);
+      const protocols = await this.sl.getProtocols(this.tokenA.address);
+      expect(protocols.length).to.eq(0);
+    });
     it('Do', async function () {
       await this.sl
         .c(this.gov)
@@ -88,7 +96,10 @@ describe('Gov', function () {
       expect(await this.sl.getProtocolIsCovered(this.protocolX)).to.eq(true);
       expect(await this.sl.getProtocolAgent(this.protocolX)).to.eq(this.alice.address);
       expect(await this.sl.getProtocolManager(this.protocolX)).to.eq(this.bob.address);
-      expect(await this.sl.getProtocolDeposit(this.protocolX, this.tokenA.address)).to.eq(true);
+      expect(await this.sl.isProtocol(this.protocolX, this.tokenA.address)).to.eq(true);
+      const protocols = await this.sl.getProtocols(this.tokenA.address);
+      expect(protocols.length).to.eq(1);
+      expect(protocols[0]).to.eq(this.protocolX);
     });
   });
   describe('protocolUpdate()', function () {
@@ -109,7 +120,7 @@ describe('Gov', function () {
       expect(await this.sl.getProtocolManager(this.protocolX)).to.eq(this.carol.address);
     });
   });
-  describe('protocolDepositUpdate()', function () {
+  describe('protocolDepositAdd()', function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
       await this.sl
@@ -117,13 +128,22 @@ describe('Gov', function () {
         .tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address, true);
       await this.sl
         .c(this.gov)
-        .protocolAdd(this.protocolX, this.alice.address, this.bob.address, [this.tokenA.address]);
-    });
-    it('Do', async function () {
+        .tokenAdd(this.tokenB.address, this.lockB.address, this.gov.address, true);
       await this.sl
         .c(this.gov)
-        .protocolDepositUpdate(this.protocolX, [this.tokenA.address], [false]);
-      expect(await this.sl.getProtocolDeposit(this.protocolX, this.tokenA.address)).to.eq(false);
+        .protocolAdd(this.protocolX, this.alice.address, this.bob.address, [this.tokenA.address]);
+    });
+    it('Initial state', async function () {
+      expect(await this.sl.isProtocol(this.protocolX, this.tokenB.address)).to.eq(false);
+      const protocols = await this.sl.getProtocols(this.tokenB.address);
+      expect(protocols.length).to.eq(0);
+    });
+    it('Do', async function () {
+      await this.sl.c(this.gov).protocolDepositAdd(this.protocolX, [this.tokenB.address]);
+      expect(await this.sl.isProtocol(this.protocolX, this.tokenB.address)).to.eq(true);
+      const protocols = await this.sl.getProtocols(this.tokenB.address);
+      expect(protocols.length).to.eq(1);
+      expect(protocols[0]).to.eq(this.protocolX);
     });
   });
   describe('protocolRemove()', function () {
@@ -135,13 +155,16 @@ describe('Gov', function () {
       await this.sl
         .c(this.gov)
         .protocolAdd(this.protocolX, this.alice.address, this.bob.address, [this.tokenA.address]);
+      await this.sl
+        .c(this.gov)
+        .cleanProtocol(this.protocolX, 0, false, this.alice.address, this.tokenA.address);
     });
     it('Do', async function () {
       await this.sl.c(this.gov).protocolRemove(this.protocolX);
       expect(await this.sl.getProtocolIsCovered(this.protocolX)).to.eq(false);
       expect(await this.sl.getProtocolManager(this.protocolX)).to.eq(constants.AddressZero);
       expect(await this.sl.getProtocolAgent(this.protocolX)).to.eq(constants.AddressZero);
-      expect(await this.sl.getProtocolDeposit(this.protocolX, this.tokenA.address)).to.eq(false);
+      expect(await this.sl.isProtocol(this.protocolX, this.tokenA.address)).to.eq(false);
     });
   });
   describe('protocolRemove() ─ Debt', function () {
@@ -163,8 +186,8 @@ describe('Gov', function () {
             this.protocolX,
             [this.tokenA.address],
             [parseEther('1')],
-            [parseEther('1')]
-          )
+            [parseEther('1')],
+          ),
       );
     });
     it('Remove fail', async function () {
@@ -172,10 +195,10 @@ describe('Gov', function () {
     });
     it('Remove fail, not removed from pool', async function () {
       t1 = await blockNumber(
-        this.sl.c(this.gov).setProtocolPremiums(this.protocolX, [this.tokenA.address], [0], [0])
+        this.sl.c(this.gov).setProtocolPremiums(this.protocolX, [this.tokenA.address], [0], [0]),
       );
       await expect(this.sl.c(this.gov).protocolRemove(this.protocolX)).to.be.revertedWith(
-        'POOL_PROTOCOL'
+        'POOL_PROTOCOL',
       );
     });
     it('Remove success', async function () {
@@ -190,7 +213,7 @@ describe('Gov', function () {
       expect(await this.sl.getProtocolIsCovered(this.protocolX)).to.eq(false);
       expect(await this.sl.getProtocolManager(this.protocolX)).to.eq(constants.AddressZero);
       expect(await this.sl.getProtocolAgent(this.protocolX)).to.eq(constants.AddressZero);
-      expect(await this.sl.getProtocolDeposit(this.protocolX, this.tokenA.address)).to.eq(false);
+      expect(await this.sl.isProtocol(this.protocolX, this.tokenA.address)).to.eq(false);
     });
   });
   describe('tokenAdd()', function () {
@@ -258,7 +281,7 @@ describe('Gov', function () {
     });
     it('Do', async function () {
       await expect(this.sl.c(this.gov).tokenDisable(this.tokenA.address)).to.be.revertedWith(
-        'ACTIVE_WEIGHT'
+        'ACTIVE_WEIGHT',
       );
     });
   });
@@ -268,7 +291,7 @@ describe('Gov', function () {
       await this.sl
         .c(this.gov)
         .tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address, true);
-      await await this.sl.c(this.gov).tokenDisable(this.tokenA.address);
+      await this.sl.c(this.gov).tokenDisable(this.tokenA.address);
     });
     it('Do', async function () {
       await this.sl.c(this.gov).tokenRemove(this.tokenA.address, 0, this.alice.address);
@@ -279,7 +302,25 @@ describe('Gov', function () {
       await expect(this.sl.isInitialized(this.tokenA.address)).to.be.revertedWith('INVALID_TOKEN');
     });
   });
-  describe('tokenRemove()  ─ Active premium', function () {
+  describe('tokenRemove() ─ Active protocol', function () {
+    before(async function () {
+      await timeTraveler.revertSnapshot();
+
+      await this.sl
+        .c(this.gov)
+        .tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address, true);
+      await this.sl
+        .c(this.gov)
+        .protocolAdd(this.protocolX, this.gov.address, this.gov.address, [this.tokenA.address]);
+      await this.sl.c(this.gov).tokenDisable(this.tokenA.address);
+    });
+    it('Do', async function () {
+      await expect(
+        this.sl.c(this.gov).tokenRemove(this.tokenA.address, 0, this.alice.address),
+      ).to.be.revertedWith('ACTIVE_PROTOCOLS');
+    });
+  });
+  describe('tokenRemove() ─ Active premium', function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
 
@@ -295,7 +336,7 @@ describe('Gov', function () {
     });
     it('Do', async function () {
       await expect(
-        this.sl.c(this.gov).tokenRemove(this.tokenA.address, 0, this.alice.address)
+        this.sl.c(this.gov).tokenRemove(this.tokenA.address, 0, this.alice.address),
       ).to.be.revertedWith('ACTIVE_PREMIUM');
     });
   });

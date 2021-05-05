@@ -26,8 +26,6 @@ interface IPool {
 
   function isStake(address _token) external view returns (bool);
 
-  function getProtocolDeposit(bytes32 _protocol, address _token) external view returns (bool);
-
   function getProtocolBalance(bytes32 _protocol, address _token) external view returns (uint256);
 
   function getProtocolPremium(bytes32 _protocol, address _token) external view returns (uint256);
