@@ -39,6 +39,26 @@ contract SherX is ISherX {
   // View methods
   //
 
+  function getTotalUsdPerBlock(address _token) external view override returns (uint256) {
+    return SherXStorage.sx().totalUsdPerBlock;
+  }
+
+  function getTotalUsdPool(address _token) external view override returns (uint256) {
+    return SherXStorage.sx().totalUsdPool;
+  }
+
+  function getTotalUsdLastSettled(address _token) external view override returns (uint256) {
+    return SherXStorage.sx().totalUsdLastSettled;
+  }
+
+  function getSherXPerBlock(address _token) external view override returns (uint256) {
+    return SherXStorage.sx().sherXPerBlock;
+  }
+
+  function getSherXLastAccrued(address _token) external view override returns (uint256) {
+    return SherXStorage.sx().sherXLastAccrued;
+  }
+
   function calcUnderlying()
     external
     view

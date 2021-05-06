@@ -17,6 +17,16 @@ interface ISherX {
   // View methods
   //
 
+  function getTotalUsdPerBlock(address _token) external view returns (uint256);
+
+  function getTotalUsdPool(address _token) external view returns (uint256);
+
+  function getTotalUsdLastSettled(address _token) external view returns (uint256);
+
+  function getSherXPerBlock(address _token) external view returns (uint256);
+
+  function getSherXLastAccrued(address _token) external view returns (uint256);
+
   function calcUnderlying()
     external
     view

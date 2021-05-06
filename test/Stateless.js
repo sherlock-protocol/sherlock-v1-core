@@ -827,6 +827,11 @@ describe('Stateless', function () {
     });
   });
   describe('ISherX ─ View Methods', function () {
+    describe('getTotalUsdPerBlock', function () {});
+    describe('getTotalUsdPool', function () {});
+    describe('getTotalUsdLastSettled', function () {});
+    describe('getSherXPerBlock', function () {});
+    describe('getSherXLastAccrued()', function () {});
     describe('calcUnderlying()', function () {});
     describe('calcUnderlying(uint256)', function () {});
     describe('calcUnderlying(address)', function () {});
