@@ -195,6 +195,7 @@ contract Gov is IGov {
   function tokenDisable(IERC20 _token) external override onlyGovInsurance {
     PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
     require(ps.initialized, 'NOT_INITIALIZED');
+    // Setting weight can only be done when stakes=true
     require(ps.sherXWeight == 0, 'ACTIVE_WEIGHT');
 
     require(ps.stakes, 'ALREADY_DISABLED');

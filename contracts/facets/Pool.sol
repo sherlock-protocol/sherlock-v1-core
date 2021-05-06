@@ -30,6 +30,11 @@ contract Pool is IPool {
     return ps.activateCooldownFee;
   }
 
+  function getSherXWeight(address _token) external view override returns (uint256) {
+    (, PoolStorage.Base storage ps) = baseData();
+    return ps.sherXWeight;
+  }
+
   function getGovPool(address _token) external view override returns (address) {
     (, PoolStorage.Base storage ps) = baseData();
     return ps.govPool;
@@ -235,6 +240,17 @@ contract Pool is IPool {
   //
   // State changing methods
   //
+
+  function setStake(bool _stake, address _token) external override {
+    require(msg.sender == GovStorage.gs().govInsurance, 'NOT_GOV_INS');
+
+    (, PoolStorage.Base storage ps) = baseData();
+    require(ps.stakes != _stake, 'INVALID');
+    // when true --> false, it needs to be 0
+    // when false --> true, it is already 0
+    require(ps.sherXWeight == 0, 'WEIGHT');
+    ps.stakes = _stake;
+  }
 
   function setCooldownFee(uint256 _fee, address _token) external override {
     require(msg.sender == GovStorage.gs().govInsurance, 'NOT_GOV_INS');

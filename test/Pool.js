@@ -34,6 +34,28 @@ describe('Pool', function () {
 
     await timeTraveler.snapshot();
   });
+  describe('setStake()', function () {
+    before(async function () {
+      await timeTraveler.revertSnapshot();
+    });
+    it('Initial state', async function () {
+      expect(await this.sl.isStake(this.tokenA.address)).to.eq(true);
+    });
+    it('Do', async function () {
+      await this.sl.c(this.gov).setStake(false, this.tokenA.address);
+      expect(await this.sl.isStake(this.tokenA.address)).to.eq(false);
+    });
+    it('Do weight', async function () {
+      // first enable staking
+      await this.sl.c(this.gov).setStake(true, this.tokenA.address);
+      // set initial weight
+      await this.sl.c(this.gov).setInitialWeight(this.tokenA.address);
+      // disable staking
+      await expect(this.sl.c(this.gov).setStake(false, this.tokenA.address)).to.be.revertedWith(
+        'WEIGHT',
+      );
+    });
+  });
   describe('setCooldownFee()', function () {
     before(async function () {
       await timeTraveler.revertSnapshot();

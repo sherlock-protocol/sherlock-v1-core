@@ -488,6 +488,18 @@ describe('Stateless', function () {
     describe('getGovPayout()', function () {});
   });
   describe('Pool ─ State Changing', function () {
+    describe('setStake()', function () {
+      it('Invalid sender', async function () {
+        await expect(this.sl.setStake(false, this.tokenA.address)).to.be.revertedWith(
+          'NOT_GOV_INS',
+        );
+      });
+      it('Invalid stake', async function () {
+        await expect(this.sl.c(this.gov).setStake(true, this.tokenA.address)).to.be.revertedWith(
+          'INVALID',
+        );
+      });
+    });
     describe('setCooldownFee()', function () {
       it('Invalid sender', async function () {
         await expect(
@@ -705,6 +717,7 @@ describe('Stateless', function () {
   });
   describe('Pool ─ View Methods', function () {
     describe('getCooldownFee()', function () {});
+    describe('getSherXWeight()', function () {});
     describe('getGovPool()', function () {});
     describe('isInitialized()', function () {});
     describe('isStake()', function () {});

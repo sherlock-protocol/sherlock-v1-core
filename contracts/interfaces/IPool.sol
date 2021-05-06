@@ -20,6 +20,8 @@ interface IPool {
 
   function getCooldownFee(address _token) external view returns (uint256);
 
+  function getSherXWeight(address _token) external view returns (uint256);
+
   function getGovPool(address _token) external view returns (address);
 
   function isInitialized(address _token) external view returns (bool);
@@ -75,6 +77,8 @@ interface IPool {
   //
   // State changing methods
   //
+
+  function setStake(bool _stake, address _token) external;
 
   function setCooldownFee(uint256 _fee, address _token) external;
 
