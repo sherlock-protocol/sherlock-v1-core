@@ -732,6 +732,7 @@ describe('Stateless', function () {
     describe('getAccruedDebt()', function () {});
     describe('getTotalPremiumPerBlock()', function () {});
     describe('getPremiumLastPaid()', function () {});
+    describe('getSherXUnderlying()', function () {});
     describe('getUnstakeEntrySize()', function () {});
     describe('getInitialUnstakeEntry()', function () {});
     describe('getStakersPoolBalance()', function () {});
@@ -837,12 +838,13 @@ describe('Stateless', function () {
     });
   });
   describe('ISherX ─ View Methods', function () {
-    describe('getTotalUsdPerBlock', function () {});
-    describe('getTotalUsdPoolStored', function () {});
-    describe('getTotalUsdPool', function () {});
-    describe('getTotalUsdLastSettled', function () {});
-    describe('getTotalUnmintedSherX', function () {});
-    describe('getSherXPerBlock', function () {});
+    describe('getTotalUsdPerBlock()', function () {});
+    describe('getTotalUsdPoolStored()', function () {});
+    describe('getTotalUsdPool()', function () {});
+    describe('getTotalUsdLastSettled()', function () {});
+    describe('getTotalSherXUnminted()', function () {});
+    describe('getTotalSherX()', function () {});
+    describe('getSherXPerBlock()', function () {});
     describe('getSherXLastAccrued()', function () {});
     describe('calcUnderlying()', function () {});
     describe('calcUnderlying(uint256)', function () {});
