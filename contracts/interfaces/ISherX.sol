@@ -27,8 +27,9 @@ interface ISherX {
 
   function getTotalUsdLastSettled() external view returns (uint256);
 
-  // TODO rename
-  function getTotalUnmintedSherX2() external view returns (uint256);
+  function getTotalSherXUnminted() external view returns (uint256);
+
+  function getTotalSherX() external view returns (uint256);
 
   function getSherXPerBlock() external view returns (uint256);
 

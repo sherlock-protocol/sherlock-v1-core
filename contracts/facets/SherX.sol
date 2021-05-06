@@ -56,9 +56,14 @@ contract SherX is ISherX {
     return SherXStorage.sx().totalUsdLastSettled;
   }
 
-  function getTotalUnmintedSherX2() public view override returns (uint256) {
+  function getTotalSherXUnminted() public view override returns (uint256) {
     SherXStorage.Base storage sx = SherXStorage.sx();
     return block.number.sub(sx.sherXLastAccrued).mul(sx.sherXPerBlock);
+  }
+
+  function getTotalSherX() public view override returns (uint256) {
+    SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
+    return sx20.totalSupply.add(getTotalSherXUnminted());
   }
 
   function getSherXPerBlock() external view override returns (uint256) {
@@ -111,7 +116,7 @@ contract SherX is ISherX {
       PoolStorage.Base storage ps = PoolStorage.ps(address(token));
       tokens[i] = token;
 
-      uint256 total = sx20.totalSupply.add(getTotalUnmintedSherX2());
+      uint256 total = getTotalSherX();
       if (total > 0) {
         amounts[i] = ps.sherXUnderlying.add(LibPool.getTotalAccruedDebt(token)).mul(_amount).div(
           total
