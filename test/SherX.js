@@ -250,7 +250,7 @@ describe('SherX', function () {
       expect(await this.lockX.balanceOf(this.alice.address)).to.eq(parseEther('3'));
     });
   });
-  describe.only('harvest calls', function () {
+  describe('harvest calls', function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
     });
@@ -293,5 +293,116 @@ describe('SherX', function () {
       await expect(tx).to.emit(this.sl, 'Harvest').withArgs(this.alice.address, this.lockA.address);
       expect((await events(tx)).length).to.eq(1);
     });
+  });
+  describe('redeem() ─ stale', function () {
+    before(async function () {
+      await timeTraveler.revertSnapshot();
+
+      await this.sl.depositProtocolBalance(this.protocolX, parseEther('100'), this.tokenA.address);
+      // add token b for protocol
+      await this.tokenB.approve(this.sl.address, parseEther('10000'));
+      await this.sl
+        .c(this.gov)
+        .tokenAdd(this.tokenB.address, this.lockB.address, this.gov.address, false);
+      await this.sl.c(this.gov).protocolDepositAdd(this.protocolX, [this.tokenB.address]);
+      await this.sl.depositProtocolBalance(this.protocolX, parseEther('100'), this.tokenB.address);
+
+      await this.sl.c(this.gov).setStake(true, this.tokenA.address);
+      await this.sl.c(this.gov).setInitialWeight(this.tokenA.address);
+      // stake token A
+      await this.sl.stake(parseEther('10'), this.alice.address, this.tokenA.address);
+      // send SherX tokens to token A holder
+      await this.sl
+        .c(this.gov)
+        .setProtocolPremiums(
+          this.protocolX,
+          [this.tokenA.address, this.tokenB.address],
+          [parseEther('1'), parseEther('2')],
+          [parseEther('1'), parseEther('1')],
+        );
+      // stop sending to token A
+      this.b0 = await blockNumber(
+        this.sl
+          .c(this.gov)
+          .setProtocolPremiums(
+            this.protocolX,
+            [this.tokenA.address, this.tokenB.address],
+            [parseEther('0'), parseEther('0')],
+            [parseEther('1'), parseEther('1')],
+          ),
+      );
+      // harvest SherX tokens
+      await this.sl['harvestFor(address,address)'](this.alice.address, this.lockA.address);
+      // unstake SherX tokens
+      await this.sl.c(this.gov).setUnstakeWindow(10);
+      await this.lockX.approve(this.sl.address, parseEther('10000'));
+      await this.sl.activateCooldown(parseEther('1'), this.sl.address);
+      await this.sl.unstake(0, this.alice.address, this.sl.address);
+    });
+    it('Initial state', async function () {
+      // underlying variables
+      expect(await this.sl.totalSupply()).to.eq(parseEther('1'));
+      expect(await this.sl.balanceOf(this.alice.address)).to.eq(parseEther('1'));
+      expect(await this.sl.getSherXUnderlying(this.tokenA.address)).to.eq(parseEther('1'));
+      expect(await this.sl.getSherXUnderlying(this.tokenB.address)).to.eq(parseEther('2'));
+
+      const data = await this.sl['calcUnderlying()']();
+      expect(data.tokens[0]).to.eq(this.tokenA.address);
+      expect(data.tokens[1]).to.eq(this.sl.address);
+      expect(data.tokens[2]).to.eq(this.tokenB.address);
+      expect(data.tokens.length).to.eq(3);
+
+      expect(data.amounts[0]).to.eq(parseEther('1'));
+      expect(data.amounts[1]).to.eq(0);
+      expect(data.amounts[2]).to.eq(parseEther('2'));
+      expect(data.amounts.length).to.eq(3);
+
+      expect(await this.sl['calcUnderlyingInStoredUSD()']()).to.eq(parseEther('3'));
+
+      // pool variables
+      expect(await this.sl.getTotalUsdLastSettled()).to.eq(this.b0);
+      expect(await this.sl.getTotalUsdPoolStored()).to.eq(parseEther('3'));
+      expect(await this.sl.getTotalUsdPool()).to.eq(parseEther('3'));
+      expect(await this.sl.getPremiumLastPaid(this.tokenA.address)).to.eq(this.b0);
+      expect(await this.sl.getPremiumLastPaid(this.tokenB.address)).to.eq(this.b0);
+
+      // bob
+      expect(await this.tokenA.balanceOf(this.bob.address)).to.eq(0);
+      expect(await this.tokenB.balanceOf(this.bob.address)).to.eq(0);
+    });
+    it('Do', async function () {
+      const b1 = await blockNumber(this.sl.redeem(parseEther('1'), this.bob.address));
+
+      // underlying variables
+      expect(await this.sl.totalSupply()).to.eq(0);
+      expect(await this.sl.balanceOf(this.alice.address)).to.eq(0);
+      expect(await this.sl.getSherXUnderlying(this.tokenA.address)).to.eq(0);
+      expect(await this.sl.getSherXUnderlying(this.tokenB.address)).to.eq(0);
+
+      const data = await this.sl['calcUnderlying()']();
+      expect(data.tokens[0]).to.eq(this.tokenA.address);
+      expect(data.tokens[1]).to.eq(this.sl.address);
+      expect(data.tokens[2]).to.eq(this.tokenB.address);
+      expect(data.tokens.length).to.eq(3);
+
+      expect(data.amounts[0]).to.eq(0);
+      expect(data.amounts[1]).to.eq(0);
+      expect(data.amounts[2]).to.eq(0);
+      expect(data.amounts.length).to.eq(3);
+
+      expect(await this.sl['calcUnderlyingInStoredUSD()']()).to.eq(0);
+
+      // pool variables
+      expect(await this.sl.getTotalUsdLastSettled()).to.eq(b1);
+      expect(await this.sl.getTotalUsdPoolStored()).to.eq(0);
+      expect(await this.sl.getTotalUsdPool()).to.eq(0);
+      expect(await this.sl.getPremiumLastPaid(this.tokenA.address)).to.eq(b1);
+      expect(await this.sl.getPremiumLastPaid(this.tokenB.address)).to.eq(b1);
+
+      // bob
+      expect(await this.tokenA.balanceOf(this.bob.address)).to.eq(parseEther('1'));
+      expect(await this.tokenB.balanceOf(this.bob.address)).to.eq(parseEther('2'));
+    });
+    // verify if calc +1 matches redeem
   });
 });

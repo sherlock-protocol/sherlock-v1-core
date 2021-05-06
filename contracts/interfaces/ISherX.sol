@@ -21,6 +21,8 @@ interface ISherX {
 
   function getTotalUsdPerBlock() external view returns (uint256);
 
+  function getTotalUsdPoolStored() external view returns (uint256);
+
   function getTotalUsdPool() external view returns (uint256);
 
   function getTotalUsdLastSettled() external view returns (uint256);

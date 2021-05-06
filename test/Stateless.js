@@ -740,6 +740,7 @@ describe('Stateless', function () {
     describe('getUnallocatedSherXStored()', function () {});
     describe('getUnallocatedSherXTotal()', function () {});
     describe('getUnallocatedSherXFor()', function () {});
+    describe('getTotalSherXPerBlock(address)', function () {});
     describe('getSherXPerBlock(address)', function () {});
     describe('getSherXPerBlock(address,address)', function () {});
     describe('getSherXPerBlock(uint256,address)', function () {});
@@ -837,6 +838,7 @@ describe('Stateless', function () {
   });
   describe('ISherX ─ View Methods', function () {
     describe('getTotalUsdPerBlock', function () {});
+    describe('getTotalUsdPoolStored', function () {});
     describe('getTotalUsdPool', function () {});
     describe('getTotalUsdLastSettled', function () {});
     describe('getSherXPerBlock', function () {});

@@ -219,21 +219,25 @@ contract Pool is IPool {
     withdrawable_amount = raw_amount.sub(ps.sWithdrawn[_user]);
   }
 
-  function getSherXPerBlock(address _token) public view override returns (uint256 amount) {
+  function getTotalSherXPerBlock(address _token) public view override returns (uint256 amount) {
     (, PoolStorage.Base storage ps) = baseData();
     SherXStorage.Base storage sx = SherXStorage.sx();
 
     amount = sx.sherXPerBlock.mul(ps.sherXWeight).div(10**18);
   }
 
+  function getSherXPerBlock(address _token) external view override returns (uint256) {
+    return getSherXPerBlock(msg.sender, _token);
+  }
+
   function getSherXPerBlock(address _user, address _token)
-    external
+    public
     view
     override
     returns (uint256 amount)
   {
     (, PoolStorage.Base storage ps) = baseData();
-    amount = getSherXPerBlock(_token).mul(ps.lockToken.balanceOf(_user)).div(
+    amount = getTotalSherXPerBlock(_token).mul(ps.lockToken.balanceOf(_user)).div(
       ps.lockToken.totalSupply()
     );
   }
@@ -246,7 +250,7 @@ contract Pool is IPool {
   {
     // simulates staking (adding lock)
     (, PoolStorage.Base storage ps) = baseData();
-    amount = getSherXPerBlock(_token).mul(_lock).div(ps.lockToken.totalSupply().add(_lock));
+    amount = getTotalSherXPerBlock(_token).mul(_lock).div(ps.lockToken.totalSupply().add(_lock));
   }
 
   function LockToTokenXRate(address _token) external view override returns (uint256) {

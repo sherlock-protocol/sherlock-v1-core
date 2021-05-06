@@ -43,8 +43,13 @@ contract SherX is ISherX {
     return SherXStorage.sx().totalUsdPerBlock;
   }
 
-  function getTotalUsdPool() external view override returns (uint256) {
+  function getTotalUsdPoolStored() external view override returns (uint256) {
     return SherXStorage.sx().totalUsdPool;
+  }
+
+  function getTotalUsdPool() external view override returns (uint256) {
+    SherXStorage.Base storage sx = SherXStorage.sx();
+    return sx.totalUsdPool.add(block.number.sub(sx.totalUsdLastSettled).mul(sx.totalUsdPerBlock));
   }
 
   function getTotalUsdLastSettled() external view override returns (uint256) {
@@ -127,6 +132,9 @@ contract SherX is ISherX {
       // TODO callstack
       PoolStorage.Base storage ps = PoolStorage.ps(address(token));
       uint256 _temp = ps.sherXUnderlying.mul(_amount).mul(sx.tokenUSD[token]);
+      if (sx20.totalSupply == 0) {
+        continue;
+      }
       _temp = _temp.div(10**18).div(sx20.totalSupply);
 
       usd = usd.add(_temp);

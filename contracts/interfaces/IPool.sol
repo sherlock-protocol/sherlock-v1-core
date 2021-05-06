@@ -72,6 +72,8 @@ interface IPool {
 
   function getUnallocatedSherXFor(address _user, address _token) external view returns (uint256);
 
+  function getTotalSherXPerBlock(address _token) external view returns (uint256);
+
   function getSherXPerBlock(address _token) external view returns (uint256);
 
   function getSherXPerBlock(address _user, address _token) external view returns (uint256);

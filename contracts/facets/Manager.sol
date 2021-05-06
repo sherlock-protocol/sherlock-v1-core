@@ -44,12 +44,14 @@ contract Manager is IManager {
     uint256 _premium,
     uint256 _price
   ) public override {
+    require(address(_token) != address(this), 'SELF');
     GovStorage.Base storage gs = GovStorage.gs();
     PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
     SherXStorage.Base storage sx = SherXStorage.sx();
     SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
 
     require(ps.initialized, 'WHITELIST');
+    require(ps.isProtocol[_protocol], 'IS_PROTOCOL');
 
     LibPool.payOffDebtAll(IERC20(_token));
     if (sx.sherXLastAccrued == 0) {
