@@ -13,6 +13,8 @@ interface ISherX {
   // Events
   //
 
+  event Harvest(address indexed user, address indexed token);
+
   //
   // View methods
   //

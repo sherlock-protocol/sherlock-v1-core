@@ -221,6 +221,7 @@ contract SherX is ISherX {
     if (stakeBalance > 0) {
       doYield(_token, _user, _user, 0);
     }
+    emit Harvest(_user, _token);
   }
 
   function harvestFor(address _user, address[] calldata _tokens) external override {

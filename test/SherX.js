@@ -1,7 +1,7 @@
 const { expect } = require('chai');
 const { parseEther, parseUnits } = require('ethers/lib/utils');
 
-const { prepare, deploy, solution, blockNumber } = require('./utilities');
+const { prepare, deploy, solution, blockNumber, events } = require('./utilities');
 const { constants } = require('ethers');
 const { TimeTraveler } = require('./utilities/snapshot');
 
@@ -248,6 +248,50 @@ describe('SherX', function () {
 
       expect(await this.sl.balanceOf(this.sl.address)).to.eq(parseEther('3'));
       expect(await this.lockX.balanceOf(this.alice.address)).to.eq(parseEther('3'));
+    });
+  });
+  describe.only('harvest calls', function () {
+    before(async function () {
+      await timeTraveler.revertSnapshot();
+    });
+    it('harvest()', async function () {
+      const tx = this.sl['harvest()']();
+      await expect(tx)
+        .to.emit(this.sl, 'Harvest')
+        .withArgs(this.alice.address, this.lockA.address)
+        .to.emit(this.sl, 'Harvest')
+        .withArgs(this.alice.address, this.lockX.address);
+
+      expect((await events(tx)).length).to.eq(2);
+    });
+    it('harvest(address)', async function () {
+      const tx = this.sl['harvest(address)'](this.lockA.address);
+      await expect(tx).to.emit(this.sl, 'Harvest').withArgs(this.alice.address, this.lockA.address);
+      expect((await events(tx)).length).to.eq(1);
+    });
+    it('harvest(address[])', async function () {
+      const tx = this.sl['harvest(address[])']([this.lockA.address]);
+      await expect(tx).to.emit(this.sl, 'Harvest').withArgs(this.alice.address, this.lockA.address);
+      expect((await events(tx)).length).to.eq(1);
+    });
+    it('harvestFor(address)', async function () {
+      const tx = this.sl['harvestFor(address)'](this.alice.address);
+      await expect(tx)
+        .to.emit(this.sl, 'Harvest')
+        .withArgs(this.alice.address, this.lockA.address)
+        .to.emit(this.sl, 'Harvest')
+        .withArgs(this.alice.address, this.lockX.address);
+      expect((await events(tx)).length).to.eq(2);
+    });
+    it('harvestFor(address,address)', async function () {
+      const tx = this.sl['harvestFor(address,address)'](this.alice.address, this.lockA.address);
+      await expect(tx).to.emit(this.sl, 'Harvest').withArgs(this.alice.address, this.lockA.address);
+      expect((await events(tx)).length).to.eq(1);
+    });
+    it('harvestFor(address,address[])', async function () {
+      const tx = this.sl['harvestFor(address,address[])'](this.alice.address, [this.lockA.address]);
+      await expect(tx).to.emit(this.sl, 'Harvest').withArgs(this.alice.address, this.lockA.address);
+      expect((await events(tx)).length).to.eq(1);
     });
   });
 });

@@ -108,4 +108,7 @@ module.exports = {
   blockNumber: async (tx) => {
     return BigNumber.from(await (await tx).blockNumber);
   },
+  events: async (tx) => {
+    return (await (await tx).wait()).events;
+  },
 };
