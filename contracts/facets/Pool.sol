@@ -184,9 +184,69 @@ contract Pool is IPool {
       );
   }
 
-  function getUnmaterializedSherX(address _token) external view override returns (uint256) {
+  function getTotalUnmintedSherX(address _token) public view override returns (uint256 sherX) {
+    (, PoolStorage.Base storage ps) = baseData();
+    SherXStorage.Base storage sx = SherXStorage.sx();
+    uint256 amount = block.number.sub(sx.sherXLastAccrued).mul(sx.sherXPerBlock);
+    sherX = amount.mul(ps.sherXWeight).div(10**18);
+  }
+
+  function getUnallocatedSherXStored(address _token) public view override returns (uint256) {
     (, PoolStorage.Base storage ps) = baseData();
     return ps.unmaterializedSherX;
+  }
+
+  function getUnallocatedSherXTotal(address _token) external view override returns (uint256) {
+    return getUnallocatedSherXStored(_token).add(getTotalUnmintedSherX(_token));
+  }
+
+  function getUnallocatedSherXFor(address _user, address _token)
+    external
+    view
+    override
+    returns (uint256 withdrawable_amount)
+  {
+    (, PoolStorage.Base storage ps) = baseData();
+
+    uint256 userAmount = ps.lockToken.balanceOf(_user);
+    uint256 totalAmount = ps.lockToken.totalSupply();
+    if (totalAmount == 0) {
+      return 0;
+    }
+
+    uint256 raw_amount =
+      ps.sWeight.add(getTotalUnmintedSherX(_token)).mul(userAmount).div(totalAmount);
+    withdrawable_amount = raw_amount.sub(ps.sWithdrawn[_user]);
+  }
+
+  function getSherXPerBlock(address _token) public view override returns (uint256 amount) {
+    (, PoolStorage.Base storage ps) = baseData();
+    SherXStorage.Base storage sx = SherXStorage.sx();
+
+    amount = sx.sherXPerBlock.mul(ps.sherXWeight).div(10**18);
+  }
+
+  function getSherXPerBlock(address _user, address _token)
+    external
+    view
+    override
+    returns (uint256 amount)
+  {
+    (, PoolStorage.Base storage ps) = baseData();
+    amount = getSherXPerBlock(_token).mul(ps.lockToken.balanceOf(_user)).div(
+      ps.lockToken.totalSupply()
+    );
+  }
+
+  function getSherXPerBlock(uint256 _lock, address _token)
+    external
+    view
+    override
+    returns (uint256 amount)
+  {
+    // simulates staking (adding lock)
+    (, PoolStorage.Base storage ps) = baseData();
+    amount = getSherXPerBlock(_token).mul(_lock).div(ps.lockToken.totalSupply().add(_lock));
   }
 
   function LockToTokenXRate(address _token) external view override returns (uint256) {
@@ -199,6 +259,7 @@ contract Pool is IPool {
     if (totalLock == 0 || ps.stakeBalance == 0) {
       revert('NO_DATA');
     }
+    // TODO what if _amount > totalLock
     return ps.stakeBalance.mul(_amount).div(totalLock);
   }
 
@@ -212,6 +273,7 @@ contract Pool is IPool {
     if (totalLock == 0 || ps.stakeBalance == 0) {
       return 10**18;
     }
+    // TODO what if _amount > ps.stakeBalance
     return totalLock.mul(_amount).div(ps.stakeBalance);
   }
 

@@ -39,23 +39,23 @@ contract SherX is ISherX {
   // View methods
   //
 
-  function getTotalUsdPerBlock(address _token) external view override returns (uint256) {
+  function getTotalUsdPerBlock() external view override returns (uint256) {
     return SherXStorage.sx().totalUsdPerBlock;
   }
 
-  function getTotalUsdPool(address _token) external view override returns (uint256) {
+  function getTotalUsdPool() external view override returns (uint256) {
     return SherXStorage.sx().totalUsdPool;
   }
 
-  function getTotalUsdLastSettled(address _token) external view override returns (uint256) {
+  function getTotalUsdLastSettled() external view override returns (uint256) {
     return SherXStorage.sx().totalUsdLastSettled;
   }
 
-  function getSherXPerBlock(address _token) external view override returns (uint256) {
+  function getSherXPerBlock() external view override returns (uint256) {
     return SherXStorage.sx().sherXPerBlock;
   }
 
-  function getSherXLastAccrued(address _token) external view override returns (uint256) {
+  function getSherXLastAccrued() external view override returns (uint256) {
     return SherXStorage.sx().sherXLastAccrued;
   }
 
@@ -263,9 +263,8 @@ contract SherX is ISherX {
     address underlying = ILock(token).underlying();
     PoolStorage.Base storage ps = PoolStorage.ps(underlying);
     require(address(ps.lockToken) == token, 'Unexpected sender');
-
+    // TODO optimize, accure only for this token
     LibSherX.accrueSherX();
-
     uint256 userAmount = ps.lockToken.balanceOf(from);
     uint256 totalAmount = ps.lockToken.totalSupply();
 
@@ -284,12 +283,12 @@ contract SherX is ISherX {
         ps.sWithdrawn[from] = raw_amount.sub(ineglible_yield_amount);
 
         ps.unmaterializedSherX = ps.unmaterializedSherX.sub(withdrawable_amount);
-        PoolStorage.Base storage psFee = PoolStorage.ps(address(this));
+        PoolStorage.Base storage psSherX = PoolStorage.ps(address(this));
         if (from == address(this)) {
           // add SherX harvested by the pool itself to first money out pool.
-          psFee.firstMoneyOut = psFee.firstMoneyOut.add(withdrawable_amount);
+          psSherX.firstMoneyOut = psSherX.firstMoneyOut.add(withdrawable_amount);
         } else {
-          LibPool.stake(psFee, withdrawable_amount, from);
+          LibPool.stake(psSherX, withdrawable_amount, from);
         }
       } else {
         ps.sWithdrawn[from] = ps.sWithdrawn[from].sub(ineglible_yield_amount);

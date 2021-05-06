@@ -736,8 +736,17 @@ describe('Stateless', function () {
     describe('getInitialUnstakeEntry()', function () {});
     describe('getStakersPoolBalance()', function () {});
     describe('getStakerPoolBalance()', function () {});
-    describe('getUnmaterializedSherX()', function () {});
-    describe('exchangeRate()', function () {});
+    describe('getTotalUnmintedSherX()', function () {});
+    describe('getUnallocatedSherXStored()', function () {});
+    describe('getUnallocatedSherXTotal()', function () {});
+    describe('getUnallocatedSherXFor()', function () {});
+    describe('getSherXPerBlock(address)', function () {});
+    describe('getSherXPerBlock(address,address)', function () {});
+    describe('getSherXPerBlock(uint256,address)', function () {});
+    describe('LockToTokenXRate()', function () {});
+    describe('LockToToken()', function () {});
+    describe('TokenToLockXRate()', function () {});
+    describe('TokenToLock()', function () {});
   });
   describe('ISherX ─ State Changing', function () {
     describe('_beforeTokenTransfer()', function () {

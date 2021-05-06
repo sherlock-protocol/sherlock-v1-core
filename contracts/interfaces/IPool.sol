@@ -64,7 +64,19 @@ interface IPool {
 
   function getStakerPoolBalance(address _staker, address _token) external view returns (uint256);
 
-  function getUnmaterializedSherX(address _token) external view returns (uint256);
+  function getTotalUnmintedSherX(address _token) external view returns (uint256);
+
+  function getUnallocatedSherXStored(address _token) external view returns (uint256);
+
+  function getUnallocatedSherXTotal(address _token) external view returns (uint256);
+
+  function getUnallocatedSherXFor(address _user, address _token) external view returns (uint256);
+
+  function getSherXPerBlock(address _token) external view returns (uint256);
+
+  function getSherXPerBlock(address _user, address _token) external view returns (uint256);
+
+  function getSherXPerBlock(uint256 _amount, address _token) external view returns (uint256);
 
   function LockToTokenXRate(address _token) external view returns (uint256);
 
