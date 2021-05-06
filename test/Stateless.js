@@ -841,6 +841,7 @@ describe('Stateless', function () {
     describe('getTotalUsdPoolStored', function () {});
     describe('getTotalUsdPool', function () {});
     describe('getTotalUsdLastSettled', function () {});
+    describe('getTotalUnmintedSherX', function () {});
     describe('getSherXPerBlock', function () {});
     describe('getSherXLastAccrued()', function () {});
     describe('calcUnderlying()', function () {});
@@ -899,6 +900,7 @@ describe('Stateless', function () {
       });
     });
     // TODO test other erc20 methods
+    // TODO test if underlying calc increases over time (mining blocks)
   });
   describe('ISherXERC20 ─ View Methods', function () {
     describe('name()', function () {});

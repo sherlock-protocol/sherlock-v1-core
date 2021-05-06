@@ -220,10 +220,7 @@ contract Pool is IPool {
   }
 
   function getTotalSherXPerBlock(address _token) public view override returns (uint256 amount) {
-    (, PoolStorage.Base storage ps) = baseData();
-    SherXStorage.Base storage sx = SherXStorage.sx();
-
-    amount = sx.sherXPerBlock.mul(ps.sherXWeight).div(10**18);
+    return LibPool.getTotalSherXPerBlock(_token);
   }
 
   function getSherXPerBlock(address _token) external view override returns (uint256) {
@@ -236,10 +233,7 @@ contract Pool is IPool {
     override
     returns (uint256 amount)
   {
-    (, PoolStorage.Base storage ps) = baseData();
-    amount = getTotalSherXPerBlock(_token).mul(ps.lockToken.balanceOf(_user)).div(
-      ps.lockToken.totalSupply()
-    );
+    return LibPool.getSherXPerBlock(_user, _token);
   }
 
   function getSherXPerBlock(uint256 _lock, address _token)

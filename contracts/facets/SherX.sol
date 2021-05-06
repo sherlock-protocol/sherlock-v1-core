@@ -56,6 +56,11 @@ contract SherX is ISherX {
     return SherXStorage.sx().totalUsdLastSettled;
   }
 
+  function getTotalUnmintedSherX2() public view override returns (uint256) {
+    SherXStorage.Base storage sx = SherXStorage.sx();
+    return block.number.sub(sx.sherXLastAccrued).mul(sx.sherXPerBlock);
+  }
+
   function getSherXPerBlock() external view override returns (uint256) {
     return SherXStorage.sx().sherXPerBlock;
   }
@@ -70,9 +75,23 @@ contract SherX is ISherX {
     override
     returns (IERC20[] memory tokens, uint256[] memory amounts)
   {
-    SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
+    return calcUnderlying(msg.sender);
+  }
 
-    return calcUnderlying(sx20.balances[msg.sender]);
+  function calcUnderlying(address _user)
+    public
+    view
+    override
+    returns (IERC20[] memory tokens, uint256[] memory amounts)
+  {
+    SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
+    uint256 balance = sx20.balances[_user];
+
+    GovStorage.Base storage gs = GovStorage.gs();
+    for (uint256 i; i < gs.tokens.length; i++) {
+      balance = balance.add(LibPool.getSherXPerBlock(_user, address(gs.tokens[i])));
+    }
+    return calcUnderlying(balance);
   }
 
   function calcUnderlying(uint256 _amount)
@@ -81,7 +100,6 @@ contract SherX is ISherX {
     override
     returns (IERC20[] memory tokens, uint256[] memory amounts)
   {
-    //SherXStorage.Base storage sx = SherXStorage.sx();
     GovStorage.Base storage gs = GovStorage.gs();
     SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
 
@@ -90,29 +108,18 @@ contract SherX is ISherX {
 
     for (uint256 i; i < gs.tokens.length; i++) {
       IERC20 token = gs.tokens[i];
-      //LibPool.payOffDebtAll(token);
       PoolStorage.Base storage ps = PoolStorage.ps(address(token));
-      // todo include debt
       tokens[i] = token;
-      // TODO add sherXUnderlying and blockIncrement
-      // TODO add totalSupply rolling amount (per block)
-      if (sx20.totalSupply > 0) {
-        amounts[i] = ps.sherXUnderlying.mul(_amount).div(sx20.totalSupply);
+
+      uint256 total = sx20.totalSupply.add(getTotalUnmintedSherX2());
+      if (total > 0) {
+        amounts[i] = ps.sherXUnderlying.add(LibPool.getTotalAccruedDebt(token)).mul(_amount).div(
+          total
+        );
       } else {
         amounts[i] = 0;
       }
     }
-  }
-
-  function calcUnderlying(address _user)
-    external
-    view
-    override
-    returns (IERC20[] memory tokens, uint256[] memory amounts)
-  {
-    SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
-
-    return calcUnderlying(sx20.balances[_user]);
   }
 
   function calcUnderlyingInStoredUSD() external view override returns (uint256) {

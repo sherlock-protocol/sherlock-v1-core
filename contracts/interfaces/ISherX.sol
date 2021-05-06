@@ -27,6 +27,9 @@ interface ISherX {
 
   function getTotalUsdLastSettled() external view returns (uint256);
 
+  // TODO rename
+  function getTotalUnmintedSherX2() external view returns (uint256);
+
   function getSherXPerBlock() external view returns (uint256);
 
   function getSherXLastAccrued() external view returns (uint256);
@@ -36,12 +39,12 @@ interface ISherX {
     view
     returns (IERC20[] memory tokens, uint256[] memory amounts);
 
-  function calcUnderlying(uint256 _amount)
+  function calcUnderlying(address _user)
     external
     view
     returns (IERC20[] memory tokens, uint256[] memory amounts);
 
-  function calcUnderlying(address _user)
+  function calcUnderlying(uint256 _amount)
     external
     view
     returns (IERC20[] memory tokens, uint256[] memory amounts);

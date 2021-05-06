@@ -21,6 +21,35 @@ library LibPool {
   using SafeERC20 for IERC20;
   using SafeERC20 for ILock;
 
+  function accruedDebt(bytes32 _protocol, IERC20 _token) public view returns (uint256) {
+    PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
+
+    return block.number.sub(ps.totalPremiumLastPaid).mul(ps.protocolPremium[_protocol]);
+  }
+
+  function getTotalAccruedDebt(IERC20 _token) public view returns (uint256) {
+    PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
+
+    return block.number.sub(ps.totalPremiumLastPaid).mul(ps.totalPremiumPerBlock);
+  }
+
+  function getTotalSherXPerBlock(address _token) public view returns (uint256 amount) {
+    PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
+    SherXStorage.Base storage sx = SherXStorage.sx();
+
+    amount = sx.sherXPerBlock.mul(ps.sherXWeight).div(10**18);
+  }
+
+  function getSherXPerBlock(address _user, address _token) external view returns (uint256 amount) {
+    PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
+    if (ps.lockToken.totalSupply() == 0) {
+      return 0;
+    }
+    amount = getTotalSherXPerBlock(_token).mul(ps.lockToken.balanceOf(_user)).div(
+      ps.lockToken.totalSupply()
+    );
+  }
+
   function stake(
     PoolStorage.Base storage ps,
     uint256 _amount,
@@ -62,17 +91,5 @@ library LibPool {
     // todo optimize by forwarding  block.number.sub(protocolPremiumLastPaid) instead of calculating every loop
     uint256 debt = accruedDebt(_protocol, _token);
     ps.protocolBalance[_protocol] = ps.protocolBalance[_protocol].sub(debt);
-  }
-
-  function accruedDebt(bytes32 _protocol, IERC20 _token) public view returns (uint256) {
-    PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
-
-    return block.number.sub(ps.totalPremiumLastPaid).mul(ps.protocolPremium[_protocol]);
-  }
-
-  function getTotalAccruedDebt(IERC20 _token) public view returns (uint256) {
-    PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
-
-    return block.number.sub(ps.totalPremiumLastPaid).mul(ps.totalPremiumPerBlock);
   }
 }
