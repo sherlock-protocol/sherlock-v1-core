@@ -902,7 +902,6 @@ describe('Stateless', function () {
       });
     });
     // TODO test other erc20 methods
-    // TODO test if underlying calc increases over time (mining blocks)
   });
   describe('ISherXERC20 ─ View Methods', function () {
     describe('name()', function () {});

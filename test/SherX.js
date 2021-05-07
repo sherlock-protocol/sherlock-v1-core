@@ -396,13 +396,14 @@ describe('SherX', function () {
       expect(await this.sl.getTotalUsdLastSettled()).to.eq(b1);
       expect(await this.sl.getTotalUsdPoolStored()).to.eq(0);
       expect(await this.sl.getTotalUsdPool()).to.eq(0);
-      expect(await this.sl.getPremiumLastPaid(this.tokenA.address)).to.eq(b1);
-      expect(await this.sl.getPremiumLastPaid(this.tokenB.address)).to.eq(b1);
+      expect(await this.sl.getPremiumLastPaid(this.tokenA.address)).to.eq(this.b0);
+      expect(await this.sl.getPremiumLastPaid(this.tokenB.address)).to.eq(this.b0);
 
       // bob
       expect(await this.tokenA.balanceOf(this.bob.address)).to.eq(parseEther('1'));
       expect(await this.tokenB.balanceOf(this.bob.address)).to.eq(parseEther('2'));
     });
     // verify if calc +1 matches redeem
+    // TODO test if underlying calc increases over time (mining blocks)
   });
 });

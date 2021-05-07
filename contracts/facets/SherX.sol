@@ -111,13 +111,14 @@ contract SherX is ISherX {
     tokens = new IERC20[](gs.tokens.length);
     amounts = new uint256[](gs.tokens.length);
 
+    uint256 total = getTotalSherX();
+
     for (uint256 i; i < gs.tokens.length; i++) {
       IERC20 token = gs.tokens[i];
-      PoolStorage.Base storage ps = PoolStorage.ps(address(token));
       tokens[i] = token;
 
-      uint256 total = getTotalSherX();
       if (total > 0) {
+        PoolStorage.Base storage ps = PoolStorage.ps(address(token));
         amounts[i] = ps.sherXUnderlying.add(LibPool.getTotalAccruedDebt(token)).mul(_amount).div(
           total
         );
@@ -139,7 +140,6 @@ contract SherX is ISherX {
 
     for (uint256 i; i < gs.tokens.length; i++) {
       IERC20 token = gs.tokens[i];
-      //LibPool.payOffDebtAll(token);
 
       // TODO callstack
       PoolStorage.Base storage ps = PoolStorage.ps(address(token));
@@ -256,18 +256,19 @@ contract SherX is ISherX {
 
     SherXStorage.Base storage sx = SherXStorage.sx();
     LibSherX.accrueUSDPool();
-    // TODO get last amount of FEE tokens (accrue)
-    // TODO get last amount sherXUnderlying
+    // LibSherX.accrueSherX() is removed as the calcUnderlying already takes it into consideration (without changing state)
 
     (IERC20[] memory tokens, uint256[] memory amounts) = calcUnderlying(_amount);
 
     for (uint256 i; i < tokens.length; i++) {
       PoolStorage.Base storage ps = PoolStorage.ps(address(tokens[i]));
+
+      if (amounts[i] > ps.sherXUnderlying) {
+        LibPool.payOffDebtAll(tokens[i]);
+      }
       ps.sherXUnderlying = ps.sherXUnderlying.sub(amounts[i]);
 
-      LibPool.payOffDebtAll(tokens[i]);
-      // TODO, deduct?
-      // ps.sWeight
+      // TODO gas, write to storage only once
       sx.totalUsdPool = sx.totalUsdPool.sub(amounts[i].mul(sx.tokenUSD[tokens[i]]).div(10**18));
 
       tokens[i].safeTransfer(_receiver, amounts[i]);
