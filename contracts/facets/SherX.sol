@@ -260,6 +260,7 @@ contract SherX is ISherX {
 
     (IERC20[] memory tokens, uint256[] memory amounts) = calcUnderlying(_amount);
 
+    uint256 subUsdPool = 0;
     for (uint256 i; i < tokens.length; i++) {
       PoolStorage.Base storage ps = PoolStorage.ps(address(tokens[i]));
 
@@ -268,11 +269,11 @@ contract SherX is ISherX {
       }
       ps.sherXUnderlying = ps.sherXUnderlying.sub(amounts[i]);
 
-      // TODO gas, write to storage only once
-      sx.totalUsdPool = sx.totalUsdPool.sub(amounts[i].mul(sx.tokenUSD[tokens[i]]).div(10**18));
+      subUsdPool = subUsdPool.add(amounts[i].mul(sx.tokenUSD[tokens[i]]).div(10**18));
 
       tokens[i].safeTransfer(_receiver, amounts[i]);
     }
+    sx.totalUsdPool = sx.totalUsdPool.sub(subUsdPool);
     LibSherXERC20.burn(msg.sender, _amount);
   }
 
