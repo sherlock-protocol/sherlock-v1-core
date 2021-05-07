@@ -35,6 +35,10 @@ interface ISherX {
 
   function getSherXLastAccrued() external view returns (uint256);
 
+  function getSherXBalance() external view returns (uint256);
+
+  function getSherXBalance(address _user) external view returns (uint256);
+
   function calcUnderlying()
     external
     view

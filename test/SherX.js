@@ -403,7 +403,120 @@ describe('SherX', function () {
       expect(await this.tokenA.balanceOf(this.bob.address)).to.eq(parseEther('1'));
       expect(await this.tokenB.balanceOf(this.bob.address)).to.eq(parseEther('2'));
     });
-    // verify if calc +1 matches redeem
-    // TODO test if underlying calc increases over time (mining blocks)
+  });
+  describe('redeem() ─ moving', function () {
+    before(async function () {
+      await timeTraveler.revertSnapshot();
+
+      await this.sl.depositProtocolBalance(this.protocolX, parseEther('100'), this.tokenA.address);
+      // add token b for protocol
+      await this.tokenB.approve(this.sl.address, parseEther('10000'));
+      await this.sl
+        .c(this.gov)
+        .tokenAdd(this.tokenB.address, this.lockB.address, this.gov.address, false);
+      await this.sl.c(this.gov).protocolDepositAdd(this.protocolX, [this.tokenB.address]);
+      await this.sl.depositProtocolBalance(this.protocolX, parseEther('100'), this.tokenB.address);
+
+      await this.sl.c(this.gov).setStake(true, this.tokenA.address);
+      await this.sl.c(this.gov).setInitialWeight(this.tokenA.address);
+      // stake token A
+      await this.sl.stake(parseEther('10'), this.alice.address, this.tokenA.address);
+      // send SherX tokens to token A holder
+      await this.sl
+        .c(this.gov)
+        .setProtocolPremiums(
+          this.protocolX,
+          [this.tokenA.address, this.tokenB.address],
+          [parseEther('1'), parseEther('2')],
+          [parseEther('1'), parseEther('1')],
+        );
+    });
+    it('Initial state', async function () {
+      expect(await this.sl['getSherXBalance()']()).to.eq(0);
+
+      const data = await this.sl['calcUnderlying()']();
+      expect(data.tokens[0]).to.eq(this.tokenA.address);
+      expect(data.tokens[1]).to.eq(this.sl.address);
+      expect(data.tokens[2]).to.eq(this.tokenB.address);
+      expect(data.tokens.length).to.eq(3);
+
+      expect(data.amounts[0]).to.eq(0);
+      expect(data.amounts[1]).to.eq(0);
+      expect(data.amounts[2]).to.eq(0);
+      expect(data.amounts.length).to.eq(3);
+    });
+    it('t=1', async function () {
+      await timeTraveler.mine(1);
+
+      expect(await this.sl['getSherXBalance()']()).to.eq(parseEther('1'));
+
+      const data = await this.sl['calcUnderlying()']();
+      expect(data.amounts[0]).to.eq(parseEther('1'));
+      expect(data.amounts[1]).to.eq(0);
+      expect(data.amounts[2]).to.eq(parseEther('2'));
+      expect(data.amounts.length).to.eq(3);
+    });
+    it('t=2', async function () {
+      await timeTraveler.mine(1);
+
+      expect(await this.sl['getSherXBalance()']()).to.eq(parseEther('2'));
+
+      const data = await this.sl['calcUnderlying()']();
+      expect(data.amounts[0]).to.eq(parseEther('2'));
+      expect(data.amounts[1]).to.eq(0);
+      expect(data.amounts[2]).to.eq(parseEther('4'));
+      expect(data.amounts.length).to.eq(3);
+    });
+    it('t=3', async function () {
+      await timeTraveler.mine(1);
+
+      expect(await this.sl['getSherXBalance()']()).to.eq(parseEther('3'));
+
+      const data = await this.sl['calcUnderlying()']();
+      expect(data.amounts[0]).to.eq(parseEther('3'));
+      expect(data.amounts[1]).to.eq(0);
+      expect(data.amounts[2]).to.eq(parseEther('6'));
+      expect(data.amounts.length).to.eq(3);
+    });
+    it('t=4, update', async function () {
+      await this.sl
+        .c(this.gov)
+        .setProtocolPremiums(
+          this.protocolX,
+          [this.tokenA.address, this.tokenB.address],
+          [parseEther('2'), parseEther('4')],
+          [parseEther('1'), parseEther('1')],
+        );
+
+      expect(await this.sl['getSherXBalance()']()).to.eq(parseEther('4'));
+
+      const data = await this.sl['calcUnderlying()']();
+      expect(data.amounts[0]).to.eq(parseEther('4'));
+      expect(data.amounts[1]).to.eq(0);
+      expect(data.amounts[2]).to.eq(parseEther('8'));
+      expect(data.amounts.length).to.eq(3);
+    });
+    it('t=5', async function () {
+      await timeTraveler.mine(1);
+
+      expect(await this.sl['getSherXBalance()']()).to.eq(parseEther('6'));
+
+      const data = await this.sl['calcUnderlying()']();
+      expect(data.amounts[0]).to.eq(parseEther('6'));
+      expect(data.amounts[1]).to.eq(0);
+      expect(data.amounts[2]).to.eq(parseEther('12'));
+      expect(data.amounts.length).to.eq(3);
+    });
+    it('t=6', async function () {
+      await timeTraveler.mine(1);
+
+      expect(await this.sl['getSherXBalance()']()).to.eq(parseEther('8'));
+
+      const data = await this.sl['calcUnderlying()']();
+      expect(data.amounts[0]).to.eq(parseEther('8'));
+      expect(data.amounts[1]).to.eq(0);
+      expect(data.amounts[2]).to.eq(parseEther('16'));
+      expect(data.amounts.length).to.eq(3);
+    });
   });
 });

@@ -846,6 +846,8 @@ describe('Stateless', function () {
     describe('getTotalSherX()', function () {});
     describe('getSherXPerBlock()', function () {});
     describe('getSherXLastAccrued()', function () {});
+    describe('getSherXBalance()', function () {});
+    describe('getSherXBalance()', function () {});
     describe('calcUnderlying()', function () {});
     describe('calcUnderlying(uint256)', function () {});
     describe('calcUnderlying(address)', function () {});

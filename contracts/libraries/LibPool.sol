@@ -33,21 +33,29 @@ library LibPool {
     return block.number.sub(ps.totalPremiumLastPaid).mul(ps.totalPremiumPerBlock);
   }
 
-  function getTotalSherXPerBlock(address _token) public view returns (uint256 amount) {
+  function getTotalUnmintedSherX(address _token) public view returns (uint256 sherX) {
     PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
     SherXStorage.Base storage sx = SherXStorage.sx();
-
-    amount = sx.sherXPerBlock.mul(ps.sherXWeight).div(10**18);
+    uint256 amount = block.number.sub(sx.sherXLastAccrued).mul(sx.sherXPerBlock);
+    sherX = amount.mul(ps.sherXWeight).div(10**18);
   }
 
-  function getSherXPerBlock(address _user, address _token) external view returns (uint256 amount) {
+  function getUnallocatedSherXFor(address _user, address _token)
+    external
+    view
+    returns (uint256 withdrawable_amount)
+  {
     PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
-    if (ps.lockToken.totalSupply() == 0) {
+
+    uint256 userAmount = ps.lockToken.balanceOf(_user);
+    uint256 totalAmount = ps.lockToken.totalSupply();
+    if (totalAmount == 0) {
       return 0;
     }
-    amount = getTotalSherXPerBlock(_token).mul(ps.lockToken.balanceOf(_user)).div(
-      ps.lockToken.totalSupply()
-    );
+
+    uint256 raw_amount =
+      ps.sWeight.add(getTotalUnmintedSherX(_token)).mul(userAmount).div(totalAmount);
+    withdrawable_amount = raw_amount.sub(ps.sWithdrawn[_user]);
   }
 
   function stake(

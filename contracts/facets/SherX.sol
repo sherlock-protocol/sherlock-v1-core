@@ -74,6 +74,20 @@ contract SherX is ISherX {
     return SherXStorage.sx().sherXLastAccrued;
   }
 
+  function getSherXBalance() external view override returns (uint256) {
+    return getSherXBalance(msg.sender);
+  }
+
+  function getSherXBalance(address _user) public view override returns (uint256) {
+    SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
+    uint256 balance = sx20.balances[_user];
+    GovStorage.Base storage gs = GovStorage.gs();
+    for (uint256 i; i < gs.tokens.length; i++) {
+      balance = balance.add(LibPool.getUnallocatedSherXFor(_user, address(gs.tokens[i])));
+    }
+    return balance;
+  }
+
   function calcUnderlying()
     external
     view
@@ -89,14 +103,7 @@ contract SherX is ISherX {
     override
     returns (IERC20[] memory tokens, uint256[] memory amounts)
   {
-    SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
-    uint256 balance = sx20.balances[_user];
-
-    GovStorage.Base storage gs = GovStorage.gs();
-    for (uint256 i; i < gs.tokens.length; i++) {
-      balance = balance.add(LibPool.getSherXPerBlock(_user, address(gs.tokens[i])));
-    }
-    return calcUnderlying(balance);
+    return calcUnderlying(getSherXBalance(_user));
   }
 
   function calcUnderlying(uint256 _amount)
