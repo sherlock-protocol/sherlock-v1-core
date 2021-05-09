@@ -27,12 +27,16 @@ library LibSherX {
   // TODO accrueSherX(address token), to just accrue for a certain token
   // do accrueSherX() to loop over all if updating weights
 
-  function accrueUSDPool() external returns (uint256 totalUsdPool) {
+  function viewAccrueUSDPool() public view returns (uint256 totalUsdPool) {
     SherXStorage.Base storage sx = SherXStorage.sx();
-
     totalUsdPool = sx.totalUsdPool.add(
       block.number.sub(sx.totalUsdLastSettled).mul(sx.totalUsdPerBlock)
     );
+  }
+
+  function accrueUSDPool() external returns (uint256 totalUsdPool) {
+    SherXStorage.Base storage sx = SherXStorage.sx();
+    totalUsdPool = viewAccrueUSDPool();
     sx.totalUsdPool = totalUsdPool;
     sx.totalUsdLastSettled = block.number;
   }
