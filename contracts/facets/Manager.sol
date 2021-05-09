@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.7.4;
+pragma abicoder v2;
 
 /******************************************************************************\
 * Author: Evert Kors <dev@sherlock.xyz> (https://twitter.com/evert0x)
@@ -35,24 +36,21 @@ contract Manager is IManager {
   }
 
   function setTokenPrice(IERC20 _token, uint256 _newUsd) external override onlyGovInsurance {
-    SherXStorage.Base storage sx = SherXStorage.sx();
-    PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
-    onlyValidToken(ps, _token);
-
     (uint256 usdPerBlock, uint256 usdPool) = _getData();
+    (usdPerBlock, usdPool) = _setTokenPrice(_token, _newUsd, usdPerBlock, usdPool);
+    _setData(usdPerBlock, usdPool);
+  }
 
-    uint256 oldUsd = _setTokenPrice(_token, _newUsd);
-
-    uint256 premium = ps.totalPremiumPerBlock;
-    (usdPerBlock, usdPool) = _updateData(
-      ps,
-      usdPerBlock,
-      usdPool,
-      premium,
-      premium,
-      oldUsd,
-      _newUsd
-    );
+  function setTokenPrice(IERC20[] memory _token, uint256[] memory _newUsd)
+    external
+    override
+    onlyGovInsurance
+  {
+    (uint256 usdPerBlock, uint256 usdPool) = _getData();
+    require(_token.length == _newUsd.length, 'LENGTH');
+    for (uint256 i; i < _token.length; i++) {
+      (usdPerBlock, usdPool) = _setTokenPrice(_token[i], _newUsd[i], usdPerBlock, usdPool);
+    }
     _setData(usdPerBlock, usdPool);
   }
 
@@ -61,24 +59,51 @@ contract Manager is IManager {
     IERC20 _token,
     uint256 _premium
   ) external override onlyGovInsurance {
-    SherXStorage.Base storage sx = SherXStorage.sx();
-    PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
-    onlyValidToken(ps, _token);
-
     (uint256 usdPerBlock, uint256 usdPool) = _getData();
+    (usdPerBlock, usdPool) = _setProtocolPremium(_protocol, _token, _premium, usdPerBlock, usdPool);
+    _setData(usdPerBlock, usdPool);
+  }
 
-    (uint256 oldPremium, uint256 newPremium) = _setProtocolPremium(ps, _protocol, _token, _premium);
+  function setProtocolPremium(
+    bytes32 _protocol,
+    IERC20[] memory _token,
+    uint256[] memory _premium
+  ) external override onlyGovInsurance {
+    (uint256 usdPerBlock, uint256 usdPool) = _getData();
+    require(_token.length == _premium.length, 'LENGTH');
+    for (uint256 i; i < _token.length; i++) {
+      (usdPerBlock, usdPool) = _setProtocolPremium(
+        _protocol,
+        _token[i],
+        _premium[i],
+        usdPerBlock,
+        usdPool
+      );
+    }
+    _setData(usdPerBlock, usdPool);
+  }
 
-    uint256 usd = sx.tokenUSD[_token];
-    (usdPerBlock, usdPool) = _updateData(
-      ps,
-      usdPerBlock,
-      usdPool,
-      oldPremium,
-      newPremium,
-      usd,
-      usd
-    );
+  function setProtocolPremium(
+    bytes32[] memory _protocol,
+    IERC20[][] memory _token,
+    uint256[][] memory _premium
+  ) external override onlyGovInsurance {
+    (uint256 usdPerBlock, uint256 usdPool) = _getData();
+    require(_protocol.length == _token.length, 'LENGTH');
+    require(_protocol.length == _premium.length, 'LENGTH');
+
+    for (uint256 i; i < _protocol.length; i++) {
+      require(_token[i].length == _premium[i].length, 'LENGTH');
+      for (uint256 j; j < _protocol.length; j++) {
+        (usdPerBlock, usdPool) = _setProtocolPremium(
+          _protocol[i],
+          _token[i][j],
+          _premium[i][j],
+          usdPerBlock,
+          usdPool
+        );
+      }
+    }
     _setData(usdPerBlock, usdPool);
   }
 
@@ -113,41 +138,102 @@ contract Manager is IManager {
     (uint256 usdPerBlock, uint256 usdPool) = _getData();
 
     for (uint256 i; i < _token.length; i++) {
-      IERC20 token = _token[i];
       (usdPerBlock, usdPool) = _setProtocolPremiumAndTokenPrice(
         _protocol,
-        token,
+        _token[i],
         _premium[i],
         _newUsd[i],
         usdPerBlock,
         usdPool
       );
     }
-
     _setData(usdPerBlock, usdPool);
   }
 
-  function _setProtocolPremiumAndTokenPrice(
-    bytes32 _protocol,
+  function setProtocolPremiumAndTokenPrice(
+    bytes32[] memory _protocol,
+    IERC20[][] memory _token,
+    uint256[][] memory _premium,
+    uint256[][] memory _newUsd
+  ) external override onlyGovInsurance {
+    // TODO could be setting _newUsd multiple times
+    (uint256 usdPerBlock, uint256 usdPool) = _getData();
+    require(_protocol.length == _token.length, 'LENGTH');
+    require(_protocol.length == _premium.length, 'LENGTH');
+    require(_protocol.length == _newUsd.length, 'LENGTH');
+
+    for (uint256 i; i < _protocol.length; i++) {
+      require(_token[i].length == _premium[i].length, 'LENGTH');
+      require(_token[i].length == _newUsd[i].length, 'LENGTH');
+      for (uint256 j; j < _protocol.length; j++) {
+        (usdPerBlock, usdPool) = _setProtocolPremiumAndTokenPrice(
+          _protocol[i],
+          _token[i][j],
+          _premium[i][j],
+          _newUsd[i][j],
+          usdPerBlock,
+          usdPool
+        );
+      }
+    }
+    _setData(usdPerBlock, usdPool);
+  }
+
+  function _setTokenPrice(
     IERC20 _token,
-    uint256 _premium,
     uint256 _newUsd,
     uint256 usdPerBlock,
     uint256 usdPool
-  ) internal returns (uint256, uint256) {
+  ) private returns (uint256, uint256) {
     PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
     onlyValidToken(ps, _token);
+
     uint256 oldUsd = _setTokenPrice(_token, _newUsd);
+    uint256 premium = ps.totalPremiumPerBlock;
+    (usdPerBlock, usdPool) = _updateData(
+      ps,
+      usdPerBlock,
+      usdPool,
+      premium,
+      premium,
+      oldUsd,
+      _newUsd
+    );
+    return (usdPerBlock, usdPool);
+  }
+
+  function _setTokenPrice(IERC20 _token, uint256 _newUsd) private returns (uint256 oldUsd) {
+    SherXStorage.Base storage sx = SherXStorage.sx();
+
+    oldUsd = sx.tokenUSD[_token];
+    // used for setProtocolPremiumAndTokenPrice, if same token prices are updated
+    if (oldUsd != _newUsd) {
+      sx.tokenUSD[_token] = _newUsd;
+    }
+  }
+
+  function _setProtocolPremium(
+    bytes32 _protocol,
+    IERC20 _token,
+    uint256 _premium,
+    uint256 usdPerBlock,
+    uint256 usdPool
+  ) private returns (uint256, uint256) {
+    SherXStorage.Base storage sx = SherXStorage.sx();
+    PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
+    onlyValidToken(ps, _token);
+
     (uint256 oldPremium, uint256 newPremium) = _setProtocolPremium(ps, _protocol, _token, _premium);
 
+    uint256 usd = sx.tokenUSD[_token];
     (usdPerBlock, usdPool) = _updateData(
       ps,
       usdPerBlock,
       usdPool,
       oldPremium,
       newPremium,
-      oldUsd,
-      _newUsd
+      usd,
+      usd
     );
     return (usdPerBlock, usdPool);
   }
@@ -167,12 +253,29 @@ contract Manager is IManager {
     ps.protocolPremium[_protocol] = _premium;
   }
 
-  function _setTokenPrice(IERC20 _token, uint256 _newUsd) private returns (uint256 oldUsd) {
-    SherXStorage.Base storage sx = SherXStorage.sx();
+  function _setProtocolPremiumAndTokenPrice(
+    bytes32 _protocol,
+    IERC20 _token,
+    uint256 _premium,
+    uint256 _newUsd,
+    uint256 usdPerBlock,
+    uint256 usdPool
+  ) private returns (uint256, uint256) {
+    PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
+    onlyValidToken(ps, _token);
 
-    oldUsd = sx.tokenUSD[_token];
-
-    sx.tokenUSD[_token] = _newUsd;
+    uint256 oldUsd = _setTokenPrice(_token, _newUsd);
+    (uint256 oldPremium, uint256 newPremium) = _setProtocolPremium(ps, _protocol, _token, _premium);
+    (usdPerBlock, usdPool) = _updateData(
+      ps,
+      usdPerBlock,
+      usdPool,
+      oldPremium,
+      newPremium,
+      oldUsd,
+      _newUsd
+    );
+    return (usdPerBlock, usdPool);
   }
 
   function _getData() private view returns (uint256 usdPerBlock, uint256 usdPool) {

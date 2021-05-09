@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.7.4;
+pragma abicoder v2;
 
 /******************************************************************************\
 * Author: Evert Kors <dev@sherlock.xyz> (https://twitter.com/evert0x)
@@ -9,46 +10,54 @@ pragma solidity ^0.7.4;
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
 interface IManager {
-  function setTokenPrice(IERC20 _token, uint256 _price) external;
+  // updating token price for 1 token
+  function setTokenPrice(IERC20 _token, uint256 _newUsd) external;
 
-  //function setTokenPrice(IERC20[] _token, uint256[] _price) external;
+  // updating token price for 1+ token
+  function setTokenPrice(IERC20[] memory _token, uint256[] memory _newUsd) external;
 
+  // updating protocol's premiums for 1 tokens
   function setProtocolPremium(
     bytes32 _protocol,
     IERC20 _token,
     uint256 _premium
   ) external;
 
-  // function setProtocolPremium(
-  //   bytes32 _protocol[],
-  //   IERC20 _token,
-  //   uint256 _premium[]
-  // ) external;
+  // updating protocol's premiums for 1+ tokens
+  function setProtocolPremium(
+    bytes32 _protocol,
+    IERC20[] memory _token,
+    uint256[] memory _premium
+  ) external;
 
-  // function setProtocolPremium(
-  //   bytes32 _protocol,
-  //   IERC20 _token[],
-  //   uint256 _premium[]
-  // ) external;
+  // updating multiple protocol's premiums for 1+ token
+  function setProtocolPremium(
+    bytes32[] memory _protocol,
+    IERC20[][] memory _token,
+    uint256[][] memory _premium
+  ) external;
 
+  // updating protocol's premiums for 1 tokens (+price)
   function setProtocolPremiumAndTokenPrice(
     bytes32 _protocol,
     IERC20 _token,
     uint256 _premium,
-    uint256 _price
+    uint256 _newUsd
   ) external;
 
-  // function setProtocolPremiumAndTokenPrice(
-  //   bytes32 _protocol[],
-  //   IERC20 _token,
-  //   uint256 _premium[]
-  //   uint256 _price
-  // ) external;
-
+  // updating protocol's premiums for 1+ tokens (+price)
   function setProtocolPremiumAndTokenPrice(
     bytes32 _protocol,
     IERC20[] memory _token,
     uint256[] memory _premium,
-    uint256[] memory _price
+    uint256[] memory _newUsd
+  ) external;
+
+  // updating multiple protocol's premiums for 1+ tokens (+price)
+  function setProtocolPremiumAndTokenPrice(
+    bytes32[] memory _protocol,
+    IERC20[][] memory _token,
+    uint256[][] memory _premium,
+    uint256[][] memory _newUsd
   ) external;
 }
