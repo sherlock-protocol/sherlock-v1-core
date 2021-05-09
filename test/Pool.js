@@ -603,7 +603,12 @@ describe('Pool', function () {
       await this.sl.depositProtocolBalance(this.protocolX, parseEther('10'), this.tokenA.address);
       await this.sl
         .c(this.gov)
-        .setProtocolPremium(this.protocolX, this.tokenA.address, parseEther('20'), parseEther('1'));
+        ['setProtocolPremiumAndTokenPrice(bytes32,address,uint256,uint256)'](
+          this.protocolX,
+          this.tokenA.address,
+          parseEther('20'),
+          parseEther('1'),
+        );
     });
     it('Initial state', async function () {
       expect(await this.tokenA.balanceOf(this.alice.address)).to.eq(parseEther('990'));
@@ -632,7 +637,12 @@ describe('Pool', function () {
       await this.sl.depositProtocolBalance(this.protocolX, parseEther('10'), this.tokenA.address);
       await this.sl
         .c(this.gov)
-        .setProtocolPremium(this.protocolX, this.tokenA.address, parseEther('20'), parseEther('1'));
+        ['setProtocolPremiumAndTokenPrice(bytes32,address,uint256,uint256)'](
+          this.protocolX,
+          this.tokenA.address,
+          parseEther('20'),
+          parseEther('1'),
+        );
     });
     it('Initial state', async function () {
       expect(await this.tokenA.balanceOf(this.alice.address)).to.eq(parseEther('990'));
@@ -662,7 +672,12 @@ describe('Pool', function () {
       await timeTraveler.ethereum.send('evm_setAutomine', [false]);
       await this.sl
         .c(this.gov)
-        .setProtocolPremium(this.protocolX, this.tokenA.address, parseEther('1'), parseEther('1'));
+        ['setProtocolPremiumAndTokenPrice(bytes32,address,uint256,uint256)'](
+          this.protocolX,
+          this.tokenA.address,
+          parseEther('1'),
+          parseEther('1'),
+        );
     });
     it('Do', async function () {
       await timeTraveler.ethereum.send('evm_setAutomine', [true]);
@@ -680,7 +695,12 @@ describe('Pool', function () {
       await this.sl.depositProtocolBalance(this.protocolX, parseEther('10'), this.tokenA.address);
       await this.sl
         .c(this.gov)
-        .setProtocolPremium(this.protocolX, this.tokenA.address, parseEther('1'), parseEther('1'));
+        ['setProtocolPremiumAndTokenPrice(bytes32,address,uint256,uint256)'](
+          this.protocolX,
+          this.tokenA.address,
+          parseEther('1'),
+          parseEther('1'),
+        );
     });
     it('Do', async function () {
       await expect(

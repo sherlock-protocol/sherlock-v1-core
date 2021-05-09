@@ -160,7 +160,7 @@ describe('SherX', function () {
       const b0 = await blockNumber(
         this.sl
           .c(this.gov)
-          .setProtocolPremiums(
+          ['setProtocolPremiumAndTokenPrice(bytes32,address[],uint256[],uint256[])'](
             this.protocolX,
             [this.tokenA.address],
             [parseEther('1')],
@@ -314,7 +314,7 @@ describe('SherX', function () {
       // send SherX tokens to token A holder
       await this.sl
         .c(this.gov)
-        .setProtocolPremiums(
+        ['setProtocolPremiumAndTokenPrice(bytes32,address[],uint256[],uint256[])'](
           this.protocolX,
           [this.tokenA.address, this.tokenB.address],
           [parseEther('1'), parseEther('2')],
@@ -324,7 +324,7 @@ describe('SherX', function () {
       this.b0 = await blockNumber(
         this.sl
           .c(this.gov)
-          .setProtocolPremiums(
+          ['setProtocolPremiumAndTokenPrice(bytes32,address[],uint256[],uint256[])'](
             this.protocolX,
             [this.tokenA.address, this.tokenB.address],
             [parseEther('0'), parseEther('0')],
@@ -425,7 +425,7 @@ describe('SherX', function () {
       this.b0 = await blockNumber(
         this.sl
           .c(this.gov)
-          .setProtocolPremiums(
+          ['setProtocolPremiumAndTokenPrice(bytes32,address[],uint256[],uint256[])'](
             this.protocolX,
             [this.tokenA.address, this.tokenB.address],
             [parseEther('1'), parseEther('2')],
@@ -534,7 +534,7 @@ describe('SherX', function () {
       // send SherX tokens to token A holder
       await this.sl
         .c(this.gov)
-        .setProtocolPremiums(
+        ['setProtocolPremiumAndTokenPrice(bytes32,address[],uint256[],uint256[])'](
           this.protocolX,
           [this.tokenA.address, this.tokenB.address],
           [parseEther('1'), parseEther('2')],
@@ -591,7 +591,7 @@ describe('SherX', function () {
     it('t=4, update', async function () {
       await this.sl
         .c(this.gov)
-        .setProtocolPremiums(
+        ['setProtocolPremiumAndTokenPrice(bytes32,address[],uint256[],uint256[])'](
           this.protocolX,
           [this.tokenA.address, this.tokenB.address],
           [parseEther('2'), parseEther('4')],

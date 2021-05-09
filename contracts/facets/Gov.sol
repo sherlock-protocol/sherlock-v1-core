@@ -59,6 +59,7 @@ contract Gov is IGov {
   }
 
   function getProtocolManager(bytes32 _protocol) external view override returns (address manager) {
+    // NOTE: UNUSED
     manager = GovStorage.gs().protocolManagers[_protocol];
   }
 
@@ -122,6 +123,7 @@ contract Gov is IGov {
     GovStorage.Base storage gs = GovStorage.gs();
     require(gs.protocolIsCovered[_protocol], 'NOT_COVERED');
 
+    // NOTE: UNUSED
     gs.protocolManagers[_protocol] = _eoaManager;
     gs.protocolAgents[_protocol] = _eoaProtocolAgent;
   }

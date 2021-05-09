@@ -15,6 +15,7 @@ library GovStorage {
 
   struct Base {
     address govInsurance;
+    // NOTE: UNUSED
     mapping(bytes32 => address) protocolManagers;
     mapping(bytes32 => address) protocolAgents;
     uint256 unstakeCooldown;

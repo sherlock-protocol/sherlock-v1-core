@@ -27,11 +27,13 @@ library LibSherX {
   // TODO accrueSherX(address token), to just accrue for a certain token
   // do accrueSherX() to loop over all if updating weights
 
-  function accrueUSDPool() external {
+  function accrueUSDPool() external returns (uint256 totalUsdPool) {
     SherXStorage.Base storage sx = SherXStorage.sx();
-    sx.totalUsdPool = sx.totalUsdPool.add(
+
+    totalUsdPool = sx.totalUsdPool.add(
       block.number.sub(sx.totalUsdLastSettled).mul(sx.totalUsdPerBlock)
     );
+    sx.totalUsdPool = totalUsdPool;
     sx.totalUsdLastSettled = block.number;
   }
 
@@ -52,6 +54,7 @@ library LibSherX {
     // mint sherX tokens op basis van (sx.sherXPerBlock) diff
 
     uint256 amount = block.number.sub(sx.sherXLastAccrued).mul(sx.sherXPerBlock);
+    sx.sherXLastAccrued = block.number;
     if (amount == 0) {
       return;
     }
@@ -70,6 +73,5 @@ library LibSherX {
       }
     }
     LibSherXERC20.mint(address(this), amount);
-    sx.sherXLastAccrued = block.number;
   }
 }

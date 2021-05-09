@@ -182,7 +182,7 @@ describe('Gov', function () {
       t0 = await blockNumber(
         this.sl
           .c(this.gov)
-          .setProtocolPremiums(
+          ['setProtocolPremiumAndTokenPrice(bytes32,address[],uint256[],uint256[])'](
             this.protocolX,
             [this.tokenA.address],
             [parseEther('1')],
@@ -195,7 +195,14 @@ describe('Gov', function () {
     });
     it('Remove fail, not removed from pool', async function () {
       t1 = await blockNumber(
-        this.sl.c(this.gov).setProtocolPremiums(this.protocolX, [this.tokenA.address], [0], [0]),
+        this.sl
+          .c(this.gov)
+          ['setProtocolPremiumAndTokenPrice(bytes32,address[],uint256[],uint256[])'](
+            this.protocolX,
+            [this.tokenA.address],
+            [0],
+            [0],
+          ),
       );
       await expect(this.sl.c(this.gov).protocolRemove(this.protocolX)).to.be.revertedWith(
         'POOL_PROTOCOL',
@@ -332,7 +339,12 @@ describe('Gov', function () {
         .protocolAdd(this.protocolX, this.gov.address, this.gov.address, [this.tokenA.address]);
       await this.sl
         .c(this.gov)
-        .setProtocolPremiums(this.protocolX, [this.tokenA.address], [1], [1]);
+        ['setProtocolPremiumAndTokenPrice(bytes32,address[],uint256[],uint256[])'](
+          this.protocolX,
+          [this.tokenA.address],
+          [1],
+          [1],
+        );
     });
     it('Do', async function () {
       await expect(
