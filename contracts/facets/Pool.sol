@@ -352,6 +352,9 @@ contract Pool is IPool {
     ps.protocolBalance[_protocol] = ps.protocolBalance[_protocol].sub(_amount);
   }
 
+  // TODO initially make stake admin only for the initial fee exchange rate
+  // Upgrade contracts later by removing admin only (just a require(msg.sender="a"))
+  // We can do it gas efficient by moving the stake() function to a seperate facet
   function stake(
     uint256 _amount,
     address _receiver,
