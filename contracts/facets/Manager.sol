@@ -29,7 +29,7 @@ contract Manager is IManager {
     _;
   }
 
-  function _requireOnlyValidToken(PoolStorage.Base storage ps, IERC20 _token) private {
+  function onlyValidToken(PoolStorage.Base storage ps, IERC20 _token) private {
     require(address(_token) != address(this), 'SELF');
     require(ps.initialized, 'WHITELIST');
   }
@@ -37,7 +37,7 @@ contract Manager is IManager {
   function setTokenPrice(IERC20 _token, uint256 _newUsd) external override onlyGovInsurance {
     SherXStorage.Base storage sx = SherXStorage.sx();
     PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
-    _requireOnlyValidToken(ps, _token);
+    onlyValidToken(ps, _token);
 
     (uint256 usdPerBlock, uint256 usdPool) = _getData();
 
@@ -63,7 +63,7 @@ contract Manager is IManager {
   ) external override onlyGovInsurance {
     SherXStorage.Base storage sx = SherXStorage.sx();
     PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
-    _requireOnlyValidToken(ps, _token);
+    onlyValidToken(ps, _token);
 
     (uint256 usdPerBlock, uint256 usdPool) = _getData();
 
@@ -136,7 +136,7 @@ contract Manager is IManager {
     uint256 usdPool
   ) internal returns (uint256, uint256) {
     PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
-    _requireOnlyValidToken(ps, _token);
+    onlyValidToken(ps, _token);
     uint256 oldUsd = _setTokenPrice(_token, _newUsd);
     (uint256 oldPremium, uint256 newPremium) = _setProtocolPremium(ps, _protocol, _token, _premium);
 
