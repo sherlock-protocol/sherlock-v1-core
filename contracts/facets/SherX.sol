@@ -56,6 +56,10 @@ contract SherX is ISherX {
     return SherXStorage.sx().totalUsdLastSettled;
   }
 
+  function getStoredUsd(IERC20 _token) external view override returns (uint256) {
+    return SherXStorage.sx().tokenUSD[_token];
+  }
+
   function getTotalSherXUnminted() public view override returns (uint256) {
     SherXStorage.Base storage sx = SherXStorage.sx();
     return block.number.sub(sx.sherXLastAccrued).mul(sx.sherXPerBlock);
@@ -283,6 +287,8 @@ contract SherX is ISherX {
     sx.totalUsdPool = sx.totalUsdPool.sub(subUsdPool);
     LibSherXERC20.burn(msg.sender, _amount);
   }
+
+  // todo external LibSherX.accrueSherX();
 
   function doYield(
     address token,

@@ -404,8 +404,427 @@ describe('Stateless', function () {
     describe('getGovDev()', function () {});
   });
   describe('Manager ─ State Changing', function () {
-    describe('setProtocolPremiums()', function () {});
-    describe('setProtocolPremium()', function () {});
+    describe('setTokenPrice(address,uint256)', function () {
+      it('Invalid sender', async function () {
+        await expect(
+          this.sl['setTokenPrice(address,uint256)'](this.tokenA.address, parseEther('1')),
+        ).to.be.revertedWith('NOT_GOV_INS');
+      });
+      it('Invalid token', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            ['setTokenPrice(address,uint256)'](this.tokenB.address, parseEther('1')),
+        ).to.be.revertedWith('WHITELIST');
+      });
+    });
+    describe('setTokenPrice(address[],uint256[])', function () {
+      it('Invalid sender', async function () {
+        await expect(
+          this.sl['setTokenPrice(address[],uint256[])']([this.tokenA.address], [parseEther('1')]),
+        ).to.be.revertedWith('NOT_GOV_INS');
+      });
+      it('Invalid length', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            ['setTokenPrice(address[],uint256[])'](
+              [this.tokenA.address],
+              [parseEther('2'), parseEther('1')],
+            ),
+        ).to.be.revertedWith('LENGTH');
+      });
+      it('Invalid token', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            ['setTokenPrice(address[],uint256[])']([this.tokenB.address], [parseEther('2')]),
+        ).to.be.revertedWith('WHITELIST');
+      });
+    });
+    describe('setPPm(bytes32,address,uint256)', function () {
+      it('Invalid sender', async function () {
+        await expect(
+          this.sl['setProtocolPremium(bytes32,address,uint256)'](
+            this.protocolX,
+            this.tokenA.address,
+            parseEther('1'),
+          ),
+        ).to.be.revertedWith('NOT_GOV_INS');
+      });
+      it('Invalid protocol', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            ['setProtocolPremium(bytes32,address,uint256)'](
+              this.nonProtocol2,
+              this.tokenA.address,
+              parseEther('1'),
+            ),
+        ).to.be.revertedWith('NON_PROTOCOL');
+      });
+      it('Invalid token', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            ['setProtocolPremium(bytes32,address,uint256)'](
+              this.protocolX,
+              this.tokenB.address,
+              parseEther('1'),
+            ),
+        ).to.be.revertedWith('WHITELIST');
+      });
+    });
+    describe('setPPm(bytes32,address[],uint256[])', function () {
+      it('Invalid sender', async function () {
+        await expect(
+          this.sl['setProtocolPremium(bytes32,address[],uint256[])'](
+            this.protocolX,
+            [this.tokenA.address],
+            [parseEther('1')],
+          ),
+        ).to.be.revertedWith('NOT_GOV_INS');
+      });
+      it('Invalid length', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            ['setProtocolPremium(bytes32,address[],uint256[])'](
+              this.protocolX,
+              [this.tokenA.address],
+              [parseEther('1'), parseEther('2')],
+            ),
+        ).to.be.revertedWith('LENGTH');
+      });
+      it('Invalid protocol', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            ['setProtocolPremium(bytes32,address[],uint256[])'](
+              this.nonProtocol2,
+              [this.tokenA.address],
+              [parseEther('1')],
+            ),
+        ).to.be.revertedWith('NON_PROTOCOL');
+      });
+      it('Invalid token', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            ['setProtocolPremium(bytes32,address[],uint256[])'](
+              this.protocolX,
+              [this.tokenB.address],
+              [parseEther('1')],
+            ),
+        ).to.be.revertedWith('WHITELIST');
+      });
+    });
+    describe('setPPm(bytes32[],address[][],uint256[][])', function () {
+      it('Invalid sender', async function () {
+        await expect(
+          this.sl['setProtocolPremium(bytes32[],address[][],uint256[][])'](
+            [this.protocolX],
+            [[this.tokenA.address]],
+            [[parseEther('1')]],
+          ),
+        ).to.be.revertedWith('NOT_GOV_INS');
+      });
+      it('Invalid length 1', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            ['setProtocolPremium(bytes32[],address[][],uint256[][])'](
+              [this.protocolX],
+              [[this.tokenA.address], [this.tokenA.address]],
+              [[parseEther('1')]],
+            ),
+        ).to.be.revertedWith('LENGTH_1');
+      });
+      it('Invalid length 2', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            ['setProtocolPremium(bytes32[],address[][],uint256[][])'](
+              [this.protocolX],
+              [[this.tokenA.address]],
+              [[parseEther('1')], [parseEther('2')]],
+            ),
+        ).to.be.revertedWith('LENGTH_2');
+      });
+      it('Invalid length 3', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            ['setProtocolPremium(bytes32[],address[][],uint256[][])'](
+              [this.protocolX],
+              [[this.tokenA.address]],
+              [[parseEther('1'), parseEther('2')]],
+            ),
+        ).to.be.revertedWith('LENGTH_3');
+      });
+      it('Invalid protocol', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            ['setProtocolPremium(bytes32[],address[][],uint256[][])'](
+              [this.nonProtocol2],
+              [[this.tokenA.address]],
+              [[parseEther('1')]],
+            ),
+        ).to.be.revertedWith('NON_PROTOCOL');
+      });
+      it('Invalid token', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            ['setProtocolPremium(bytes32[],address[][],uint256[][])'](
+              [this.protocolX],
+              [[this.tokenB.address]],
+              [[parseEther('1')]],
+            ),
+        ).to.be.revertedWith('WHITELIST');
+      });
+    });
+    describe('setPPmAndTokenPrice(bytes32,address,uint256,uint256)', function () {
+      it('Invalid sender', async function () {
+        await expect(
+          this.sl['setProtocolPremiumAndTokenPrice(bytes32,address,uint256,uint256)'](
+            this.protocolX,
+            this.tokenA.address,
+            parseEther('1'),
+            parseEther('2'),
+          ),
+        ).to.be.revertedWith('NOT_GOV_INS');
+      });
+      it('Invalid protocol', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            ['setProtocolPremiumAndTokenPrice(bytes32,address,uint256,uint256)'](
+              this.nonProtocol2,
+              this.tokenA.address,
+              parseEther('1'),
+              parseEther('2'),
+            ),
+        ).to.be.revertedWith('NON_PROTOCOL');
+      });
+      it('Invalid token', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            ['setProtocolPremiumAndTokenPrice(bytes32,address,uint256,uint256)'](
+              this.protocolX,
+              this.tokenB.address,
+              parseEther('1'),
+              parseEther('2'),
+            ),
+        ).to.be.revertedWith('WHITELIST');
+      });
+    });
+    describe('setPPmAndTokenPrice(bytes32,address[],uint256[],uint256[])', function () {
+      it('Invalid sender', async function () {
+        await expect(
+          this.sl['setProtocolPremiumAndTokenPrice(bytes32,address[],uint256[],uint256[])'](
+            this.protocolX,
+            [this.tokenA.address],
+            [parseEther('1')],
+            [parseEther('10')],
+          ),
+        ).to.be.revertedWith('NOT_GOV_INS');
+      });
+      it('Invalid length 1', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            ['setProtocolPremiumAndTokenPrice(bytes32,address[],uint256[],uint256[])'](
+              this.protocolX,
+              [this.tokenA.address],
+              [parseEther('1'), parseEther('2')],
+              [parseEther('10')],
+            ),
+        ).to.be.revertedWith('LENGTH_1');
+      });
+      it('Invalid length 2', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            ['setProtocolPremiumAndTokenPrice(bytes32,address[],uint256[],uint256[])'](
+              this.protocolX,
+              [this.tokenA.address],
+              [parseEther('1')],
+              [parseEther('10'), parseEther('2')],
+            ),
+        ).to.be.revertedWith('LENGTH_2');
+      });
+      it('Invalid protocol', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            ['setProtocolPremiumAndTokenPrice(bytes32,address[],uint256[],uint256[])'](
+              this.nonProtocol2,
+              [this.tokenA.address],
+              [parseEther('1')],
+              [parseEther('10')],
+            ),
+        ).to.be.revertedWith('NON_PROTOCOL');
+      });
+      it('Invalid token', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            ['setProtocolPremiumAndTokenPrice(bytes32,address[],uint256[],uint256[])'](
+              this.protocolX,
+              [this.tokenB.address],
+              [parseEther('1')],
+              [parseEther('10')],
+            ),
+        ).to.be.revertedWith('WHITELIST');
+      });
+    });
+    describe('setPPmAndTokenPrice(bytes32[],address,uint256[],uint256)', function () {
+      it('Invalid sender', async function () {
+        await expect(
+          this.sl['setProtocolPremiumAndTokenPrice(bytes32[],address,uint256[],uint256)'](
+            [this.protocolX],
+            this.tokenA.address,
+            [parseEther('1')],
+            parseEther('10'),
+          ),
+        ).to.be.revertedWith('NOT_GOV_INS');
+      });
+      it('Invalid length', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            ['setProtocolPremiumAndTokenPrice(bytes32[],address,uint256[],uint256)'](
+              [this.protocolX],
+              this.tokenA.address,
+              [parseEther('1'), parseEther('2')],
+              parseEther('10'),
+            ),
+        ).to.be.revertedWith('LENGTH');
+      });
+      it('Invalid protocol', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            ['setProtocolPremiumAndTokenPrice(bytes32[],address,uint256[],uint256)'](
+              [this.nonProtocol2],
+              this.tokenA.address,
+              [parseEther('1')],
+              parseEther('10'),
+            ),
+        ).to.be.revertedWith('NON_PROTOCOL');
+      });
+      it('Invalid token', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            ['setProtocolPremiumAndTokenPrice(bytes32[],address,uint256[],uint256)'](
+              [this.protocolX],
+              this.tokenB.address,
+              [parseEther('1')],
+              parseEther('10'),
+            ),
+        ).to.be.revertedWith('WHITELIST');
+      });
+    });
+    describe('setPPmAndTokenPrice(bytes32[],address[][],uint256[][],uint256[][])', function () {
+      it('Invalid sender', async function () {
+        await expect(
+          this.sl['setProtocolPremiumAndTokenPrice(bytes32[],address[][],uint256[][],uint256[][])'](
+            [this.protocolX],
+            [[this.tokenA.address]],
+            [[parseEther('1')]],
+            [[parseEther('10')]],
+          ),
+        ).to.be.revertedWith('NOT_GOV_INS');
+      });
+      it('Invalid length 1', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            ['setProtocolPremiumAndTokenPrice(bytes32[],address[][],uint256[][],uint256[][])'](
+              [this.protocolX],
+              [[this.tokenA.address], [this.tokenA.address]],
+              [[parseEther('1')]],
+              [[parseEther('10')]],
+            ),
+        ).to.be.revertedWith('LENGTH_1');
+      });
+      it('Invalid length 2', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            ['setProtocolPremiumAndTokenPrice(bytes32[],address[][],uint256[][],uint256[][])'](
+              [this.protocolX],
+              [[this.tokenA.address]],
+              [[parseEther('1')], [parseEther('1')]],
+              [[parseEther('10')]],
+            ),
+        ).to.be.revertedWith('LENGTH_2');
+      });
+      it('Invalid length 3', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            ['setProtocolPremiumAndTokenPrice(bytes32[],address[][],uint256[][],uint256[][])'](
+              [this.protocolX],
+              [[this.tokenA.address]],
+              [[parseEther('1')]],
+              [[parseEther('10')], [parseEther('10')]],
+            ),
+        ).to.be.revertedWith('LENGTH_3');
+      });
+      it('Invalid length 4', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            ['setProtocolPremiumAndTokenPrice(bytes32[],address[][],uint256[][],uint256[][])'](
+              [this.protocolX],
+              [[this.tokenA.address]],
+              [[parseEther('1'), parseEther('1')]],
+              [[parseEther('10')]],
+            ),
+        ).to.be.revertedWith('LENGTH_4');
+      });
+      it('Invalid length 5', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            ['setProtocolPremiumAndTokenPrice(bytes32[],address[][],uint256[][],uint256[][])'](
+              [this.protocolX],
+              [[this.tokenA.address]],
+              [[parseEther('1')]],
+              [[parseEther('10'), parseEther('10')]],
+            ),
+        ).to.be.revertedWith('LENGTH_5');
+      });
+      it('Invalid protocol', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            ['setProtocolPremiumAndTokenPrice(bytes32[],address[][],uint256[][],uint256[][])'](
+              [this.nonProtocol2],
+              [[this.tokenA.address]],
+              [[parseEther('1')]],
+              [[parseEther('10')]],
+            ),
+        ).to.be.revertedWith('NON_PROTOCOL');
+      });
+      it('Invalid token', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            ['setProtocolPremiumAndTokenPrice(bytes32[],address[][],uint256[][],uint256[][])'](
+              [this.protocolX],
+              [[this.tokenB.address]],
+              [[parseEther('1')]],
+              [[parseEther('10')]],
+            ),
+        ).to.be.revertedWith('WHITELIST');
+      });
+    });
   });
   describe('Manager ─ View Methods', function () {});
   describe('Payout ─ State Changing', function () {
@@ -842,6 +1261,7 @@ describe('Stateless', function () {
     describe('getTotalUsdPoolStored()', function () {});
     describe('getTotalUsdPool()', function () {});
     describe('getTotalUsdLastSettled()', function () {});
+    describe('getStoredUsd()', function () {});
     describe('getTotalSherXUnminted()', function () {});
     describe('getTotalSherX()', function () {});
     describe('getSherXPerBlock()', function () {});

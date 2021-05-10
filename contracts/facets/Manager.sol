@@ -89,12 +89,12 @@ contract Manager is IManager {
     uint256[][] memory _premium
   ) external override onlyGovInsurance {
     (uint256 usdPerBlock, uint256 usdPool) = _getData();
-    require(_protocol.length == _token.length, 'LENGTH');
-    require(_protocol.length == _premium.length, 'LENGTH');
+    require(_protocol.length == _token.length, 'LENGTH_1');
+    require(_protocol.length == _premium.length, 'LENGTH_2');
 
     for (uint256 i; i < _protocol.length; i++) {
-      require(_token[i].length == _premium[i].length, 'LENGTH');
-      for (uint256 j; j < _protocol.length; j++) {
+      require(_token[i].length == _premium[i].length, 'LENGTH_3');
+      for (uint256 j; j < _token[i].length; j++) {
         (usdPerBlock, usdPool) = _setProtocolPremium(
           _protocol[i],
           _token[i][j],
@@ -168,9 +168,11 @@ contract Manager is IManager {
     uint256 oldUsd = _setTokenPrice(_token, _newUsd);
 
     for (uint256 i; i < _protocol.length; i++) {
+      require(ps.isProtocol[_protocol[i]], 'NON_PROTOCOL');
       newPremium = newPremium.sub(ps.protocolPremium[_protocol[i]]).add(_premium[i]);
       ps.protocolPremium[_protocol[i]] = _premium[i];
     }
+    ps.totalPremiumPerBlock = newPremium;
     (usdPerBlock, usdPool) = _updateData(
       ps,
       usdPerBlock,
@@ -191,14 +193,14 @@ contract Manager is IManager {
   ) external override onlyGovInsurance {
     // TODO could be setting _newUsd multiple times
     (uint256 usdPerBlock, uint256 usdPool) = _getData();
-    require(_protocol.length == _token.length, 'LENGTH');
-    require(_protocol.length == _premium.length, 'LENGTH');
-    require(_protocol.length == _newUsd.length, 'LENGTH');
+    require(_protocol.length == _token.length, 'LENGTH_1');
+    require(_protocol.length == _premium.length, 'LENGTH_2');
+    require(_protocol.length == _newUsd.length, 'LENGTH_3');
 
     for (uint256 i; i < _protocol.length; i++) {
-      require(_token[i].length == _premium[i].length, 'LENGTH');
-      require(_token[i].length == _newUsd[i].length, 'LENGTH');
-      for (uint256 j; j < _protocol.length; j++) {
+      require(_token[i].length == _premium[i].length, 'LENGTH_4');
+      require(_token[i].length == _newUsd[i].length, 'LENGTH_5');
+      for (uint256 j; j < _token[i].length; j++) {
         (usdPerBlock, usdPool) = _setProtocolPremiumAndTokenPrice(
           _protocol[i],
           _token[i][j],
@@ -277,6 +279,8 @@ contract Manager is IManager {
     IERC20 _token,
     uint256 _premium
   ) private returns (uint256 oldPremium, uint256 newPremium) {
+    require(ps.isProtocol[_protocol], 'NON_PROTOCOL');
+
     LibPool.payOffDebtAll(_token);
 
     oldPremium = ps.totalPremiumPerBlock;

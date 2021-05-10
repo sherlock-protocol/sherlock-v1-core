@@ -27,6 +27,8 @@ interface ISherX {
 
   function getTotalUsdLastSettled() external view returns (uint256);
 
+  function getStoredUsd(IERC20 _token) external view returns (uint256);
+
   function getTotalSherXUnminted() external view returns (uint256);
 
   function getTotalSherX() external view returns (uint256);
