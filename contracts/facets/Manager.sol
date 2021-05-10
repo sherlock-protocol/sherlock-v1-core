@@ -152,6 +152,39 @@ contract Manager is IManager {
 
   function setProtocolPremiumAndTokenPrice(
     bytes32[] memory _protocol,
+    IERC20 _token,
+    uint256[] memory _premium,
+    uint256 _newUsd
+  ) external override onlyGovInsurance {
+    require(_protocol.length == _premium.length, 'LENGTH');
+    PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
+    onlyValidToken(ps, _token);
+    LibPool.payOffDebtAll(_token);
+
+    uint256 oldPremium = ps.totalPremiumPerBlock;
+    uint256 newPremium = oldPremium;
+    (uint256 usdPerBlock, uint256 usdPool) = _getData();
+
+    uint256 oldUsd = _setTokenPrice(_token, _newUsd);
+
+    for (uint256 i; i < _protocol.length; i++) {
+      newPremium = newPremium.sub(ps.protocolPremium[_protocol[i]]).add(_premium[i]);
+      ps.protocolPremium[_protocol[i]] = _premium[i];
+    }
+    (usdPerBlock, usdPool) = _updateData(
+      ps,
+      usdPerBlock,
+      usdPool,
+      oldPremium,
+      newPremium,
+      oldUsd,
+      _newUsd
+    );
+    _setData(usdPerBlock, usdPool);
+  }
+
+  function setProtocolPremiumAndTokenPrice(
+    bytes32[] memory _protocol,
     IERC20[][] memory _token,
     uint256[][] memory _premium,
     uint256[][] memory _newUsd

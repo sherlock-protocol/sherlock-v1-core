@@ -13,10 +13,10 @@ interface IManager {
   // updating token price for 1 token
   function setTokenPrice(IERC20 _token, uint256 _newUsd) external;
 
-  // updating token price for 1+ token
+  // updating token price for 1+ tokens
   function setTokenPrice(IERC20[] memory _token, uint256[] memory _newUsd) external;
 
-  // updating protocol's premiums for 1 tokens
+  // updating protocol's premiums for 1 token
   function setProtocolPremium(
     bytes32 _protocol,
     IERC20 _token,
@@ -30,14 +30,22 @@ interface IManager {
     uint256[] memory _premium
   ) external;
 
-  // updating multiple protocol's premiums for 1+ token
+  // NOTE: note implemented for now, same call with price has better use case
+  // updating multiple protocol's premiums for 1 tokens
+  // function setProtocolPremium(
+  //   bytes32[] memory _protocol,
+  //   IERC20 memory _token,
+  //   uint256[] memory _premium
+  // ) external;
+
+  // updating multiple protocol's premiums for 1+ tokens
   function setProtocolPremium(
     bytes32[] memory _protocol,
     IERC20[][] memory _token,
     uint256[][] memory _premium
   ) external;
 
-  // updating protocol's premiums for 1 tokens (+price)
+  // updating protocol's premiums for 1 token (+price)
   function setProtocolPremiumAndTokenPrice(
     bytes32 _protocol,
     IERC20 _token,
@@ -51,6 +59,14 @@ interface IManager {
     IERC20[] memory _token,
     uint256[] memory _premium,
     uint256[] memory _newUsd
+  ) external;
+
+  // updating multiple protocol's premiums for 1 token (+price)
+  function setProtocolPremiumAndTokenPrice(
+    bytes32[] memory _protocol,
+    IERC20 _token,
+    uint256[] memory _premium,
+    uint256 _newUsd
   ) external;
 
   // updating multiple protocol's premiums for 1+ tokens (+price)
