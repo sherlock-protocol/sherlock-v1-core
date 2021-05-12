@@ -10,6 +10,10 @@ pragma abicoder v2;
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
 interface IManager {
+  //
+  // State changing methods
+  //
+
   // updating token price for 1 token
   function setTokenPrice(IERC20 _token, uint256 _newUsd) external;
 

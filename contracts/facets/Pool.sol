@@ -19,11 +19,13 @@ import '../interfaces/IPool.sol';
 import '../libraries/LibPool.sol';
 
 contract Pool is IPool {
-  // TODO, ability to activate assets (in different facet)
-
   using SafeMath for uint256;
   using SafeERC20 for IERC20;
   using SafeERC20 for ILock;
+
+  //
+  // View methods
+  //
 
   function getCooldownFee(address _token) external view override returns (uint256) {
     (, PoolStorage.Base storage ps) = baseData();

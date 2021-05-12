@@ -18,7 +18,7 @@ contract ERC20Mock is ERC20 {
   }
 }
 
-contract MockTokens8d is ERC20 {
+contract ERC20Mock8d is ERC20 {
   constructor(
     string memory _name,
     string memory _symbol,
@@ -32,7 +32,7 @@ contract MockTokens8d is ERC20 {
   }
 }
 
-contract MockTokens6d is ERC20 {
+contract ERC20Mock6d is ERC20 {
   constructor(
     string memory _name,
     string memory _symbol,

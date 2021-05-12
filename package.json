@@ -1,9 +1,10 @@
 {
-  "name": "hardhat-project",
+  "name": "sherlock-v1",
+  "version": "0.0.1",
+  "description": "Core contracts for Sherlock protocol",
   "scripts": {
     "prettier": "prettier --write contracts/*.sol contracts/**/*.sol",
-    "prettier-diff": "prettier --list-different  contracts/*.sol contracts/**/*.sol",
-    "forktest": "npx hardhat node & P1=$! sleep 3 && npx hardhat --network localhost run scripts/frontend.js & wait $P1"
+    "prettier-diff": "prettier --list-different  contracts/*.sol contracts/**/*.sol"
   },
   "prettier": {
     "tabWidth": 2,

@@ -35,6 +35,10 @@ contract Manager is IManager {
     require(ps.initialized, 'WHITELIST');
   }
 
+  //
+  // State changing methods
+  //
+
   function setTokenPrice(IERC20 _token, uint256 _newUsd) external override onlyGovInsurance {
     (uint256 usdPerBlock, uint256 usdPool) = _getData();
     (usdPerBlock, usdPool) = _setTokenPrice(_token, _newUsd, usdPerBlock, usdPool);
