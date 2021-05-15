@@ -176,35 +176,27 @@ contract SherX is ISherX {
     doYield(msg.sender, from, to, amount);
   }
 
-  function setInitialWeight(address _token) external override onlyGovInsurance {
-    require(_token != address(0), 'TOKEN');
-
+  function setInitialWeight() external override onlyGovInsurance {
     GovStorage.Base storage gs = GovStorage.gs();
-    bool set;
-
+    require(gs.watsonsAddress != address(0), 'WATS_UNSET');
+    require(gs.watsonsSherxWeight == 0, 'ALREADY_INIT');
     for (uint256 i; i < gs.tokens.length; i++) {
-      address token = address(gs.tokens[i]);
-      PoolStorage.Base storage ps = PoolStorage.ps(token);
-      require(ps.sherXWeight == 0, 'ALREADY_INIT');
-
-      if (token == _token) {
-        require(ps.stakes, 'DISABLED');
-        // 100% to token
-        set = true;
-        ps.sherXWeight = 10**18;
-      }
+      PoolStorage.Base storage ps = PoolStorage.ps(address(gs.tokens[i]));
+      require(ps.sherXWeight == 0, 'ALREADY_INIT_2');
     }
 
-    require(set, 'SET');
+    gs.watsonsSherxWeight = 10**18;
   }
 
-  function setWeights(address[] memory _tokens, uint256[] memory _weights)
-    external
-    override
-    onlyGovInsurance
-  {
+  function setWeights(
+    address[] memory _tokens,
+    uint256[] memory _weights,
+    uint256 _watsons
+  ) external override onlyGovInsurance {
     require(_tokens.length == _weights.length, 'LENGTH');
     LibSherX.accrueSherX();
+
+    GovStorage.Base storage gs = GovStorage.gs();
 
     uint256 weightAdd;
     uint256 weightSub;
@@ -218,6 +210,12 @@ contract SherX is ISherX {
       weightAdd = weightAdd.add(_weights[i]);
       weightSub = weightSub.add(ps.sherXWeight);
       ps.sherXWeight = _weights[i];
+    }
+    if (_watsons != uint256(-1)) {
+      weightAdd = weightAdd.add(_watsons);
+      weightSub = weightSub.add(gs.watsonsSherxWeight);
+
+      gs.watsonsSherxWeight = _watsons;
     }
 
     require(weightAdd == weightSub, 'SUM');
@@ -267,7 +265,7 @@ contract SherX is ISherX {
 
     SherXStorage.Base storage sx = SherXStorage.sx();
     LibSherX.accrueUSDPool();
-    // LibSherX.accrueSherX() is removed as the calcUnderlying already takes it into consideration (without changing state)
+    // Note: LibSherX.accrueSherX() is removed as the calcUnderlying already takes it into consideration (without changing state)
 
     (IERC20[] memory tokens, uint256[] memory amounts) = calcUnderlying(_amount);
 
@@ -288,7 +286,9 @@ contract SherX is ISherX {
     LibSherXERC20.burn(msg.sender, _amount);
   }
 
-  // todo external LibSherX.accrueSherX();
+  function accrueSherX() external override {
+    LibSherX.accrueSherX();
+  }
 
   function doYield(
     address token,

@@ -22,6 +22,8 @@ library GovStorage {
     uint256 unstakeWindow;
     mapping(bytes32 => bool) protocolIsCovered;
     IERC20[] tokens;
+    address watsonsAddress;
+    uint256 watsonsSherxWeight;
   }
 
   function gs() internal pure returns (Base storage bs) {

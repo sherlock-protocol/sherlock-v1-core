@@ -70,9 +70,13 @@ interface ISherX {
     uint256 amount
   ) external;
 
-  function setInitialWeight(address _token) external;
+  function setInitialWeight() external;
 
-  function setWeights(address[] memory _tokens, uint256[] memory _weights) external;
+  function setWeights(
+    address[] memory _tokens,
+    uint256[] memory _weights,
+    uint256 _watsons
+  ) external;
 
   function harvest() external;
 
@@ -87,4 +91,6 @@ interface ISherX {
   function harvestFor(address _user, address[] calldata _tokens) external;
 
   function redeem(uint256 _amount, address _receiver) external;
+
+  function accrueSherX() external;
 }

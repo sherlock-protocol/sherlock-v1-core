@@ -18,6 +18,7 @@ import '../interfaces/IGov.sol';
 
 import '../storage/LibGov.sol';
 import '../storage/LibPool.sol';
+import '../storage/LibSherX.sol';
 
 contract Gov is IGov {
   using SafeMath for uint256;
@@ -38,6 +39,26 @@ contract Gov is IGov {
 
   function getGovInsurance() external view override returns (address) {
     return GovStorage.gs().govInsurance;
+  }
+
+  function getWatsons() external view override returns (address) {
+    return GovStorage.gs().watsonsAddress;
+  }
+
+  function getWatsonsSherXWeight() external view override returns (uint256) {
+    return GovStorage.gs().watsonsSherxWeight;
+  }
+
+  function getWatsonsSherXPerBlock() public view override returns (uint256 amount) {
+    GovStorage.Base storage gs = GovStorage.gs();
+    SherXStorage.Base storage sx = SherXStorage.sx();
+
+    amount = sx.sherXPerBlock.mul(gs.watsonsSherxWeight).div(10**18);
+  }
+
+  function getWatsonsUnmintedSherX() external view override returns (uint256 sherX) {
+    SherXStorage.Base storage sx = SherXStorage.sx();
+    sherX = block.number.sub(sx.sherXLastAccrued).mul(getWatsonsSherXPerBlock());
   }
 
   function getUnstakeWindow() external view override returns (uint256 unstakeWindow) {
@@ -85,6 +106,14 @@ contract Gov is IGov {
     require(_govInsurance != address(0), 'ZERO_GOV');
     require(GovStorage.gs().govInsurance != _govInsurance, 'SAME_GOV');
     GovStorage.gs().govInsurance = _govInsurance;
+  }
+
+  function setWatsonsAddress(address _watsons) external override onlyGovInsurance {
+    GovStorage.Base storage gs = GovStorage.gs();
+
+    require(_watsons != address(0), 'ZERO_WATS');
+    require(gs.watsonsAddress != _watsons, 'SAME_WATS');
+    gs.watsonsAddress = _watsons;
   }
 
   function setUnstakeWindow(uint256 _unstakeWindow) external override onlyGovInsurance {

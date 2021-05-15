@@ -49,7 +49,9 @@ describe('Pool', function () {
       // first enable staking
       await this.sl.c(this.gov).setStake(true, this.tokenA.address);
       // set initial weight
-      await this.sl.c(this.gov).setInitialWeight(this.tokenA.address);
+      await this.sl.c(this.gov).setWatsonsAddress(this.alice.address);
+      await this.sl.c(this.gov).setInitialWeight();
+      await this.sl.c(this.gov).setWeights([this.tokenA.address], [parseEther('1')], 0);
       // disable staking
       await expect(this.sl.c(this.gov).setStake(false, this.tokenA.address)).to.be.revertedWith(
         'WEIGHT',

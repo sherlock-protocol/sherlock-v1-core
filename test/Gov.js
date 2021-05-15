@@ -50,6 +50,27 @@ describe('Gov', function () {
       expect(await this.sl.getGovInsurance()).to.eq(this.alice.address);
     });
   });
+  describe('setWatsonsAddress()', function () {
+    before(async function () {
+      await timeTraveler.revertSnapshot();
+    });
+    it('Initial state', async function () {
+      expect(await this.sl.getWatsons()).to.eq(constants.AddressZero);
+    });
+    it('Do', async function () {
+      await this.sl.c(this.gov).setWatsonsAddress(this.alice.address);
+      expect(await this.sl.getWatsons()).to.eq(this.alice.address);
+    });
+    it('Do again fail', async function () {
+      await expect(this.sl.c(this.gov).setWatsonsAddress(this.alice.address)).to.be.revertedWith(
+        'SAME_WATS',
+      );
+    });
+    it('Do again', async function () {
+      await this.sl.c(this.gov).setWatsonsAddress(this.bob.address);
+      expect(await this.sl.getWatsons()).to.eq(this.bob.address);
+    });
+  });
   describe('setUnstakeWindow()', function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
@@ -284,7 +305,9 @@ describe('Gov', function () {
       await this.sl
         .c(this.gov)
         .protocolAdd(this.protocolX, this.gov.address, this.gov.address, [this.tokenA.address]);
-      await this.sl.c(this.gov).setInitialWeight(this.tokenA.address);
+      await this.sl.c(this.gov).setWatsonsAddress(this.alice.address);
+      await this.sl.c(this.gov).setInitialWeight();
+      await this.sl.c(this.gov).setWeights([this.tokenA.address], [parseEther('1')], 0);
     });
     it('Do', async function () {
       await expect(this.sl.c(this.gov).tokenDisable(this.tokenA.address)).to.be.revertedWith(

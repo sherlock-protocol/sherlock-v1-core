@@ -69,6 +69,10 @@ library LibSherX {
       PoolStorage.Base storage ps = PoolStorage.ps(address(token));
 
       uint256 sherX = amount.mul(ps.sherXWeight).div(10**18);
+      if (sherX == 0) {
+        continue;
+      }
+
       if (address(token) == address(this)) {
         ps.stakeBalance = ps.stakeBalance.add(sherX);
       } else {
@@ -76,6 +80,12 @@ library LibSherX {
         ps.sWeight = ps.sWeight.add(sherX);
       }
     }
-    LibSherXERC20.mint(address(this), amount);
+
+    uint256 watsonsAmount = amount.mul(gs.watsonsSherxWeight).div(10**18);
+    if (watsonsAmount > 0) {
+      LibSherXERC20.mint(gs.watsonsAddress, watsonsAmount);
+    }
+
+    LibSherXERC20.mint(address(this), amount.sub(watsonsAmount));
   }
 }

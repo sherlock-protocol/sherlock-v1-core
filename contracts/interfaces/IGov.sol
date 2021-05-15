@@ -21,6 +21,14 @@ interface IGov {
 
   function getGovInsurance() external view returns (address);
 
+  function getWatsons() external view returns (address);
+
+  function getWatsonsSherXWeight() external view returns (uint256);
+
+  function getWatsonsSherXPerBlock() external view returns (uint256 amount);
+
+  function getWatsonsUnmintedSherX() external view returns (uint256 sherX);
+
   function getUnstakeWindow() external view returns (uint256 unstakeWindow);
 
   function getCooldown() external view returns (uint256 period);
@@ -40,6 +48,8 @@ interface IGov {
   function setInitialGovInsurance(address _govInsurance) external;
 
   function transferGovInsurance(address _govInsurance) external;
+
+  function setWatsonsAddress(address _watsons) external;
 
   function setUnstakeWindow(uint256 _unstakeWindow) external;
 

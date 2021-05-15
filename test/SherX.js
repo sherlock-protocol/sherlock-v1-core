@@ -41,26 +41,24 @@ describe('SherX', function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
     });
-    it('Do invalid', async function () {
-      await expect(this.sl.c(this.gov).setInitialWeight(this.tokenB.address)).to.be.revertedWith(
-        'SET',
-      );
-    });
-    it('Do disabled', async function () {
-      await expect(this.sl.c(this.gov).setInitialWeight(this.tokenA.address)).to.be.revertedWith(
-        'DISABLED',
-      );
-      await this.sl.c(this.gov).setStake(true, this.tokenA.address);
+    it('Do unset', async function () {
+      await expect(this.sl.c(this.gov).setInitialWeight()).to.be.revertedWith('WATS_UNSET');
+
+      await this.sl.c(this.gov).setWatsonsAddress(this.alice.address);
     });
     it('Do', async function () {
-      expect(await this.sl.getSherXWeight(this.tokenA.address)).to.eq(0);
-      await this.sl.c(this.gov).setInitialWeight(this.tokenA.address);
-      expect(await this.sl.getSherXWeight(this.tokenA.address)).to.eq(parseEther('1'));
+      expect(await this.sl.getWatsonsSherXWeight()).to.eq(0);
+      await this.sl.c(this.gov).setInitialWeight();
+      expect(await this.sl.getWatsonsSherXWeight()).to.eq(parseEther('1'));
     });
     it('Do twice', async function () {
-      await expect(this.sl.c(this.gov).setInitialWeight(this.tokenA.address)).to.be.revertedWith(
-        'ALREADY_INIT',
-      );
+      await expect(this.sl.c(this.gov).setInitialWeight()).to.be.revertedWith('ALREADY_INIT');
+    });
+    it('Do twice, with move', async function () {
+      await this.sl.c(this.gov).setStake(true, this.tokenA.address);
+      await this.sl.c(this.gov).setWeights([this.tokenA.address], [parseEther('1')], 0);
+
+      await expect(this.sl.c(this.gov).setInitialWeight()).to.be.revertedWith('ALREADY_INIT_2');
     });
   });
   describe('setWeights()', function () {
@@ -71,24 +69,28 @@ describe('SherX', function () {
         .c(this.gov)
         .tokenAdd(this.tokenB.address, this.lockB.address, this.gov.address, false);
       await this.sl.c(this.gov).setStake(true, this.tokenA.address);
-      await this.sl.c(this.gov).setInitialWeight(this.tokenA.address);
+      await this.sl.c(this.gov).setWatsonsAddress(this.alice.address);
+      await this.sl.c(this.gov).setInitialWeight();
     });
     it('Initial state', async function () {
-      expect(await this.sl.getSherXWeight(this.tokenA.address)).to.eq(parseEther('1'));
+      expect(await this.sl.getSherXWeight(this.tokenA.address)).to.eq(0);
+      expect(await this.sl.getSherXWeight(this.tokenB.address)).to.eq(0);
+      expect(await this.sl.getWatsonsSherXWeight()).to.eq(parseEther('1'));
     });
     it('Do', async function () {
-      await this.sl.c(this.gov).setWeights([this.tokenA.address], [parseEther('1')]);
+      await this.sl.c(this.gov).setWeights([this.tokenA.address], [parseEther('1')], 0);
 
       expect(await this.sl.getSherXWeight(this.tokenA.address)).to.eq(parseEther('1'));
+      expect(await this.sl.getWatsonsSherXWeight()).to.eq(0);
     });
     it('Do disabled', async function () {
       await expect(
-        this.sl.c(this.gov).setWeights([this.tokenB.address], [parseEther('1')]),
+        this.sl.c(this.gov).setWeights([this.tokenB.address], [parseEther('1')], 0),
       ).to.be.revertedWith('DISABLED');
     });
     it('Do wrong', async function () {
       await expect(
-        this.sl.c(this.gov).setWeights([this.tokenC.address], [parseEther('1')]),
+        this.sl.c(this.gov).setWeights([this.tokenC.address], [parseEther('1')], 0),
       ).to.be.revertedWith('INIT');
     });
     it('Do tokenB, exceed sum', async function () {
@@ -100,6 +102,7 @@ describe('SherX', function () {
           .setWeights(
             [this.tokenA.address, this.tokenB.address],
             [parseEther('0.5'), parseEther('0.51')],
+            0,
           ),
       ).to.be.revertedWith('SUM');
     });
@@ -110,12 +113,13 @@ describe('SherX', function () {
           .setWeights(
             [this.tokenA.address, this.tokenB.address],
             [parseEther('0.5'), parseEther('0.49')],
+            0,
           ),
       ).to.be.revertedWith('SUM');
     });
     it('Do tokenB, single', async function () {
       await expect(
-        this.sl.c(this.gov).setWeights([this.tokenB.address], [parseEther('1')]),
+        this.sl.c(this.gov).setWeights([this.tokenB.address], [parseEther('1')], 0),
       ).to.be.revertedWith('SUM');
     });
     it('Do 30/70', async function () {
@@ -124,17 +128,71 @@ describe('SherX', function () {
         .setWeights(
           [this.tokenA.address, this.tokenB.address],
           [parseEther('0.3'), parseEther('0.7')],
+          0,
         );
 
       expect(await this.sl.getSherXWeight(this.tokenA.address)).to.eq(parseEther('0.3'));
       expect(await this.sl.getSherXWeight(this.tokenB.address)).to.eq(parseEther('0.7'));
+      expect(await this.sl.getWatsonsSherXWeight()).to.eq(0);
+    });
+    it('Do watsons, exceed sum', async function () {
+      await expect(
+        this.sl
+          .c(this.gov)
+          .setWeights(
+            [this.tokenA.address, this.tokenB.address],
+            [parseEther('0.1'), parseEther('0.2')],
+            parseEther('0.71'),
+          ),
+      ).to.be.revertedWith('SUM');
+    });
+    it('Do watsons, below sum', async function () {
+      await expect(
+        this.sl
+          .c(this.gov)
+          .setWeights(
+            [this.tokenA.address, this.tokenB.address],
+            [parseEther('0.1'), parseEther('0.2')],
+            parseEther('0.69'),
+          ),
+      ).to.be.revertedWith('SUM');
+    });
+    it('Do watsons, 10/20/70', async function () {
+      await this.sl
+        .c(this.gov)
+        .setWeights(
+          [this.tokenA.address, this.tokenB.address],
+          [parseEther('0.1'), parseEther('0.2')],
+          parseEther('0.7'),
+        );
+
+      expect(await this.sl.getSherXWeight(this.tokenA.address)).to.eq(parseEther('0.1'));
+      expect(await this.sl.getSherXWeight(this.tokenB.address)).to.eq(parseEther('0.2'));
+      expect(await this.sl.getWatsonsSherXWeight()).to.eq(parseEther('0.7'));
+    });
+    it('Do watsons, 20/10/70', async function () {
+      await this.sl
+        .c(this.gov)
+        .setWeights(
+          [this.tokenA.address, this.tokenB.address],
+          [parseEther('0.1'), parseEther('0.2')],
+          constants.MaxUint256,
+        );
+
+      expect(await this.sl.getSherXWeight(this.tokenA.address)).to.eq(parseEther('0.1'));
+      expect(await this.sl.getSherXWeight(this.tokenB.address)).to.eq(parseEther('0.2'));
+      expect(await this.sl.getWatsonsSherXWeight()).to.eq(parseEther('0.7'));
     });
   });
   describe('harvestFor(address,address)', function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
       await this.sl.c(this.gov).setStake(true, this.tokenA.address);
-      await this.sl.c(this.gov).setInitialWeight(this.tokenA.address);
+      await this.sl.c(this.gov).setWatsonsAddress(this.alice.address);
+      await this.sl.c(this.gov).setInitialWeight();
+      this.bStart = await blockNumber(
+        this.sl.c(this.gov).setWeights([this.tokenA.address], [parseEther('1')], 0),
+      );
     });
     it('Initial state', async function () {
       await this.sl['harvestFor(address,address)'](this.alice.address, this.lockA.address);
@@ -149,7 +207,7 @@ describe('SherX', function () {
       expect(await this.sl.getStakersPoolBalance(this.sl.address)).to.eq(0);
       expect(await this.sl.getFirstMoneyOut(this.sl.address)).to.eq(0);
 
-      expect(await this.sl.getSherXLastAccrued()).to.eq(0);
+      expect(await this.sl.getSherXLastAccrued()).to.eq(this.bStart);
       expect(await this.sl.balanceOf(this.sl.address)).to.eq(0);
       expect(await this.lockX.balanceOf(this.alice.address)).to.eq(0);
 
@@ -308,7 +366,9 @@ describe('SherX', function () {
       await this.sl.depositProtocolBalance(this.protocolX, parseEther('100'), this.tokenB.address);
 
       await this.sl.c(this.gov).setStake(true, this.tokenA.address);
-      await this.sl.c(this.gov).setInitialWeight(this.tokenA.address);
+      await this.sl.c(this.gov).setWatsonsAddress(this.alice.address);
+      await this.sl.c(this.gov).setInitialWeight();
+      await this.sl.c(this.gov).setWeights([this.tokenA.address], [parseEther('1')], 0);
       // stake token A
       await this.sl.stake(parseEther('10'), this.alice.address, this.tokenA.address);
       // send SherX tokens to token A holder
@@ -418,7 +478,9 @@ describe('SherX', function () {
       await this.sl.depositProtocolBalance(this.protocolX, parseEther('100'), this.tokenB.address);
 
       await this.sl.c(this.gov).setStake(true, this.tokenA.address);
-      await this.sl.c(this.gov).setInitialWeight(this.tokenA.address);
+      await this.sl.c(this.gov).setWatsonsAddress(this.alice.address);
+      await this.sl.c(this.gov).setInitialWeight();
+      await this.sl.c(this.gov).setWeights([this.tokenA.address], [parseEther('1')], 0);
       // stake token A
       await this.sl.stake(parseEther('10'), this.alice.address, this.tokenA.address);
       // send SherX tokens to token A holder
@@ -528,7 +590,9 @@ describe('SherX', function () {
       await this.sl.depositProtocolBalance(this.protocolX, parseEther('100'), this.tokenB.address);
 
       await this.sl.c(this.gov).setStake(true, this.tokenA.address);
-      await this.sl.c(this.gov).setInitialWeight(this.tokenA.address);
+      await this.sl.c(this.gov).setWatsonsAddress(this.alice.address);
+      await this.sl.c(this.gov).setInitialWeight();
+      await this.sl.c(this.gov).setWeights([this.tokenA.address], [parseEther('1')], 0);
       // stake token A
       await this.sl.stake(parseEther('10'), this.alice.address, this.tokenA.address);
       // send SherX tokens to token A holder
@@ -627,6 +691,40 @@ describe('SherX', function () {
       expect(data.amounts[1]).to.eq(0);
       expect(data.amounts[2]).to.eq(parseEther('16'));
       expect(data.amounts.length).to.eq(3);
+    });
+  });
+  describe('watsons payout', function () {
+    before(async function () {
+      await timeTraveler.revertSnapshot();
+      await this.sl.c(this.gov).setStake(true, this.tokenA.address);
+      await this.sl.c(this.gov).setWatsonsAddress(this.carol.address);
+      await this.sl.c(this.gov).setInitialWeight();
+      this.b0 = await blockNumber(
+        this.sl
+          .c(this.gov)
+          ['setProtocolPremiumAndTokenPrice(bytes32,address[],uint256[],uint256[])'](
+            this.protocolX,
+            [this.tokenA.address],
+            [parseEther('1')],
+            [parseEther('1')],
+          ),
+      );
+    });
+    it('Initial state', async function () {
+      await timeTraveler.mine(1);
+
+      expect(await this.sl.getSherXLastAccrued()).to.eq(this.b0);
+      expect(await this.sl.getWatsonsSherXPerBlock()).to.eq(parseEther('1'));
+      expect(await this.sl.getWatsonsUnmintedSherX()).to.eq(parseEther('1'));
+      expect(await this.sl.balanceOf(this.carol.address)).to.eq(0);
+    });
+    it('Accrue', async function () {
+      const b1 = await blockNumber(this.sl.accrueSherX());
+
+      expect(await this.sl.getSherXLastAccrued()).to.eq(b1);
+      expect(await this.sl.getWatsonsSherXPerBlock()).to.eq(parseEther('1'));
+      expect(await this.sl.getWatsonsUnmintedSherX()).to.eq(0);
+      expect(await this.sl.balanceOf(this.carol.address)).to.eq(parseEther('2'));
     });
   });
 });
