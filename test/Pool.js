@@ -742,7 +742,7 @@ describe('Pool', function () {
     it('payout', async function () {
       await this.sl
         .c(this.gov)
-        .payout(this.alice.address, [this.tokenA.address], [0], [parseEther('5')], [0]);
+        .payout(this.alice.address, [this.tokenA.address], [0], [parseEther('5')], [0], this.tokenC.address);
     });
     it('After payout exchange rates', async function () {
       expect(await this.sl.LockToTokenXRate(this.tokenA.address)).to.be.eq(parseEther('5'));

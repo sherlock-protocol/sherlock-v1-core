@@ -75,6 +75,7 @@ module.exports = {
       }),
       await ethers.getContractFactory('Payout', {
         libraries: {
+          LibPool: libPool.address,
           LibSherX: libSherX.address,
         },
       }),

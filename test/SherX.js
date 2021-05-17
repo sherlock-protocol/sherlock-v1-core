@@ -523,7 +523,7 @@ describe('SherX', function () {
       expect(data.amounts[2]).to.eq(this.userDiff.mul(parseEther('2')));
       expect(data.amounts.length).to.eq(3);
 
-      expect(await this.sl['calcUnderlyingInStoredUSD()']()).to.eq(0);
+      expect(await this.sl['calcUnderlyingInStoredUSD()']()).to.eq(parseEther('3'));
 
       // pool variables
       expect(await this.sl.getTotalUsdLastSettled()).to.eq(this.b0);

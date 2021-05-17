@@ -127,18 +127,20 @@ contract SherX is ISherX {
     GovStorage.Base storage gs = GovStorage.gs();
     SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
 
+    uint256 total = LibSherX.getTotalSherX();
     for (uint256 i; i < gs.tokens.length; i++) {
       IERC20 token = gs.tokens[i];
 
       // TODO callstack
       PoolStorage.Base storage ps = PoolStorage.ps(address(token));
-      uint256 _temp = ps.sherXUnderlying.mul(_amount).mul(sx.tokenUSD[token]);
-      if (sx20.totalSupply == 0) {
-        continue;
+      uint256 _temp =
+        ps.sherXUnderlying.add(LibPool.getTotalAccruedDebt(token)).mul(_amount).mul(
+          sx.tokenUSD[token]
+        );
+      if (total > 0) {
+        _temp = _temp.div(10**18).div(total);
+        usd = usd.add(_temp);
       }
-      _temp = _temp.div(10**18).div(sx20.totalSupply);
-
-      usd = usd.add(_temp);
     }
   }
 

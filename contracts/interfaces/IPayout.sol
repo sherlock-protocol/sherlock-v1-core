@@ -20,6 +20,7 @@ interface IPayout {
     IERC20[] memory _tokens,
     uint256[] memory _firstMoneyOut,
     uint256[] memory _amounts,
-    uint256[] memory _unmaterializedSherX
+    uint256[] memory _unmaterializedSherX,
+    address _sher
   ) external;
 }

@@ -878,42 +878,46 @@ describe('Stateless', function () {
     });
     describe('payout()', function () {
       it('Invalid sender', async function () {
-        await expect(this.sl.payout(this.bob.address, [], [], [], [])).to.be.revertedWith(
-          'NOT_GOV_PAY',
-        );
+        await expect(
+          this.sl.payout(this.bob.address, [], [], [], [], this.tokenC.address),
+        ).to.be.revertedWith('NOT_GOV_PAY');
       });
       it('Invalid payout (zero)', async function () {
         await expect(
-          this.sl.c(this.gov).payout(constants.AddressZero, [], [], [], []),
+          this.sl.c(this.gov).payout(constants.AddressZero, [], [], [], [], this.tokenC.address),
         ).to.be.revertedWith('ZERO_PAY');
       });
       it('Invalid payout (this)', async function () {
         await expect(
-          this.sl.c(this.gov).payout(this.sl.address, [], [], [], []),
+          this.sl.c(this.gov).payout(this.sl.address, [], [], [], [], this.tokenC.address),
         ).to.be.revertedWith('THIS_PAY');
       });
       it('Invalid length 1', async function () {
         await expect(
-          this.sl.c(this.gov).payout(this.bob.address, [], [1], [], []),
+          this.sl.c(this.gov).payout(this.bob.address, [], [1], [], [], this.tokenC.address),
         ).to.be.revertedWith('LENGTH_1');
       });
       it('Invalid length 2', async function () {
         await expect(
-          this.sl.c(this.gov).payout(this.bob.address, [], [], [1], []),
+          this.sl.c(this.gov).payout(this.bob.address, [], [], [1], [], this.tokenC.address),
         ).to.be.revertedWith('LENGTH_2');
       });
       it('Invalid length 3', async function () {
         await expect(
-          this.sl.c(this.gov).payout(this.bob.address, [], [], [], [1]),
+          this.sl.c(this.gov).payout(this.bob.address, [], [], [], [1], this.tokenC.address),
         ).to.be.revertedWith('LENGTH_3');
       });
       it('Invalid token', async function () {
         await expect(
-          this.sl.c(this.gov).payout(this.bob.address, [this.tokenB.address], [1], [1], [1]),
+          this.sl
+            .c(this.gov)
+            .payout(this.bob.address, [this.tokenB.address], [1], [1], [1], this.tokenC.address),
         ).to.be.revertedWith('INIT');
       });
       it('Success', async function () {
-        await this.sl.c(this.gov).payout(this.bob.address, [this.tokenA.address], [0], [0], [0]);
+        await this.sl
+          .c(this.gov)
+          .payout(this.bob.address, [this.tokenA.address], [0], [0], [0], this.tokenC.address);
       });
     });
   });

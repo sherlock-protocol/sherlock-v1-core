@@ -72,7 +72,8 @@ contract Payout is IPayout {
     IERC20[] memory _tokens,
     uint256[] memory _firstMoneyOut,
     uint256[] memory _amounts,
-    uint256[] memory _unmaterializedSherX
+    uint256[] memory _unmaterializedSherX,
+    address _exclude
   ) external override onlyGovPayout {
     // all pools (including SherX pool) can be deducted fmo and balance
     // deducting balance will reduce the users underlying value of stake token
@@ -107,13 +108,49 @@ contract Payout is IPayout {
       if (token == address(this)) {
         totalSherX = totalSherX.add(total);
       } else {
+        // TODO, transfer later
         _tokens[i].safeTransfer(_payout, total);
       }
     }
     if (totalUnmaterializedSherX > 0) {
-      LibSherXERC20.mint(address(this), totalUnmaterializedSherX);
       totalSherX = totalSherX.add(totalUnmaterializedSherX);
     }
-    // TODO
+
+    SherXStorage.Base storage sx = SherXStorage.sx();
+
+    (IERC20[] memory tokens, uint256[] memory amounts) = LibSherX.calcUnderlying(totalSherX);
+    uint256 subUsdPool;
+    uint256 sherUsd;
+
+    for (uint256 i; i < tokens.length; i++) {
+      PoolStorage.Base storage ps = PoolStorage.ps(address(tokens[i]));
+
+      if (amounts[i] > ps.sherXUnderlying) {
+        LibPool.payOffDebtAll(tokens[i]);
+      }
+
+      if (address(tokens[i]) == _exclude) {
+        sherUsd = amounts[i].mul(sx.tokenUSD[tokens[i]]);
+      } else {
+        ps.sherXUnderlying = ps.sherXUnderlying.sub(amounts[i]);
+
+        subUsdPool = subUsdPool.add(amounts[i].mul(sx.tokenUSD[tokens[i]]).div(10**18));
+        // TODO, optimize transfer
+        tokens[i].safeTransfer(_payout, amounts[i]);
+      }
+    }
+
+    SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
+
+    if (sx20.totalSupply > 0) {
+      uint256 curTotalUsdPool = LibSherX.viewAccrueUSDPool();
+
+      uint256 storedUsdPriceSherX = curTotalUsdPool.div(sx20.totalSupply);
+      uint256 deduction = sherUsd.div(storedUsdPriceSherX).div(10**18);
+
+      sx.totalUsdPool = curTotalUsdPool.sub(subUsdPool);
+
+      LibSherXERC20.burn(address(this), totalSherX.sub(deduction));
+    }
   }
 }
