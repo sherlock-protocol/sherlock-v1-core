@@ -72,34 +72,34 @@ contract Payout is IPayout {
     IERC20[] memory _tokens,
     uint256[] memory _firstMoneyOut,
     uint256[] memory _amounts,
-    uint256[] memory _unmaterializedSherX,
+    uint256[] memory _unallocatedSherX,
     address _exclude
   ) external override onlyGovPayout {
     // all pools (including SherX pool) can be deducted fmo and balance
     // deducting balance will reduce the users underlying value of stake token
-    // for every pool, _unmaterializedSherX can be deducted, this will decrease outstanding SherX rewards
+    // for every pool, _unallocatedSherX can be deducted, this will decrease outstanding SherX rewards
     // for users that did not claim them (e.g materialized them and included in SherX pool)
 
     require(address(_payout) != address(0), 'ZERO_PAY');
     require(address(_payout) != address(this), 'THIS_PAY');
     require(_tokens.length == _firstMoneyOut.length, 'LENGTH_1');
     require(_tokens.length == _amounts.length, 'LENGTH_2');
-    require(_tokens.length == _unmaterializedSherX.length, 'LENGTH_3');
+    require(_tokens.length == _unallocatedSherX.length, 'LENGTH_3');
 
     LibSherX.accrueSherX();
-    uint256 totalUnmaterializedSherX = 0;
+    uint256 totalUnallocatedSherX = 0;
     uint256 totalSherX = 0;
 
     for (uint256 i; i < _tokens.length; i++) {
       address token = address(_tokens[i]);
       PoolStorage.Base storage ps = PoolStorage.ps(token);
       require(ps.initialized, 'INIT');
-      require(ps.unmaterializedSherX >= _unmaterializedSherX[i], 'ERR_UNMAT_FEE');
-      ps.sWeight = ps.sWeight.sub(_unmaterializedSherX[i]);
+      require(ps.unallocatedSherX >= _unallocatedSherX[i], 'ERR_UNALLOC_FEE');
+      ps.sWeight = ps.sWeight.sub(_unallocatedSherX[i]);
       ps.firstMoneyOut = ps.firstMoneyOut.sub(_firstMoneyOut[i]);
       ps.stakeBalance = ps.stakeBalance.sub(_amounts[i]);
 
-      totalUnmaterializedSherX = totalUnmaterializedSherX.add(_unmaterializedSherX[i]);
+      totalUnallocatedSherX = totalUnallocatedSherX.add(_unallocatedSherX[i]);
 
       uint256 total = _firstMoneyOut[i].add(_amounts[i]);
       if (total == 0) {
@@ -112,8 +112,8 @@ contract Payout is IPayout {
         _tokens[i].safeTransfer(_payout, total);
       }
     }
-    if (totalUnmaterializedSherX > 0) {
-      totalSherX = totalSherX.add(totalUnmaterializedSherX);
+    if (totalUnallocatedSherX > 0) {
+      totalSherX = totalSherX.add(totalUnallocatedSherX);
     }
 
     SherXStorage.Base storage sx = SherXStorage.sx();

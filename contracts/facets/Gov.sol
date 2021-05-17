@@ -290,12 +290,12 @@ contract Gov is IGov {
       _token.safeTransfer(_to, totalToken);
     }
     // todo accruelatest fees
-    uint256 totalFee = ps.unmaterializedSherX;
+    uint256 totalFee = ps.unallocatedSherX;
     if (totalFee > 0) {
       IERC20(address(this)).safeTransfer(_to, totalFee);
     }
     delete ps.sherXUnderlying;
-    delete ps.unmaterializedSherX;
+    delete ps.unallocatedSherX;
     delete ps.firstMoneyOut;
     delete ps.stakeBalance;
   }

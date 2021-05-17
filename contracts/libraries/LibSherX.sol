@@ -114,7 +114,7 @@ library LibSherX {
       if (address(token) == address(this)) {
         ps.stakeBalance = ps.stakeBalance.add(sherX);
       } else {
-        ps.unmaterializedSherX = ps.unmaterializedSherX.add(sherX);
+        ps.unallocatedSherX = ps.unallocatedSherX.add(sherX);
         ps.sWeight = ps.sWeight.add(sherX);
       }
     }

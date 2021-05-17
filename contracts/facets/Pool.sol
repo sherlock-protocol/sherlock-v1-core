@@ -192,7 +192,7 @@ contract Pool is IPool {
 
   function getUnallocatedSherXStored(address _token) public view override returns (uint256) {
     (, PoolStorage.Base storage ps) = baseData();
-    return ps.unmaterializedSherX;
+    return ps.unallocatedSherX;
   }
 
   function getUnallocatedSherXTotal(address _token) external view override returns (uint256) {

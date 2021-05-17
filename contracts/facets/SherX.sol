@@ -298,7 +298,7 @@ contract SherX is ISherX {
         // store the data in a single calc
         ps.sWithdrawn[from] = raw_amount.sub(ineglible_yield_amount);
 
-        ps.unmaterializedSherX = ps.unmaterializedSherX.sub(withdrawable_amount);
+        ps.unallocatedSherX = ps.unallocatedSherX.sub(withdrawable_amount);
         PoolStorage.Base storage psSherX = PoolStorage.ps(address(this));
         if (from == address(this)) {
           // add SherX harvested by the pool itself to first money out pool.
