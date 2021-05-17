@@ -67,6 +67,36 @@ contract Payout is IPayout {
     PayoutStorage.ps().govPayout = _govPayout;
   }
 
+  function _doSherX(
+    address _payout,
+    address _exclude,
+    uint256 curTotalUsdPool,
+    uint256 totalSherX
+  ) private returns (uint256 sherUsd) {
+    SherXStorage.Base storage sx = SherXStorage.sx();
+    (IERC20[] memory tokens, uint256[] memory amounts) = LibSherX.calcUnderlying(totalSherX);
+    uint256 subUsdPool;
+
+    for (uint256 i; i < tokens.length; i++) {
+      PoolStorage.Base storage ps = PoolStorage.ps(address(tokens[i]));
+
+      if (amounts[i] > ps.sherXUnderlying) {
+        LibPool.payOffDebtAll(tokens[i]);
+      }
+
+      if (address(tokens[i]) == _exclude) {
+        sherUsd = amounts[i].mul(sx.tokenUSD[tokens[i]]);
+      } else {
+        ps.sherXUnderlying = ps.sherXUnderlying.sub(amounts[i]);
+
+        subUsdPool = subUsdPool.add(amounts[i].mul(sx.tokenUSD[tokens[i]]).div(10**18));
+        // TODO, optimize transfer
+        tokens[i].safeTransfer(_payout, amounts[i]);
+      }
+    }
+    sx.totalUsdPool = curTotalUsdPool.sub(subUsdPool);
+  }
+
   function payout(
     address _payout,
     IERC20[] memory _tokens,
@@ -87,69 +117,60 @@ contract Payout is IPayout {
     require(_tokens.length == _unallocatedSherX.length, 'LENGTH_3');
 
     LibSherX.accrueSherX();
-    uint256 totalUnallocatedSherX = 0;
-    uint256 totalSherX = 0;
+    uint256 totalUnallocatedSherX;
+    uint256 totalSherX;
 
     for (uint256 i; i < _tokens.length; i++) {
-      address token = address(_tokens[i]);
-      PoolStorage.Base storage ps = PoolStorage.ps(token);
+      IERC20 token = _tokens[i];
+      uint256 firstMoneyOut = _firstMoneyOut[i];
+      uint256 amounts = _amounts[i];
+      uint256 unallocatedSherX = _unallocatedSherX[i];
+
+      PoolStorage.Base storage ps = PoolStorage.ps(address(token));
       require(ps.initialized, 'INIT');
-      require(ps.unallocatedSherX >= _unallocatedSherX[i], 'ERR_UNALLOC_FEE');
-      ps.sWeight = ps.sWeight.sub(_unallocatedSherX[i]);
-      ps.firstMoneyOut = ps.firstMoneyOut.sub(_firstMoneyOut[i]);
-      ps.stakeBalance = ps.stakeBalance.sub(_amounts[i]);
+      require(ps.unallocatedSherX >= unallocatedSherX, 'ERR_UNALLOC_FEE');
 
-      totalUnallocatedSherX = totalUnallocatedSherX.add(_unallocatedSherX[i]);
+      if (unallocatedSherX > 0) {
+        ps.sWeight = ps.sWeight.sub(unallocatedSherX);
+        totalUnallocatedSherX = totalUnallocatedSherX.add(unallocatedSherX);
+      }
 
-      uint256 total = _firstMoneyOut[i].add(_amounts[i]);
+      uint256 total = firstMoneyOut.add(amounts);
       if (total == 0) {
         continue;
       }
-      if (token == address(this)) {
+      if (firstMoneyOut > 0) {
+        ps.firstMoneyOut = ps.firstMoneyOut.sub(firstMoneyOut);
+      }
+      if (amounts > 0) {
+        ps.stakeBalance = ps.stakeBalance.sub(amounts);
+      }
+
+      if (address(token) == address(this)) {
         totalSherX = totalSherX.add(total);
       } else {
-        // TODO, transfer later
-        _tokens[i].safeTransfer(_payout, total);
+        // TODO, transfer later for gas optimalization
+        token.safeTransfer(_payout, total);
       }
     }
+
     if (totalUnallocatedSherX > 0) {
       totalSherX = totalSherX.add(totalUnallocatedSherX);
     }
-
-    SherXStorage.Base storage sx = SherXStorage.sx();
-
-    (IERC20[] memory tokens, uint256[] memory amounts) = LibSherX.calcUnderlying(totalSherX);
-    uint256 subUsdPool;
-    uint256 sherUsd;
-
-    for (uint256 i; i < tokens.length; i++) {
-      PoolStorage.Base storage ps = PoolStorage.ps(address(tokens[i]));
-
-      if (amounts[i] > ps.sherXUnderlying) {
-        LibPool.payOffDebtAll(tokens[i]);
-      }
-
-      if (address(tokens[i]) == _exclude) {
-        sherUsd = amounts[i].mul(sx.tokenUSD[tokens[i]]);
-      } else {
-        ps.sherXUnderlying = ps.sherXUnderlying.sub(amounts[i]);
-
-        subUsdPool = subUsdPool.add(amounts[i].mul(sx.tokenUSD[tokens[i]]).div(10**18));
-        // TODO, optimize transfer
-        tokens[i].safeTransfer(_payout, amounts[i]);
-      }
+    if (totalSherX == 0) {
+      return;
     }
 
+    uint256 curTotalUsdPool = LibSherX.viewAccrueUSDPool();
+    uint256 excludeUsd = _doSherX(_payout, _exclude, curTotalUsdPool, totalSherX);
+
     SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
+    uint256 totalSupply = sx20.totalSupply;
 
-    if (sx20.totalSupply > 0) {
-      uint256 curTotalUsdPool = LibSherX.viewAccrueUSDPool();
-
-      uint256 storedUsdPriceSherX = curTotalUsdPool.div(sx20.totalSupply);
-      uint256 deduction = sherUsd.div(storedUsdPriceSherX).div(10**18);
-
-      sx.totalUsdPool = curTotalUsdPool.sub(subUsdPool);
-
+    if (totalSupply > 0) {
+      // usd excluded, divided by the price per SherX token.
+      uint256 deduction = excludeUsd.div(curTotalUsdPool.div(totalSupply)).div(10e17);
+      // deduct that amount from the tokens being burned, to keep the same USD value
       LibSherXERC20.burn(address(this), totalSherX.sub(deduction));
     }
   }
