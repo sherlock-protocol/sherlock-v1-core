@@ -60,14 +60,12 @@ contract SherX is ISherX {
     return SherXStorage.sx().tokenUSD[_token];
   }
 
-  function getTotalSherXUnminted() public view override returns (uint256) {
-    SherXStorage.Base storage sx = SherXStorage.sx();
-    return block.number.sub(sx.sherXLastAccrued).mul(sx.sherXPerBlock);
+  function getTotalSherXUnminted() external view override returns (uint256) {
+    return LibSherX.getTotalSherXUnminted();
   }
 
-  function getTotalSherX() public view override returns (uint256) {
-    SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
-    return sx20.totalSupply.add(getTotalSherXUnminted());
+  function getTotalSherX() external view override returns (uint256) {
+    return LibSherX.getTotalSherX();
   }
 
   function getSherXPerBlock() external view override returns (uint256) {
@@ -107,36 +105,16 @@ contract SherX is ISherX {
     override
     returns (IERC20[] memory tokens, uint256[] memory amounts)
   {
-    return calcUnderlying(getSherXBalance(_user));
+    return LibSherX.calcUnderlying(getSherXBalance(_user));
   }
 
   function calcUnderlying(uint256 _amount)
-    public
+    external
     view
     override
     returns (IERC20[] memory tokens, uint256[] memory amounts)
   {
-    GovStorage.Base storage gs = GovStorage.gs();
-    SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
-
-    tokens = new IERC20[](gs.tokens.length);
-    amounts = new uint256[](gs.tokens.length);
-
-    uint256 total = getTotalSherX();
-
-    for (uint256 i; i < gs.tokens.length; i++) {
-      IERC20 token = gs.tokens[i];
-      tokens[i] = token;
-
-      if (total > 0) {
-        PoolStorage.Base storage ps = PoolStorage.ps(address(token));
-        amounts[i] = ps.sherXUnderlying.add(LibPool.getTotalAccruedDebt(token)).mul(_amount).div(
-          total
-        );
-      } else {
-        amounts[i] = 0;
-      }
-    }
+    return LibSherX.calcUnderlying(_amount);
   }
 
   function calcUnderlyingInStoredUSD() external view override returns (uint256) {
@@ -267,7 +245,7 @@ contract SherX is ISherX {
     LibSherX.accrueUSDPool();
     // Note: LibSherX.accrueSherX() is removed as the calcUnderlying already takes it into consideration (without changing state)
 
-    (IERC20[] memory tokens, uint256[] memory amounts) = calcUnderlying(_amount);
+    (IERC20[] memory tokens, uint256[] memory amounts) = LibSherX.calcUnderlying(_amount);
 
     uint256 subUsdPool = 0;
     for (uint256 i; i < tokens.length; i++) {

@@ -86,25 +86,34 @@ contract Payout is IPayout {
     require(_tokens.length == _unmaterializedSherX.length, 'LENGTH_3');
 
     LibSherX.accrueSherX();
-    uint256 totalUnmaterializedFee = 0;
+    uint256 totalUnmaterializedSherX = 0;
+    uint256 totalSherX = 0;
 
     for (uint256 i; i < _tokens.length; i++) {
-      PoolStorage.Base storage ps = PoolStorage.ps(address(_tokens[i]));
+      address token = address(_tokens[i]);
+      PoolStorage.Base storage ps = PoolStorage.ps(token);
       require(ps.initialized, 'INIT');
       require(ps.unmaterializedSherX >= _unmaterializedSherX[i], 'ERR_UNMAT_FEE');
       ps.sWeight = ps.sWeight.sub(_unmaterializedSherX[i]);
       ps.firstMoneyOut = ps.firstMoneyOut.sub(_firstMoneyOut[i]);
       ps.stakeBalance = ps.stakeBalance.sub(_amounts[i]);
 
-      totalUnmaterializedFee = totalUnmaterializedFee.add(_unmaterializedSherX[i]);
+      totalUnmaterializedSherX = totalUnmaterializedSherX.add(_unmaterializedSherX[i]);
 
       uint256 total = _firstMoneyOut[i].add(_amounts[i]);
-      if (total > 0) {
+      if (total == 0) {
+        continue;
+      }
+      if (token == address(this)) {
+        totalSherX = totalSherX.add(total);
+      } else {
         _tokens[i].safeTransfer(_payout, total);
       }
     }
-    if (totalUnmaterializedFee > 0) {
-      LibSherXERC20.mint(_payout, totalUnmaterializedFee);
+    if (totalUnmaterializedSherX > 0) {
+      LibSherXERC20.mint(address(this), totalUnmaterializedSherX);
+      totalSherX = totalSherX.add(totalUnmaterializedSherX);
     }
+    // TODO
   }
 }

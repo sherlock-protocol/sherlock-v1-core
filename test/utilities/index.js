@@ -56,7 +56,13 @@ module.exports = {
   },
   solution: async (thisObject, thisName, gov) => {
     libPool = await (await ethers.getContractFactory('LibPool')).deploy();
-    libSherX = await (await ethers.getContractFactory('LibSherX')).deploy();
+    libSherX = await (
+      await ethers.getContractFactory('LibSherX', {
+        libraries: {
+          LibPool: libPool.address,
+        },
+      })
+    ).deploy();
 
     facets = [
       await ethers.getContractFactory('Gov'),

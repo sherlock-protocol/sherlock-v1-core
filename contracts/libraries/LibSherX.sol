@@ -49,6 +49,44 @@ library LibSherX {
     amount = total.mul(ps.sherXWeight).div(10**18);
   }
 
+  function getTotalSherXUnminted() public view returns (uint256) {
+    SherXStorage.Base storage sx = SherXStorage.sx();
+    return block.number.sub(sx.sherXLastAccrued).mul(sx.sherXPerBlock);
+  }
+
+  function getTotalSherX() public view returns (uint256) {
+    SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
+    return sx20.totalSupply.add(getTotalSherXUnminted());
+  }
+
+  function calcUnderlying(uint256 _amount)
+    external
+    view
+    returns (IERC20[] memory tokens, uint256[] memory amounts)
+  {
+    GovStorage.Base storage gs = GovStorage.gs();
+    SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
+
+    tokens = new IERC20[](gs.tokens.length);
+    amounts = new uint256[](gs.tokens.length);
+
+    uint256 total = getTotalSherX();
+
+    for (uint256 i; i < gs.tokens.length; i++) {
+      IERC20 token = gs.tokens[i];
+      tokens[i] = token;
+
+      if (total > 0) {
+        PoolStorage.Base storage ps = PoolStorage.ps(address(token));
+        amounts[i] = ps.sherXUnderlying.add(LibPool.getTotalAccruedDebt(token)).mul(_amount).div(
+          total
+        );
+      } else {
+        amounts[i] = 0;
+      }
+    }
+  }
+
   function accrueSherX() external {
     // loop over pools, increase the pool + pool_weight based on the distribution weights
 
