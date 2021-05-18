@@ -9,13 +9,13 @@ describe('Gov', function () {
   before(async function () {
     timeTraveler = new TimeTraveler(network.provider);
 
-    await prepare(this, ['ERC20Mock', 'NativeLock', 'ForeignLock']);
+    await prepare(this, ['ERC20Mock', 'ERC20Mock6d', 'ERC20Mock8d', 'NativeLock', 'ForeignLock']);
 
     await solution(this, 'sl', this.gov);
     await deploy(this, [
-      ['tokenA', this.ERC20Mock, ['TokenA', 'A', parseEther('1000')]],
-      ['tokenB', this.ERC20Mock, ['TokenB', 'B', parseEther('1000')]],
-      ['tokenC', this.ERC20Mock, ['TokenC', 'C', parseEther('1000')]],
+      ['tokenA', this.ERC20Mock, ['TokenA', 'A', parseUnits('1000', 18)]],
+      ['tokenB', this.ERC20Mock6d, ['TokenB', 'B', parseUnits('1000', 6)]],
+      ['tokenC', this.ERC20Mock8d, ['TokenC', 'C', parseUnits('1000', 8)]],
     ]);
     await deploy(this, [
       ['lockA', this.ForeignLock, ['Lock TokenA', 'lockA', this.sl.address, this.tokenA.address]],
@@ -191,7 +191,7 @@ describe('Gov', function () {
   describe('protocolRemove() ─ Debt', function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
-      await this.tokenA.approve(this.sl.address, parseEther('10000'));
+      await this.tokenA.approve(this.sl.address, parseUnits('10000', this.tokenA.dec));
 
       await this.sl
         .c(this.gov)
@@ -199,15 +199,19 @@ describe('Gov', function () {
       await this.sl
         .c(this.gov)
         .protocolAdd(this.protocolX, this.gov.address, this.gov.address, [this.tokenA.address]);
-      await this.sl.depositProtocolBalance(this.protocolX, parseEther('100'), this.tokenA.address);
+      await this.sl.depositProtocolBalance(
+        this.protocolX,
+        parseUnits('100', this.tokenA.dec),
+        this.tokenA.address,
+      );
       t0 = await blockNumber(
         this.sl
           .c(this.gov)
           ['setProtocolPremiumAndTokenPrice(bytes32,address[],uint256[],uint256[])'](
             this.protocolX,
             [this.tokenA.address],
-            [parseEther('1')],
-            [parseEther('1')],
+            [parseUnits('1', this.tokenA.dec)],
+            [parseUnits('1', this.tokenA.usdDec)],
           ),
       );
     });
@@ -236,8 +240,10 @@ describe('Gov', function () {
         .cleanProtocol(this.protocolX, 0, true, this.bob.address, this.tokenA.address);
       await this.sl.c(this.gov).protocolRemove(this.protocolX);
 
-      const pPaid = t1.sub(t0).mul(parseEther('1'));
-      expect(await this.tokenA.balanceOf(this.bob.address)).to.eq(parseEther('100').sub(pPaid));
+      const pPaid = t1.sub(t0).mul(parseUnits('1', this.tokenA.dec));
+      expect(await this.tokenA.balanceOf(this.bob.address)).to.eq(
+        parseUnits('100', this.tokenA.dec).sub(pPaid),
+      );
       expect(await this.sl.getProtocolIsCovered(this.protocolX)).to.eq(false);
       expect(await this.sl.getProtocolManager(this.protocolX)).to.eq(constants.AddressZero);
       expect(await this.sl.getProtocolAgent(this.protocolX)).to.eq(constants.AddressZero);

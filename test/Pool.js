@@ -9,13 +9,13 @@ describe('Pool', function () {
   before(async function () {
     timeTraveler = new TimeTraveler(network.provider);
 
-    await prepare(this, ['ERC20Mock', 'NativeLock', 'ForeignLock']);
+    await prepare(this, ['ERC20Mock', 'ERC20Mock6d', 'ERC20Mock8d', 'NativeLock', 'ForeignLock']);
 
     await solution(this, 'sl', this.gov);
     await deploy(this, [
-      ['tokenA', this.ERC20Mock, ['TokenA', 'A', parseEther('1000')]],
-      ['tokenB', this.ERC20Mock, ['TokenB', 'B', parseEther('1000')]],
-      ['tokenC', this.ERC20Mock, ['TokenC', 'C', parseEther('1000')]],
+      ['tokenA', this.ERC20Mock, ['TokenA', 'A', parseUnits('1000', 18)]],
+      ['tokenB', this.ERC20Mock6d, ['TokenB', 'B', parseUnits('1000', 6)]],
+      ['tokenC', this.ERC20Mock8d, ['TokenC', 'C', parseUnits('1000', 8)]],
     ]);
     await deploy(this, [
       ['lockA', this.ForeignLock, ['Lock TokenA', 'lockA', this.sl.address, this.tokenA.address]],
@@ -742,7 +742,14 @@ describe('Pool', function () {
     it('payout', async function () {
       await this.sl
         .c(this.gov)
-        .payout(this.alice.address, [this.tokenA.address], [0], [parseEther('5')], [0], this.tokenC.address);
+        .payout(
+          this.alice.address,
+          [this.tokenA.address],
+          [0],
+          [parseEther('5')],
+          [0],
+          constants.AddressZero,
+        );
     });
     it('After payout exchange rates', async function () {
       expect(await this.sl.LockToTokenXRate(this.tokenA.address)).to.be.eq(parseEther('5'));

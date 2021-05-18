@@ -9,13 +9,13 @@ describe('Payout', function () {
   before(async function () {
     timeTraveler = new TimeTraveler(network.provider);
 
-    await prepare(this, ['ERC20Mock', 'NativeLock', 'ForeignLock']);
+    await prepare(this, ['ERC20Mock', 'ERC20Mock6d', 'ERC20Mock8d', 'NativeLock', 'ForeignLock']);
 
     await solution(this, 'sl', this.gov);
     await deploy(this, [
-      ['tokenA', this.ERC20Mock, ['TokenA', 'A', parseEther('1000')]],
-      ['tokenB', this.ERC20Mock, ['TokenB', 'B', parseEther('1000')]],
-      ['tokenC', this.ERC20Mock, ['TokenC', 'C', parseEther('1000')]],
+      ['tokenA', this.ERC20Mock, ['TokenA', 'A', parseUnits('1000', 18)]],
+      ['tokenB', this.ERC20Mock6d, ['TokenB', 'B', parseUnits('1000', 6)]],
+      ['tokenC', this.ERC20Mock8d, ['TokenC', 'C', parseUnits('1000', 8)]],
     ]);
     await deploy(this, [
       ['lockA', this.ForeignLock, ['Lock TokenA', 'lockA', this.sl.address, this.tokenA.address]],
@@ -141,13 +141,13 @@ describe('Payout - SherX', function () {
   before(async function () {
     timeTraveler = new TimeTraveler(network.provider);
 
-    await prepare(this, ['ERC20Mock', 'NativeLock', 'ForeignLock']);
+    await prepare(this, ['ERC20Mock', 'ERC20Mock6d', 'ERC20Mock8d', 'NativeLock', 'ForeignLock']);
 
     await solution(this, 'sl', this.gov);
     await deploy(this, [
-      ['tokenA', this.ERC20Mock, ['TokenA', 'A', parseEther('1000')]],
-      ['tokenB', this.ERC20Mock, ['TokenB', 'B', parseEther('1000')]],
-      ['tokenC', this.ERC20Mock, ['TokenC', 'C', parseEther('1000')]],
+      ['tokenA', this.ERC20Mock, ['TokenA', 'A', parseUnits('1000', 18)]],
+      ['tokenB', this.ERC20Mock6d, ['TokenB', 'B', parseUnits('1000', 6)]],
+      ['tokenC', this.ERC20Mock8d, ['TokenC', 'C', parseUnits('1000', 8)]],
     ]);
     await deploy(this, [
       ['lockA', this.ForeignLock, ['Lock TokenA', 'lockA', this.sl.address, this.tokenA.address]],
@@ -169,7 +169,7 @@ describe('Payout - SherX', function () {
     await this.sl.c(this.gov).setCooldown(1);
     await this.sl.c(this.gov).setUnstakeWindow(1);
     await this.tokenA.approve(this.sl.address, parseEther('10000'));
-    await this.tokenC.approve(this.sl.address, parseEther('10000'));
+    await this.tokenC.approve(this.sl.address, parseUnits('10000', this.tokenC.dec));
     await this.lockA.approve(this.sl.address, parseEther('10000'));
 
     await this.sl
@@ -179,15 +179,19 @@ describe('Payout - SherX', function () {
         this.tokenC.address,
       ]);
     await this.sl.depositProtocolBalance(this.protocolX, parseEther('100'), this.tokenA.address);
-    await this.sl.depositProtocolBalance(this.protocolX, parseEther('100'), this.tokenC.address);
+    await this.sl.depositProtocolBalance(
+      this.protocolX,
+      parseUnits('100', this.tokenC.dec),
+      this.tokenC.address,
+    );
 
     await this.sl
       .c(this.gov)
       ['setProtocolPremiumAndTokenPrice(bytes32,address[],uint256[],uint256[])'](
         this.protocolX,
         [this.tokenA.address, this.tokenC.address],
-        [parseEther('1'), parseEther('1')],
-        [parseEther('1'), parseEther('1')],
+        [parseEther('1'), parseUnits('1', this.tokenC.dec)],
+        [parseEther('1'), parseUnits('1', this.tokenC.usdDec)],
       );
 
     // unallocated
@@ -203,8 +207,8 @@ describe('Payout - SherX', function () {
       ['setProtocolPremiumAndTokenPrice(bytes32,address[],uint256[],uint256[])'](
         this.protocolX,
         [this.tokenA.address, this.tokenC.address],
-        [parseEther('0'), parseEther('0')],
-        [parseEther('1'), parseEther('1')],
+        [parseEther('0'), parseUnits('0', this.tokenC.dec)],
+        [parseEther('1'), parseUnits('1', this.tokenC.usdDec)],
       );
 
     await timeTraveler.snapshot();
@@ -226,14 +230,14 @@ describe('Payout - SherX', function () {
 
     const data = await this.sl['calcUnderlying(uint256)'](parseEther('1'));
     expect(data.amounts[0]).to.eq(parseEther('1'));
-    expect(data.amounts[1]).to.eq(parseEther('1'));
+    expect(data.amounts[1]).to.eq(parseUnits('1', this.tokenC.dec));
     // this.sl.address
     expect(data.amounts[2]).to.eq(parseEther('0'));
     expect(data.amounts.length).to.eq(3);
 
     // Payout balances
-    expect(await this.tokenA.balanceOf(this.bob.address)).to.eq(parseEther('0'));
-    expect(await this.tokenC.balanceOf(this.bob.address)).to.eq(parseEther('0'));
+    expect(await this.tokenA.balanceOf(this.bob.address)).to.eq(0);
+    expect(await this.tokenC.balanceOf(this.bob.address)).to.eq(0);
   });
   describe('Not excluding', function () {
     before(async function () {
@@ -267,17 +271,17 @@ describe('Payout - SherX', function () {
 
       const data = await this.sl['calcUnderlying(uint256)'](parseEther('1'));
       expect(data.amounts[0]).to.eq(parseEther('1'));
-      expect(data.amounts[1]).to.eq(parseEther('1'));
+      expect(data.amounts[1]).to.eq(parseUnits('1', this.tokenC.dec));
       // this.sl.address
       expect(data.amounts[2]).to.eq(parseEther('0'));
       expect(data.amounts.length).to.eq(3);
 
       // Payout balances
       expect(await this.tokenA.balanceOf(this.bob.address)).to.eq(parseEther('2'));
-      expect(await this.tokenC.balanceOf(this.bob.address)).to.eq(parseEther('2'));
+      expect(await this.tokenC.balanceOf(this.bob.address)).to.eq(parseUnits('2', this.tokenC.dec));
     });
   });
-  describe('Not excluding c', function () {
+  describe('Excluding tokenC', function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
     });
@@ -309,14 +313,14 @@ describe('Payout - SherX', function () {
 
       const data = await this.sl['calcUnderlying(uint256)'](parseEther('1'));
       expect(data.amounts[0]).to.eq(parseEther('0.8'));
-      expect(data.amounts[1]).to.eq(parseEther('1.2'));
+      expect(data.amounts[1]).to.eq(parseUnits('1.2', this.tokenC.dec));
       // this.sl.address
       expect(data.amounts[2]).to.eq(parseEther('0'));
       expect(data.amounts.length).to.eq(3);
 
       // Payout balances
       expect(await this.tokenA.balanceOf(this.bob.address)).to.eq(parseEther('2'));
-      expect(await this.tokenC.balanceOf(this.bob.address)).to.eq(parseEther('0'));
+      expect(await this.tokenC.balanceOf(this.bob.address)).to.eq(0);
     });
   });
 });

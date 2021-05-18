@@ -51,6 +51,11 @@ module.exports = {
     for (let i in contracts) {
       let contract = contracts[i];
       thisObject[contract[0]] = await contract[1].deploy(...(contract[2] || []));
+      try {
+        const decimals = await thisObject[contract[0]].decimals();
+        thisObject[contract[0]].dec = decimals;
+        thisObject[contract[0]].usdDec = 18 + (18 - decimals);
+      } catch (err) {}
       await thisObject[contract[0]].deployed();
     }
   },
