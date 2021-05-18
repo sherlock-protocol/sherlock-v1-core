@@ -1,0 +1,139 @@
+diff --git a/contracts/facets/Payout.sol b/contracts/facets/Payout.sol
+index e7752e2..d10c092 100644
+--- a/contracts/facets/Payout.sol
++++ b/contracts/facets/Payout.sol
+@@ -147,7 +147,7 @@ contract Payout is IPayout {
+       }
+ 
+       if (address(token) == address(this)) {
+-        totalSherX = totalSherX.add(total);
++        totalSherX = total;
+       } else {
+         // TODO, transfer later for gas optimalization
+         token.safeTransfer(_payout, total);
+@@ -168,7 +168,7 @@ contract Payout is IPayout {
+     uint256 totalSupply = sx20.totalSupply;
+ 
+     if (totalSupply > 0) {
+-      // usd excluded, divided by the price per SherX token.
++      // usd excluded, divided by the price per SherX token = amount of sherx to not burn.
+       uint256 deduction = excludeUsd.div(curTotalUsdPool.div(totalSupply)).div(10e17);
+       // deduct that amount from the tokens being burned, to keep the same USD value
+       LibSherXERC20.burn(address(this), totalSherX.sub(deduction));
+diff --git a/test/Payout.js b/test/Payout.js
+index 7289471..0072690 100644
+--- a/test/Payout.js
++++ b/test/Payout.js
+@@ -5,7 +5,7 @@ const { prepare, deploy, solution, blockNumber } = require('./utilities');
+ const { constants } = require('ethers');
+ const { TimeTraveler } = require('./utilities/snapshot');
+ 
+-describe('Payout', function () {
++describe.only('Payout', function () {
+   before(async function () {
+     timeTraveler = new TimeTraveler(network.provider);
+ 
+@@ -39,42 +39,47 @@ describe('Payout', function () {
+         this.tokenC.address,
+       ]);
+ 
++    await this.sl.c(this.gov).setCooldownFee(parseEther('1'), this.tokenA.address);
++    await this.sl.c(this.gov).setCooldown(1);
++    await this.sl.c(this.gov).setUnstakeWindow(1);
+     await this.tokenA.approve(this.sl.address, parseEther('10000'));
+-    await this.tokenC.approve(this.sl.address, parseEther('10000'));
+-    await this.sl.depositProtocolBalance(this.protocolX, parseEther('100'), this.tokenA.address);
+-    await this.sl.depositProtocolBalance(this.protocolX, parseEther('100'), this.tokenC.address);
++    await this.lockA.approve(this.sl.address, parseEther('10000'));
+ 
+-    await this.sl.c(this.gov).setWatsonsAddress(this.alice.address);
+-    await this.sl.c(this.gov).setInitialWeight();
+-    await this.sl.c(this.gov).setWeights([this.tokenA.address], [parseEther('1')], 0);
++    await this.sl.stake(parseEther('10'), this.alice.address, this.tokenA.address);
++    await this.sl.activateCooldown(parseEther('1'), this.tokenA.address);
++
++    await this.sl.stake(parseEther('10'), this.alice.address, this.tokenA.address);
+     await timeTraveler.snapshot();
+   });
+-  describe('setPPm(bytes32,address[],uint256[])', function () {
++  it('Initital state', async function () {
++    expect(await this.sl.getFirstMoneyOut(this.tokenA.address)).to.eq(parseEther('10'));
++    expect(await this.sl.getStakersPoolBalance(this.tokenA.address)).to.eq(parseEther('10'));
++    expect(await this.tokenA.balanceOf(this.bob.address)).to.eq(parseEther('0'));
++  });
++  describe('First Money Out', function () {
+     before(async function () {
+       await timeTraveler.revertSnapshot();
++    });
++    it('Do', async function () {
+       await this.sl
+         .c(this.gov)
+-        ['setProtocolPremiumAndTokenPrice(bytes32,address[],uint256[],uint256[])'](
+-          this.protocolX,
+-          [this.tokenA.address, this.tokenC.address],
+-          [parseEther('1'), parseEther('1')],
+-          [parseEther('1'), parseEther('1')],
++        .payout(
++          this.bob.address,
++          [this.tokenA.address],
++          [parseEther('8')],
++          [0],
++          [0],
++          constants.AddressZero,
+         );
+-      await timeTraveler.mine(4);
+-    });
+-    it('Initial state', async function () {
+-      expect(await this.sl['calcUnderlyingInStoredUSD(uint256)'](parseEther('1'))).to.eq(
+-        parseEther('2'),
+-      );
+-      expect(await this.sl.getTotalSherX()).to.eq(parseEther('4'));
+-
+-      const data = await this.sl['calcUnderlying(uint256)'](parseEther('1'));
+-      expect(data.amounts[0]).to.eq(parseEther('1'));
+-      expect(data.amounts[1]).to.eq(parseEther('1'));
+-      expect(data.amounts.length).to.eq(2);
+ 
+-      expect(await this.tokenA.balanceOf(this.bob.address)).to.eq(0);
+-      expect(await this.tokenC.balanceOf(this.bob.address)).to.eq(0);
++      expect(await this.sl.getFirstMoneyOut(this.tokenA.address)).to.eq(parseEther('2'));
++      expect(await this.sl.getStakersPoolBalance(this.tokenA.address)).to.eq(parseEther('10'));
++      expect(await this.tokenA.balanceOf(this.bob.address)).to.eq(parseEther('8'));
++    });
++  });
++  describe('Stake Balance', function () {
++    before(async function () {
++      await timeTraveler.revertSnapshot();
+     });
+     it('Do', async function () {
+       await this.sl
+@@ -83,24 +88,14 @@ describe('Payout', function () {
+           this.bob.address,
+           [this.tokenA.address],
+           [0],
++          [parseEther('6')],
+           [0],
+-          [parseEther('2')],
+-          this.tokenC.address,
++          constants.AddressZero,
+         );
+-    });
+-    it('State', async function () {
+-      expect(await this.sl.getTotalSherX()).to.eq(parseEther('4'));
+-      expect(await this.sl['calcUnderlyingInStoredUSD(uint256)'](parseEther('1'))).to.eq(
+-        parseEther('2'),
+-      );
+-
+-      const data = await this.sl['calcUnderlying(uint256)'](parseEther('1'));
+-      expect(data.amounts[0]).to.eq(parseEther('0.75'));
+-      expect(data.amounts[1]).to.eq(parseEther('1.25'));
+-      expect(data.amounts.length).to.eq(2);
+ 
+-      expect(await this.tokenA.balanceOf(this.bob.address)).to.eq(parseEther('2'));
+-      expect(await this.tokenC.balanceOf(this.bob.address)).to.eq(0);
++      expect(await this.sl.getFirstMoneyOut(this.tokenA.address)).to.eq(parseEther('10'));
++      expect(await this.sl.getStakersPoolBalance(this.tokenA.address)).to.eq(parseEther('4'));
++      expect(await this.tokenA.balanceOf(this.bob.address)).to.eq(parseEther('6'));
+     });
+   });
+ });

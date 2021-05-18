@@ -132,6 +132,7 @@ contract Payout is IPayout {
 
       if (unallocatedSherX > 0) {
         ps.sWeight = ps.sWeight.sub(unallocatedSherX);
+        ps.unallocatedSherX = ps.unallocatedSherX.sub(unallocatedSherX);
         totalUnallocatedSherX = totalUnallocatedSherX.add(unallocatedSherX);
       }
 
@@ -147,7 +148,7 @@ contract Payout is IPayout {
       }
 
       if (address(token) == address(this)) {
-        totalSherX = totalSherX.add(total);
+        totalSherX = total;
       } else {
         // TODO, transfer later for gas optimalization
         token.safeTransfer(_payout, total);
@@ -168,7 +169,7 @@ contract Payout is IPayout {
     uint256 totalSupply = sx20.totalSupply;
 
     if (totalSupply > 0) {
-      // usd excluded, divided by the price per SherX token.
+      // usd excluded, divided by the price per SherX token = amount of sherx to not burn.
       uint256 deduction = excludeUsd.div(curTotalUsdPool.div(totalSupply)).div(10e17);
       // deduct that amount from the tokens being burned, to keep the same USD value
       LibSherXERC20.burn(address(this), totalSherX.sub(deduction));

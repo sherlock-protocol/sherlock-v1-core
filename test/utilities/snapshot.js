@@ -12,7 +12,7 @@ class TimeTraveler {
 
   async revertSnapshot() {
     await this.ethereum.send('evm_revert', [this.snapshotID]);
-    await this.mine(1);
+    //await this.mine(1);
     await this.snapshot();
     return;
   }
