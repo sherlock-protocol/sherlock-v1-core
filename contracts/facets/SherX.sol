@@ -84,8 +84,8 @@ contract SherX is ISherX {
     SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
     uint256 balance = sx20.balances[_user];
     GovStorage.Base storage gs = GovStorage.gs();
-    for (uint256 i; i < gs.tokens.length; i++) {
-      balance = balance.add(LibPool.getUnallocatedSherXFor(_user, address(gs.tokens[i])));
+    for (uint256 i; i < gs.tokensStaker.length; i++) {
+      balance = balance.add(LibPool.getUnallocatedSherXFor(_user, address(gs.tokensStaker[i])));
     }
     return balance;
   }
@@ -128,8 +128,8 @@ contract SherX is ISherX {
     SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
 
     uint256 total = LibSherX.getTotalSherX();
-    for (uint256 i; i < gs.tokens.length; i++) {
-      IERC20 token = gs.tokens[i];
+    for (uint256 i; i < gs.tokensProtocol.length; i++) {
+      IERC20 token = gs.tokensProtocol[i];
 
       // TODO callstack
       PoolStorage.Base storage ps = PoolStorage.ps(address(token));
@@ -160,8 +160,8 @@ contract SherX is ISherX {
     GovStorage.Base storage gs = GovStorage.gs();
     require(gs.watsonsAddress != address(0), 'WATS_UNSET');
     require(gs.watsonsSherxWeight == 0, 'ALREADY_INIT');
-    for (uint256 i; i < gs.tokens.length; i++) {
-      PoolStorage.Base storage ps = PoolStorage.ps(address(gs.tokens[i]));
+    for (uint256 i; i < gs.tokensStaker.length; i++) {
+      PoolStorage.Base storage ps = PoolStorage.ps(address(gs.tokensStaker[i]));
       require(ps.sherXWeight == 0, 'ALREADY_INIT_2');
     }
 
@@ -183,7 +183,6 @@ contract SherX is ISherX {
 
     for (uint256 i; i < _tokens.length; i++) {
       PoolStorage.Base storage ps = PoolStorage.ps(_tokens[i]);
-      require(ps.initialized, 'INIT');
       // Disabled tokens can not have ps.sherXWeight > 0
       require(ps.stakes, 'DISABLED');
 
@@ -217,8 +216,8 @@ contract SherX is ISherX {
 
   function harvestFor(address _user) public override {
     GovStorage.Base storage gs = GovStorage.gs();
-    for (uint256 i; i < gs.tokens.length; i++) {
-      PoolStorage.Base storage ps = PoolStorage.ps(address(gs.tokens[i]));
+    for (uint256 i; i < gs.tokensStaker.length; i++) {
+      PoolStorage.Base storage ps = PoolStorage.ps(address(gs.tokensStaker[i]));
       harvestFor(_user, address(ps.lockToken));
     }
   }

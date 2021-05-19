@@ -26,12 +26,12 @@ describe('Manager - Clean', function () {
     // Add tokenA as valid token
     await this.sl
       .c(this.gov)
-      .tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address, false);
+      .tokenInit(this.tokenA.address, this.gov.address, constants.AddressZero, true);
 
     // Add tokenb as valid token
     await this.sl
       .c(this.gov)
-      .tokenAdd(this.tokenB.address, this.lockB.address, this.gov.address, false);
+      .tokenInit(this.tokenB.address, this.gov.address, constants.AddressZero, true);
 
     // Add protocolX as valid protocol
     await this.sl
@@ -887,12 +887,12 @@ describe('Manager - Active', function () {
     // Add tokenA as valid token
     await this.sl
       .c(this.gov)
-      .tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address, false);
+      .tokenInit(this.tokenA.address, this.gov.address, constants.AddressZero, true);
 
     // Add tokenb as valid token
     await this.sl
       .c(this.gov)
-      .tokenAdd(this.tokenB.address, this.lockB.address, this.gov.address, false);
+      .tokenInit(this.tokenB.address, this.gov.address, constants.AddressZero, true);
 
     // Add protocolX as valid protocol
     await this.sl

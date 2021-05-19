@@ -25,7 +25,7 @@ describe('Pool', function () {
     // Add tokenA as valid token
     await this.sl
       .c(this.gov)
-      .tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address, true);
+      .tokenInit(this.tokenA.address, this.gov.address, this.lockA.address, true);
 
     // Add protocolX as valid protocol
     await this.sl
@@ -33,30 +33,6 @@ describe('Pool', function () {
       .protocolAdd(this.protocolX, this.gov.address, this.gov.address, [this.tokenA.address]);
 
     await timeTraveler.snapshot();
-  });
-  describe('setStake()', function () {
-    before(async function () {
-      await timeTraveler.revertSnapshot();
-    });
-    it('Initial state', async function () {
-      expect(await this.sl.isStake(this.tokenA.address)).to.eq(true);
-    });
-    it('Do', async function () {
-      await this.sl.c(this.gov).setStake(false, this.tokenA.address);
-      expect(await this.sl.isStake(this.tokenA.address)).to.eq(false);
-    });
-    it('Do weight', async function () {
-      // first enable staking
-      await this.sl.c(this.gov).setStake(true, this.tokenA.address);
-      // set initial weight
-      await this.sl.c(this.gov).setWatsonsAddress(this.alice.address);
-      await this.sl.c(this.gov).setInitialWeight();
-      await this.sl.c(this.gov).setWeights([this.tokenA.address], [parseEther('1')], 0);
-      // disable staking
-      await expect(this.sl.c(this.gov).setStake(false, this.tokenA.address)).to.be.revertedWith(
-        'WEIGHT',
-      );
-    });
   });
   describe('setCooldownFee()', function () {
     before(async function () {

@@ -42,9 +42,9 @@ contract Pool is IPool {
     return ps.govPool;
   }
 
-  function isInitialized(address _token) external view override returns (bool) {
+  function isPremium(address _token) external view override returns (bool) {
     (, PoolStorage.Base storage ps) = baseData();
-    return ps.initialized;
+    return ps.premiums;
   }
 
   function isStake(address _token) external view override returns (bool) {
@@ -280,7 +280,7 @@ contract Pool is IPool {
   function baseData() internal view returns (IERC20 token, PoolStorage.Base storage ps) {
     token = bps();
     ps = PoolStorage.ps(address(token));
-    require(ps.initialized, 'INVALID_TOKEN');
+    require(ps.govPool != address(0), 'INVALID_TOKEN');
   }
 
   function bps() internal pure returns (IERC20 rt) {
@@ -298,17 +298,6 @@ contract Pool is IPool {
   //
   // State changing methods
   //
-
-  function setStake(bool _stake, address _token) external override {
-    require(msg.sender == GovStorage.gs().govInsurance, 'NOT_GOV_INS');
-
-    (, PoolStorage.Base storage ps) = baseData();
-    require(ps.stakes != _stake, 'INVALID');
-    // when true --> false, it needs to be 0
-    // when false --> true, it is already 0
-    require(ps.sherXWeight == 0, 'WEIGHT');
-    ps.stakes = _stake;
-  }
 
   function setCooldownFee(uint256 _fee, address _token) external override {
     require(msg.sender == GovStorage.gs().govInsurance, 'NOT_GOV_INS');

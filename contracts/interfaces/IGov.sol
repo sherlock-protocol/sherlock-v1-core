@@ -13,8 +13,6 @@ interface IGov {
   // Events
   //
 
-  event TokenAdded(IERC20 _token, ILock _lock);
-
   //
   // View methods
   //
@@ -33,7 +31,9 @@ interface IGov {
 
   function getCooldown() external view returns (uint256 period);
 
-  function getTokens() external view returns (IERC20[] memory tokens);
+  function getTokensStaker() external view returns (IERC20[] memory tokens);
+
+  function getTokensProtocol() external view returns (IERC20[] memory tokens);
 
   function getProtocolIsCovered(bytes32 _protocol) external view returns (bool);
 
@@ -72,19 +72,16 @@ interface IGov {
 
   function protocolRemove(bytes32 _protocol) external;
 
-  // TODO transfer govpool role
-  function tokenAdd(
+  function tokenInit(
     IERC20 _token,
-    ILock _lock,
     address _govPool,
-    bool _stakes
+    ILock _lock,
+    bool _protocolPremium
   ) external;
 
-  function tokenDisable(IERC20 _token) external;
+  function tokenDisableStakers(IERC20 _token, uint256 _index) external;
 
-  function tokenRemove(
-    IERC20 _token,
-    uint256 _index,
-    address _to
-  ) external;
+  function tokenDisableProtocol(IERC20 _token, uint256 _index) external;
+
+  function tokenRemove(IERC20 _token, address _to) external;
 }

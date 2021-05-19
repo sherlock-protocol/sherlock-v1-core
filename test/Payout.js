@@ -25,7 +25,7 @@ describe('Payout', function () {
     // Add tokenA as valid token
     await this.sl
       .c(this.gov)
-      .tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address, true);
+      .tokenInit(this.tokenA.address, this.gov.address, this.lockA.address, true);
 
     await this.sl.c(this.gov).setCooldownFee(parseEther('1'), this.tokenA.address);
     await this.sl.c(this.gov).setCooldown(1);
@@ -158,13 +158,15 @@ describe('Payout - SherX', function () {
     // Add tokenA as valid token
     await this.sl
       .c(this.gov)
-      .tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address, true);
+      .tokenInit(this.tokenA.address, this.gov.address, this.lockA.address, true);
 
     await this.sl
       .c(this.gov)
-      .tokenAdd(this.tokenC.address, this.lockC.address, this.gov.address, true);
+      .tokenInit(this.tokenC.address, this.gov.address, this.lockC.address, true);
 
-    await this.sl.c(this.gov).tokenAdd(this.sl.address, this.lockX.address, this.gov.address, true);
+    await this.sl
+      .c(this.gov)
+      .tokenInit(this.sl.address, this.gov.address, this.lockX.address, false);
 
     await this.sl.c(this.gov).setCooldown(1);
     await this.sl.c(this.gov).setUnstakeWindow(1);
@@ -231,9 +233,7 @@ describe('Payout - SherX', function () {
     const data = await this.sl['calcUnderlying(uint256)'](parseEther('1'));
     expect(data.amounts[0]).to.eq(parseEther('1'));
     expect(data.amounts[1]).to.eq(parseUnits('1', this.tokenC.dec));
-    // this.sl.address
-    expect(data.amounts[2]).to.eq(parseEther('0'));
-    expect(data.amounts.length).to.eq(3);
+    expect(data.amounts.length).to.eq(2);
 
     // Payout balances
     expect(await this.tokenA.balanceOf(this.bob.address)).to.eq(0);
@@ -272,9 +272,7 @@ describe('Payout - SherX', function () {
       const data = await this.sl['calcUnderlying(uint256)'](parseEther('1'));
       expect(data.amounts[0]).to.eq(parseEther('1'));
       expect(data.amounts[1]).to.eq(parseUnits('1', this.tokenC.dec));
-      // this.sl.address
-      expect(data.amounts[2]).to.eq(parseEther('0'));
-      expect(data.amounts.length).to.eq(3);
+      expect(data.amounts.length).to.eq(2);
 
       // Payout balances
       expect(await this.tokenA.balanceOf(this.bob.address)).to.eq(parseEther('2'));
@@ -314,9 +312,7 @@ describe('Payout - SherX', function () {
       const data = await this.sl['calcUnderlying(uint256)'](parseEther('1'));
       expect(data.amounts[0]).to.eq(parseEther('0.8'));
       expect(data.amounts[1]).to.eq(parseUnits('1.2', this.tokenC.dec));
-      // this.sl.address
-      expect(data.amounts[2]).to.eq(parseEther('0'));
-      expect(data.amounts.length).to.eq(3);
+      expect(data.amounts.length).to.eq(2);
 
       // Payout balances
       expect(await this.tokenA.balanceOf(this.bob.address)).to.eq(parseEther('2'));

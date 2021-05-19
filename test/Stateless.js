@@ -34,7 +34,7 @@ describe('Stateless', function () {
     // Add tokenA as valid token
     await this.sl
       .c(this.gov)
-      .tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address, true);
+      .tokenInit(this.tokenA.address, this.gov.address, this.lockA.address, true);
 
     // Add protocolX as valid protocol
     await this.sl
@@ -44,8 +44,9 @@ describe('Stateless', function () {
     // Setting up tokenDisable
     await this.sl
       .c(this.gov)
-      .tokenAdd(this.tokenDisable.address, this.lockDisable.address, this.gov.address, true);
-    await this.sl.c(this.gov).tokenDisable(this.tokenDisable.address);
+      .tokenInit(this.tokenDisable.address, this.gov.address, this.lockDisable.address, true);
+    await this.sl.c(this.gov).tokenDisableStakers(this.tokenDisable.address, 1);
+    await this.sl.c(this.gov).tokenDisableProtocol(this.tokenDisable.address, 1);
 
     // Setting up lockWSupply
     await this.lockWSupply.connect(this.gov).mint(this.gov.address, parseEther('1'));
@@ -258,117 +259,142 @@ describe('Stateless', function () {
         await this.sl.c(this.gov).protocolRemove(this.nonProtocol1);
       });
     });
-    describe('tokenAdd()', function () {
+    describe('tokenInit()', function () {
       it('Invalid sender', async function () {
         await expect(
-          this.sl.tokenAdd(this.tokenB.address, this.lockB.address, this.gov.address, true),
+          this.sl.tokenInit(this.tokenB.address, this.gov.address, this.lockB.address, true),
         ).to.be.revertedWith('NOT_GOV_INS');
       });
-      it('Invalid token', async function () {
+      it('Invalid lock', async function () {
         await expect(
           this.sl
             .c(this.gov)
-            .tokenAdd(this.tokenA.address, this.lockB.address, this.gov.address, true),
-        ).to.be.revertedWith('INITIALIZED');
+            .tokenInit(this.tokenA.address, this.gov.address, this.lockB.address, true),
+        ).to.be.revertedWith('WRONG_LOCK');
       });
       it('Invalid token (zero)', async function () {
         await expect(
           this.sl
             .c(this.gov)
-            .tokenAdd(constants.AddressZero, this.lockB.address, this.gov.address, true),
+            .tokenInit(constants.AddressZero, this.gov.address, this.lockB.address, true),
         ).to.be.revertedWith('ZERO_TOKEN');
-      });
-      it('Invalid stake (zero)', async function () {
-        await expect(
-          this.sl
-            .c(this.gov)
-            .tokenAdd(this.tokenB.address, constants.AddressZero, this.gov.address, true),
-        ).to.be.revertedWith('ZERO_LOCK');
       });
       it('Invalid stake (owner)', async function () {
         await expect(
           this.sl
             .c(this.gov)
-            .tokenAdd(this.tokenC.address, this.lockWGov.address, this.gov.address, true),
+            .tokenInit(this.tokenC.address, this.gov.address, this.lockWGov.address, true),
         ).to.be.revertedWith('OWNER');
       });
       it('Invalid govpool (zero)', async function () {
         await expect(
           this.sl
             .c(this.gov)
-            .tokenAdd(this.tokenB.address, this.lockB.address, constants.AddressZero, true),
+            .tokenInit(this.tokenB.address, constants.AddressZero, this.lockB.address, true),
         ).to.be.revertedWith('ZERO_GOV');
       });
       it('Invalid supply', async function () {
         await expect(
           this.sl
             .c(this.gov)
-            .tokenAdd(this.tokenC.address, this.lockWSupply.address, this.gov.address, true),
+            .tokenInit(this.tokenC.address, this.gov.address, this.lockWSupply.address, true),
         ).to.be.revertedWith('SUPPLY');
       });
       it('Invalid underlying', async function () {
         await expect(
           this.sl
             .c(this.gov)
-            .tokenAdd(this.tokenB.address, this.lockA.address, this.gov.address, true),
+            .tokenInit(this.tokenB.address, this.gov.address, this.lockA.address, true),
         ).to.be.revertedWith('UNDERLYING');
+      });
+      it('Invalid stakes', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            .tokenInit(this.tokenA.address, constants.AddressZero, this.lockA.address, false),
+        ).to.be.revertedWith('STAKES_SET');
+      });
+      it('Invalid premiums', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            .tokenInit(this.tokenA.address, constants.AddressZero, constants.AddressZero, true),
+        ).to.be.revertedWith('PREMIUMS_SET');
       });
       it('Success', async function () {
         await this.sl
           .c(this.gov)
-          .tokenAdd(this.tokenB.address, this.lockB.address, this.gov.address, true);
+          .tokenInit(this.tokenB.address, this.gov.address, this.lockB.address, true);
       });
     });
-    describe('tokenDisable()', function () {
+    describe('tokenDisableStakers()', function () {
       it('Invalid sender', async function () {
-        await expect(this.sl.tokenDisable(this.tokenA.address)).to.be.revertedWith('NOT_GOV_INS');
-      });
-      it('Invalid token (zero)', async function () {
-        await expect(this.sl.c(this.gov).tokenDisable(this.tokenC.address)).to.be.revertedWith(
-          'NOT_INITIALIZED',
+        await expect(this.sl.tokenDisableStakers(this.tokenA.address, 0)).to.be.revertedWith(
+          'NOT_GOV_INS',
         );
       });
-      it('Disable twice', async function () {
+      it('Invalid index', async function () {
         await expect(
-          this.sl.c(this.gov).tokenDisable(this.tokenDisable.address),
-        ).to.be.revertedWith('ALREADY_DISABLED');
+          this.sl.c(this.gov).tokenDisableStakers(this.tokenA.address, 1),
+        ).to.be.revertedWith('INDEX');
+      });
+      it('Invalid token', async function () {
+        await expect(
+          this.sl.c(this.gov).tokenDisableStakers(this.tokenC.address, 0),
+        ).to.be.revertedWith('INDEX');
       });
       it('Success', async function () {
-        await this.sl.c(this.gov).tokenDisable(this.tokenB.address);
+        await this.sl.c(this.gov).tokenDisableStakers(this.tokenB.address, 1);
+      });
+    });
+    describe('tokenDisableProtocol()', function () {
+      it('Invalid sender', async function () {
+        await expect(this.sl.tokenDisableProtocol(this.tokenA.address, 0)).to.be.revertedWith(
+          'NOT_GOV_INS',
+        );
+      });
+      it('Invalid index', async function () {
+        await expect(
+          this.sl.c(this.gov).tokenDisableProtocol(this.tokenA.address, 1),
+        ).to.be.revertedWith('INDEX');
+      });
+      it('Invalid token', async function () {
+        await expect(
+          this.sl.c(this.gov).tokenDisableProtocol(this.tokenC.address, 0),
+        ).to.be.revertedWith('INDEX');
+      });
+      it('Success', async function () {
+        await this.sl.c(this.gov).tokenDisableProtocol(this.tokenB.address, 1);
       });
     });
     describe('tokenRemove()', function () {
       it('Invalid sender', async function () {
-        await expect(
-          this.sl.tokenRemove(this.tokenA.address, 0, this.gov.address),
-        ).to.be.revertedWith('NOT_GOV_INS');
+        await expect(this.sl.tokenRemove(this.tokenA.address, this.gov.address)).to.be.revertedWith(
+          'NOT_GOV_INS',
+        );
       });
       it('Invalid token', async function () {
         await expect(
-          this.sl.c(this.gov).tokenRemove(this.tokenB.address, 0, this.gov.address),
-        ).to.be.revertedWith('INDEX');
+          this.sl.c(this.gov).tokenRemove(this.tokenC.address, this.gov.address),
+        ).to.be.revertedWith('EMPTY');
       });
       it('Invalid token (zero)', async function () {
         await expect(
-          this.sl.c(this.gov).tokenRemove(constants.AddressZero, 0, this.gov.address),
-        ).to.be.revertedWith('INDEX');
-      });
-      it('Invalid index', async function () {
-        await expect(this.sl.c(this.gov).tokenRemove(this.tokenA.address, 1, this.gov.address)).to
-          .be.reverted;
+          this.sl.c(this.gov).tokenRemove(constants.AddressZero, this.gov.address),
+        ).to.be.revertedWith('EMPTY');
       });
       it('Invalid to', async function () {
         await expect(
-          this.sl.c(this.gov).tokenRemove(this.tokenA.address, 0, constants.AddressZero),
+          this.sl.c(this.gov).tokenRemove(this.tokenA.address, constants.AddressZero),
         ).to.be.revertedWith('ZERO_TO');
       });
       it('Not disabled', async function () {
         await expect(
-          this.sl.c(this.gov).tokenRemove(this.tokenA.address, 0, this.gov.address),
-        ).to.be.revertedWith('DISABLE_FIRST');
+          this.sl.c(this.gov).tokenRemove(this.tokenA.address, this.gov.address),
+        ).to.be.revertedWith('STAKES_SET');
       });
       it('Success', async function () {
-        await this.sl.c(this.gov).tokenRemove(this.tokenB.address, 2, this.gov.address);
+        await this.sl.c(this.gov).tokenRemove(this.tokenB.address, this.gov.address);
       });
     });
   });
@@ -1018,18 +1044,6 @@ describe('Stateless', function () {
     describe('getGovPayout()', function () {});
   });
   describe('Pool ─ State Changing', function () {
-    describe('setStake()', function () {
-      it('Invalid sender', async function () {
-        await expect(this.sl.setStake(false, this.tokenA.address)).to.be.revertedWith(
-          'NOT_GOV_INS',
-        );
-      });
-      it('Invalid stake', async function () {
-        await expect(this.sl.c(this.gov).setStake(true, this.tokenA.address)).to.be.revertedWith(
-          'INVALID',
-        );
-      });
-    });
     describe('setCooldownFee()', function () {
       it('Invalid sender', async function () {
         await expect(
@@ -1304,7 +1318,7 @@ describe('Stateless', function () {
       it('Invalid token', async function () {
         await expect(
           this.sl.c(this.gov).setWeights([this.tokenB.address], [1], 0),
-        ).to.be.revertedWith('INIT');
+        ).to.be.revertedWith('DISABLED');
       });
       it('Invalid lengths', async function () {
         await expect(this.sl.c(this.gov).setWeights([], [1], 0)).to.be.revertedWith('LENGTH');

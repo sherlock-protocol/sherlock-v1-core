@@ -100,7 +100,7 @@ describe('Gov', function () {
       await timeTraveler.revertSnapshot();
       await this.sl
         .c(this.gov)
-        .tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address, true);
+        .tokenInit(this.tokenA.address, this.gov.address, this.lockA.address, true);
     });
     it('Initial state', async function () {
       expect(await this.sl.getProtocolIsCovered(this.protocolX)).to.eq(false);
@@ -128,7 +128,7 @@ describe('Gov', function () {
       await timeTraveler.revertSnapshot();
       await this.sl
         .c(this.gov)
-        .tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address, true);
+        .tokenInit(this.tokenA.address, this.gov.address, this.lockA.address, true);
       await this.sl
         .c(this.gov)
         .protocolAdd(this.protocolX, this.alice.address, this.bob.address, [this.tokenA.address]);
@@ -146,10 +146,10 @@ describe('Gov', function () {
       await timeTraveler.revertSnapshot();
       await this.sl
         .c(this.gov)
-        .tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address, true);
+        .tokenInit(this.tokenA.address, this.gov.address, this.lockA.address, true);
       await this.sl
         .c(this.gov)
-        .tokenAdd(this.tokenB.address, this.lockB.address, this.gov.address, true);
+        .tokenInit(this.tokenB.address, this.gov.address, this.lockB.address, true);
       await this.sl
         .c(this.gov)
         .protocolAdd(this.protocolX, this.alice.address, this.bob.address, [this.tokenA.address]);
@@ -172,7 +172,7 @@ describe('Gov', function () {
       await timeTraveler.revertSnapshot();
       await this.sl
         .c(this.gov)
-        .tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address, true);
+        .tokenInit(this.tokenA.address, this.gov.address, this.lockA.address, true);
       await this.sl
         .c(this.gov)
         .protocolAdd(this.protocolX, this.alice.address, this.bob.address, [this.tokenA.address]);
@@ -195,7 +195,7 @@ describe('Gov', function () {
 
       await this.sl
         .c(this.gov)
-        .tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address, true);
+        .tokenInit(this.tokenA.address, this.gov.address, this.lockA.address, true);
       await this.sl
         .c(this.gov)
         .protocolAdd(this.protocolX, this.gov.address, this.gov.address, [this.tokenA.address]);
@@ -250,64 +250,150 @@ describe('Gov', function () {
       expect(await this.sl.isProtocol(this.protocolX, this.tokenA.address)).to.eq(false);
     });
   });
-  describe('tokenAdd()', function () {
+  describe('tokenInit()', function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
     });
     it('Do', async function () {
       await this.sl
         .c(this.gov)
-        .tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address, true);
+        .tokenInit(this.tokenA.address, this.gov.address, this.lockA.address, true);
 
-      const tokens = await this.sl.getTokens();
-      expect(tokens.length).to.eq(1);
-      expect(tokens[0]).to.eq(this.tokenA.address);
+      const tokensStaker = await this.sl.getTokensStaker();
+      expect(tokensStaker.length).to.eq(1);
+      expect(tokensStaker[0]).to.eq(this.tokenA.address);
 
-      expect(await this.sl.isInitialized(this.tokenA.address)).to.eq(true);
+      const tokensProtocol = await this.sl.getTokensProtocol();
+      expect(tokensProtocol.length).to.eq(1);
+      expect(tokensProtocol[0]).to.eq(this.tokenA.address);
+
       expect(await this.sl.isStake(this.tokenA.address)).to.eq(true);
+      expect(await this.sl.isPremium(this.tokenA.address)).to.eq(true);
       expect(await this.sl.getGovPool(this.tokenA.address)).to.eq(this.gov.address);
       expect(await this.sl.getLockToken(this.tokenA.address)).to.eq(this.lockA.address);
     });
     it('Do 2', async function () {
       await this.sl
         .c(this.gov)
-        .tokenAdd(this.tokenB.address, this.lockB.address, this.gov.address, false);
+        .tokenInit(this.tokenB.address, this.gov.address, this.lockB.address, false);
 
-      const tokens = await this.sl.getTokens();
-      expect(tokens.length).to.eq(2);
-      expect(tokens[0]).to.eq(this.tokenA.address);
-      expect(tokens[1]).to.eq(this.tokenB.address);
+      const tokensStaker = await this.sl.getTokensStaker();
+      expect(tokensStaker.length).to.eq(2);
+      expect(tokensStaker[0]).to.eq(this.tokenA.address);
+      expect(tokensStaker[1]).to.eq(this.tokenB.address);
 
-      expect(await this.sl.isStake(this.tokenB.address)).to.eq(false);
+      const tokensProtocol = await this.sl.getTokensProtocol();
+      expect(tokensProtocol.length).to.eq(1);
+      expect(tokensProtocol[0]).to.eq(this.tokenA.address);
+
+      expect(await this.sl.isStake(this.tokenB.address)).to.eq(true);
+      expect(await this.sl.isPremium(this.tokenB.address)).to.eq(false);
+      expect(await this.sl.getGovPool(this.tokenB.address)).to.eq(this.gov.address);
+      expect(await this.sl.getLockToken(this.tokenB.address)).to.eq(this.lockB.address);
+    });
+    it('Do 3', async function () {
+      await this.sl
+        .c(this.gov)
+        .tokenInit(this.tokenC.address, this.gov.address, constants.AddressZero, true);
+
+      const tokensStaker = await this.sl.getTokensStaker();
+      expect(tokensStaker.length).to.eq(2);
+      expect(tokensStaker[0]).to.eq(this.tokenA.address);
+      expect(tokensStaker[1]).to.eq(this.tokenB.address);
+
+      const tokensProtocol = await this.sl.getTokensProtocol();
+      expect(tokensProtocol.length).to.eq(2);
+      expect(tokensProtocol[0]).to.eq(this.tokenA.address);
+      expect(tokensProtocol[1]).to.eq(this.tokenC.address);
+
+      expect(await this.sl.isStake(this.tokenC.address)).to.eq(false);
+      expect(await this.sl.isPremium(this.tokenC.address)).to.eq(true);
+      expect(await this.sl.getGovPool(this.tokenC.address)).to.eq(this.gov.address);
+      expect(await this.sl.getLockToken(this.tokenC.address)).to.eq(constants.AddressZero);
     });
   });
-  describe('tokenDisable()', function () {
+  describe('tokenInit() - reinit', function () {
+    before(async function () {
+      await timeTraveler.revertSnapshot();
+
+      await this.sl
+        .c(this.gov)
+        .tokenInit(this.tokenA.address, this.gov.address, this.lockA.address, true);
+    });
+    it('Do stake reenable', async function () {
+      await this.sl.c(this.gov).tokenDisableStakers(this.tokenA.address, 0);
+
+      await this.sl
+        .c(this.gov)
+        .tokenInit(this.tokenA.address, constants.AddressZero, this.lockA.address, false);
+
+      const tokensStaker = await this.sl.getTokensStaker();
+      expect(tokensStaker.length).to.eq(1);
+      expect(tokensStaker[0]).to.eq(this.tokenA.address);
+
+      const tokensProtocol = await this.sl.getTokensProtocol();
+      expect(tokensProtocol.length).to.eq(1);
+      expect(tokensProtocol[0]).to.eq(this.tokenA.address);
+
+      expect(await this.sl.isStake(this.tokenA.address)).to.eq(true);
+      expect(await this.sl.isPremium(this.tokenA.address)).to.eq(true);
+      expect(await this.sl.getGovPool(this.tokenA.address)).to.eq(this.gov.address);
+      expect(await this.sl.getLockToken(this.tokenA.address)).to.eq(this.lockA.address);
+    });
+    it('Do protocol reenable', async function () {
+      await this.sl.c(this.gov).tokenDisableProtocol(this.tokenA.address, 0);
+
+      await this.sl
+        .c(this.gov)
+        .tokenInit(this.tokenA.address, constants.AddressZero, constants.AddressZero, true);
+
+      const tokensStaker = await this.sl.getTokensStaker();
+      expect(tokensStaker.length).to.eq(1);
+      expect(tokensStaker[0]).to.eq(this.tokenA.address);
+
+      const tokensProtocol = await this.sl.getTokensProtocol();
+      expect(tokensProtocol.length).to.eq(1);
+      expect(tokensProtocol[0]).to.eq(this.tokenA.address);
+
+      expect(await this.sl.isStake(this.tokenA.address)).to.eq(true);
+      expect(await this.sl.isPremium(this.tokenA.address)).to.eq(true);
+      expect(await this.sl.getGovPool(this.tokenA.address)).to.eq(this.gov.address);
+      expect(await this.sl.getLockToken(this.tokenA.address)).to.eq(this.lockA.address);
+    });
+    it('Do gov reinit', async function () {
+      await this.sl
+        .c(this.gov)
+        .tokenInit(this.tokenA.address, this.bob.address, constants.AddressZero, false);
+
+      expect(await this.sl.getGovPool(this.tokenA.address)).to.eq(this.bob.address);
+    });
+  });
+  describe('tokenDisableStakers()', function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
       await this.sl
         .c(this.gov)
-        .tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address, true);
+        .tokenInit(this.tokenA.address, this.gov.address, this.lockA.address, true);
     });
     it('Do', async function () {
-      await this.sl.c(this.gov).tokenDisable(this.tokenA.address);
+      await this.sl.c(this.gov).tokenDisableStakers(this.tokenA.address, 0);
 
-      const tokens = await this.sl.getTokens();
-      expect(tokens.length).to.eq(1);
-      expect(tokens[0]).to.eq(this.tokenA.address);
+      const tokensStaker = await this.sl.getTokensStaker();
+      expect(tokensStaker.length).to.eq(0);
 
-      expect(await this.sl.isInitialized(this.tokenA.address)).to.eq(true);
       expect(await this.sl.isStake(this.tokenA.address)).to.eq(false);
+      expect(await this.sl.isPremium(this.tokenA.address)).to.eq(true);
       expect(await this.sl.getGovPool(this.tokenA.address)).to.eq(this.gov.address);
       expect(await this.sl.getLockToken(this.tokenA.address)).to.eq(this.lockA.address);
     });
   });
-  describe('tokenDisable() ─ Active weight', function () {
+  describe('tokenDisableStakers() ─ Active weight', function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
 
       await this.sl
         .c(this.gov)
-        .tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address, true);
+        .tokenInit(this.tokenA.address, this.gov.address, this.lockA.address, true);
       await this.sl
         .c(this.gov)
         .protocolAdd(this.protocolX, this.gov.address, this.gov.address, [this.tokenA.address]);
@@ -316,9 +402,93 @@ describe('Gov', function () {
       await this.sl.c(this.gov).setWeights([this.tokenA.address], [parseEther('1')], 0);
     });
     it('Do', async function () {
-      await expect(this.sl.c(this.gov).tokenDisable(this.tokenA.address)).to.be.revertedWith(
-        'ACTIVE_WEIGHT',
+      await expect(
+        this.sl.c(this.gov).tokenDisableStakers(this.tokenA.address, 0),
+      ).to.be.revertedWith('ACTIVE_WEIGHT');
+    });
+  });
+  describe('tokenDisableProtocol()', function () {
+    before(async function () {
+      await timeTraveler.revertSnapshot();
+      await this.sl
+        .c(this.gov)
+        .tokenInit(this.tokenA.address, this.gov.address, this.lockA.address, true);
+    });
+    it('Do', async function () {
+      await this.sl.c(this.gov).tokenDisableProtocol(this.tokenA.address, 0);
+
+      const tokensProtocol = await this.sl.getTokensProtocol();
+      expect(tokensProtocol.length).to.eq(0);
+
+      expect(await this.sl.isStake(this.tokenA.address)).to.eq(true);
+      expect(await this.sl.isPremium(this.tokenA.address)).to.eq(false);
+      expect(await this.sl.getGovPool(this.tokenA.address)).to.eq(this.gov.address);
+      expect(await this.sl.getLockToken(this.tokenA.address)).to.eq(this.lockA.address);
+    });
+  });
+  describe('tokenDisableProtocol() ─ Active Premium', function () {
+    before(async function () {
+      await timeTraveler.revertSnapshot();
+
+      await this.sl
+        .c(this.gov)
+        .tokenInit(this.tokenA.address, this.gov.address, this.lockA.address, true);
+      await this.sl
+        .c(this.gov)
+        .protocolAdd(this.protocolX, this.gov.address, this.gov.address, [this.tokenA.address]);
+      await this.sl
+        .c(this.gov)
+        ['setProtocolPremiumAndTokenPrice(bytes32,address,uint256,uint256)'](
+          this.protocolX,
+          this.tokenA.address,
+          parseEther('1'),
+          parseEther('1'),
+        );
+    });
+    it('Do', async function () {
+      await expect(
+        this.sl.c(this.gov).tokenDisableProtocol(this.tokenA.address, 0),
+      ).to.be.revertedWith('ACTIVE_PREMIUM');
+    });
+  });
+  describe('tokenDisableProtocol() ─ Active SherX', function () {
+    before(async function () {
+      await timeTraveler.revertSnapshot();
+      await this.tokenA.approve(this.sl.address, parseEther('1000'));
+      await this.sl
+        .c(this.gov)
+        .tokenInit(this.tokenA.address, this.gov.address, this.lockA.address, true);
+      await this.sl
+        .c(this.gov)
+        .protocolAdd(this.protocolX, this.gov.address, this.gov.address, [this.tokenA.address]);
+      await this.sl.depositProtocolBalance(
+        this.protocolX,
+        parseUnits('100', this.tokenA.dec),
+        this.tokenA.address,
       );
+      await this.sl
+        .c(this.gov)
+        ['setProtocolPremiumAndTokenPrice(bytes32,address,uint256,uint256)'](
+          this.protocolX,
+          this.tokenA.address,
+          parseEther('1'),
+          parseEther('1'),
+        );
+      await this.sl.c(this.gov).setWatsonsAddress(this.alice.address);
+      await this.sl.c(this.gov).setInitialWeight();
+      await this.sl
+        .c(this.gov)
+        ['setProtocolPremiumAndTokenPrice(bytes32,address,uint256,uint256)'](
+          this.protocolX,
+          this.tokenA.address,
+          0,
+          0,
+        );
+    });
+    it('Do', async function () {
+      await expect(
+        this.sl.c(this.gov).tokenDisableProtocol(this.tokenA.address, 0),
+      ).to.be.revertedWith('ACTIVE_SHERX');
     });
   });
   describe('tokenRemove()', function () {
@@ -326,16 +496,12 @@ describe('Gov', function () {
       await timeTraveler.revertSnapshot();
       await this.sl
         .c(this.gov)
-        .tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address, true);
-      await this.sl.c(this.gov).tokenDisable(this.tokenA.address);
+        .tokenInit(this.tokenA.address, this.gov.address, constants.AddressZero, false);
     });
     it('Do', async function () {
-      await this.sl.c(this.gov).tokenRemove(this.tokenA.address, 0, this.alice.address);
+      await this.sl.c(this.gov).tokenRemove(this.tokenA.address, this.alice.address);
 
-      const tokens = await this.sl.getTokens();
-      expect(tokens.length).to.eq(0);
-
-      await expect(this.sl.isInitialized(this.tokenA.address)).to.be.revertedWith('INVALID_TOKEN');
+      await expect(this.sl.isPremium(this.tokenA.address)).to.be.revertedWith('INVALID_TOKEN');
     });
   });
   describe('tokenRemove() ─ Active protocol', function () {
@@ -344,41 +510,16 @@ describe('Gov', function () {
 
       await this.sl
         .c(this.gov)
-        .tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address, true);
+        .tokenInit(this.tokenA.address, this.gov.address, constants.AddressZero, true);
       await this.sl
         .c(this.gov)
         .protocolAdd(this.protocolX, this.gov.address, this.gov.address, [this.tokenA.address]);
-      await this.sl.c(this.gov).tokenDisable(this.tokenA.address);
+      await this.sl.c(this.gov).tokenDisableProtocol(this.tokenA.address, 0);
     });
     it('Do', async function () {
       await expect(
-        this.sl.c(this.gov).tokenRemove(this.tokenA.address, 0, this.alice.address),
+        this.sl.c(this.gov).tokenRemove(this.tokenA.address, this.alice.address),
       ).to.be.revertedWith('ACTIVE_PROTOCOLS');
-    });
-  });
-  describe('tokenRemove() ─ Active premium', function () {
-    before(async function () {
-      await timeTraveler.revertSnapshot();
-
-      await this.sl
-        .c(this.gov)
-        .tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address, true);
-      await this.sl
-        .c(this.gov)
-        .protocolAdd(this.protocolX, this.gov.address, this.gov.address, [this.tokenA.address]);
-      await this.sl
-        .c(this.gov)
-        ['setProtocolPremiumAndTokenPrice(bytes32,address[],uint256[],uint256[])'](
-          this.protocolX,
-          [this.tokenA.address],
-          [1],
-          [1],
-        );
-    });
-    it('Do', async function () {
-      await expect(
-        this.sl.c(this.gov).tokenRemove(this.tokenA.address, 0, this.alice.address),
-      ).to.be.revertedWith('ACTIVE_PREMIUM');
     });
   });
 });

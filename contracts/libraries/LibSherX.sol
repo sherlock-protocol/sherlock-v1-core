@@ -67,13 +67,13 @@ library LibSherX {
     GovStorage.Base storage gs = GovStorage.gs();
     SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
 
-    tokens = new IERC20[](gs.tokens.length);
-    amounts = new uint256[](gs.tokens.length);
+    tokens = new IERC20[](gs.tokensProtocol.length);
+    amounts = new uint256[](gs.tokensProtocol.length);
 
     uint256 total = getTotalSherX();
 
-    for (uint256 i; i < gs.tokens.length; i++) {
-      IERC20 token = gs.tokens[i];
+    for (uint256 i; i < gs.tokensProtocol.length; i++) {
+      IERC20 token = gs.tokensProtocol[i];
       tokens[i] = token;
 
       if (total > 0) {
@@ -101,8 +101,8 @@ library LibSherX {
       return;
     }
 
-    for (uint256 i; i < gs.tokens.length; i++) {
-      IERC20 token = gs.tokens[i];
+    for (uint256 i; i < gs.tokensStaker.length; i++) {
+      IERC20 token = gs.tokensStaker[i];
 
       PoolStorage.Base storage ps = PoolStorage.ps(address(token));
 

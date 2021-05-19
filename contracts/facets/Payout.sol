@@ -127,7 +127,7 @@ contract Payout is IPayout {
       uint256 unallocatedSherX = _unallocatedSherX[i];
 
       PoolStorage.Base storage ps = PoolStorage.ps(address(token));
-      require(ps.initialized, 'INIT');
+      require(ps.govPool != address(0), 'INIT');
       require(ps.unallocatedSherX >= unallocatedSherX, 'ERR_UNALLOC_FEE');
 
       if (unallocatedSherX > 0) {

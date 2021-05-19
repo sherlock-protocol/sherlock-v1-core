@@ -26,9 +26,11 @@ describe('SherX', function () {
     // Add tokenA as valid token
     await this.sl
       .c(this.gov)
-      .tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address, false);
+      .tokenInit(this.tokenA.address, this.gov.address, constants.AddressZero, true);
 
-    await this.sl.c(this.gov).tokenAdd(this.sl.address, this.lockX.address, this.gov.address, true);
+    await this.sl
+      .c(this.gov)
+      .tokenInit(this.sl.address, this.gov.address, this.lockX.address, true);
 
     await this.sl
       .c(this.gov)
@@ -55,7 +57,9 @@ describe('SherX', function () {
       await expect(this.sl.c(this.gov).setInitialWeight()).to.be.revertedWith('ALREADY_INIT');
     });
     it('Do twice, with move', async function () {
-      await this.sl.c(this.gov).setStake(true, this.tokenA.address);
+      await this.sl
+        .c(this.gov)
+        .tokenInit(this.tokenA.address, constants.AddressZero, this.lockA.address, false);
       await this.sl.c(this.gov).setWeights([this.tokenA.address], [parseEther('1')], 0);
 
       await expect(this.sl.c(this.gov).setInitialWeight()).to.be.revertedWith('ALREADY_INIT_2');
@@ -67,8 +71,10 @@ describe('SherX', function () {
       await timeTraveler.revertSnapshot();
       await this.sl
         .c(this.gov)
-        .tokenAdd(this.tokenB.address, this.lockB.address, this.gov.address, false);
-      await this.sl.c(this.gov).setStake(true, this.tokenA.address);
+        .tokenInit(this.tokenB.address, this.gov.address, constants.AddressZero, true);
+      await this.sl
+        .c(this.gov)
+        .tokenInit(this.tokenA.address, constants.AddressZero, this.lockA.address, false);
       await this.sl.c(this.gov).setWatsonsAddress(this.alice.address);
       await this.sl.c(this.gov).setInitialWeight();
     });
@@ -91,10 +97,12 @@ describe('SherX', function () {
     it('Do wrong', async function () {
       await expect(
         this.sl.c(this.gov).setWeights([this.tokenC.address], [parseEther('1')], 0),
-      ).to.be.revertedWith('INIT');
+      ).to.be.revertedWith('DISABLED');
     });
     it('Do tokenB, exceed sum', async function () {
-      await this.sl.c(this.gov).setStake(true, this.tokenB.address);
+      await this.sl
+        .c(this.gov)
+        .tokenInit(this.tokenB.address, constants.AddressZero, this.lockB.address, false);
 
       await expect(
         this.sl
@@ -187,7 +195,9 @@ describe('SherX', function () {
   describe('harvestFor(address,address)', function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
-      await this.sl.c(this.gov).setStake(true, this.tokenA.address);
+      await this.sl
+        .c(this.gov)
+        .tokenInit(this.tokenA.address, constants.AddressZero, this.lockA.address, false);
       await this.sl.c(this.gov).setWatsonsAddress(this.alice.address);
       await this.sl.c(this.gov).setInitialWeight();
       this.bStart = await blockNumber(
@@ -314,13 +324,9 @@ describe('SherX', function () {
     });
     it('harvest()', async function () {
       const tx = this.sl['harvest()']();
-      await expect(tx)
-        .to.emit(this.sl, 'Harvest')
-        .withArgs(this.alice.address, this.lockA.address)
-        .to.emit(this.sl, 'Harvest')
-        .withArgs(this.alice.address, this.lockX.address);
+      await expect(tx).to.emit(this.sl, 'Harvest').withArgs(this.alice.address, this.lockX.address);
 
-      expect((await events(tx)).length).to.eq(2);
+      expect((await events(tx)).length).to.eq(1);
     });
     it('harvest(address)', async function () {
       const tx = this.sl['harvest(address)'](this.lockA.address);
@@ -334,12 +340,8 @@ describe('SherX', function () {
     });
     it('harvestFor(address)', async function () {
       const tx = this.sl['harvestFor(address)'](this.alice.address);
-      await expect(tx)
-        .to.emit(this.sl, 'Harvest')
-        .withArgs(this.alice.address, this.lockA.address)
-        .to.emit(this.sl, 'Harvest')
-        .withArgs(this.alice.address, this.lockX.address);
-      expect((await events(tx)).length).to.eq(2);
+      await expect(tx).to.emit(this.sl, 'Harvest').withArgs(this.alice.address, this.lockX.address);
+      expect((await events(tx)).length).to.eq(1);
     });
     it('harvestFor(address,address)', async function () {
       const tx = this.sl['harvestFor(address,address)'](this.alice.address, this.lockA.address);
@@ -361,7 +363,7 @@ describe('SherX', function () {
       await this.tokenB.approve(this.sl.address, parseUnits('10000', this.tokenB.dec));
       await this.sl
         .c(this.gov)
-        .tokenAdd(this.tokenB.address, this.lockB.address, this.gov.address, false);
+        .tokenInit(this.tokenB.address, this.gov.address, constants.AddressZero, true);
       await this.sl.c(this.gov).protocolDepositAdd(this.protocolX, [this.tokenB.address]);
       await this.sl.depositProtocolBalance(
         this.protocolX,
@@ -369,7 +371,9 @@ describe('SherX', function () {
         this.tokenB.address,
       );
 
-      await this.sl.c(this.gov).setStake(true, this.tokenA.address);
+      await this.sl
+        .c(this.gov)
+        .tokenInit(this.tokenA.address, constants.AddressZero, this.lockA.address, false);
       await this.sl.c(this.gov).setWatsonsAddress(this.alice.address);
       await this.sl.c(this.gov).setInitialWeight();
       await this.sl.c(this.gov).setWeights([this.tokenA.address], [parseEther('1')], 0);
@@ -480,7 +484,7 @@ describe('SherX', function () {
       await this.tokenB.approve(this.sl.address, parseEther('10000'));
       await this.sl
         .c(this.gov)
-        .tokenAdd(this.tokenB.address, this.lockB.address, this.gov.address, false);
+        .tokenInit(this.tokenB.address, this.gov.address, constants.AddressZero, true);
       await this.sl.c(this.gov).protocolDepositAdd(this.protocolX, [this.tokenB.address]);
       await this.sl.depositProtocolBalance(
         this.protocolX,
@@ -488,7 +492,9 @@ describe('SherX', function () {
         this.tokenB.address,
       );
 
-      await this.sl.c(this.gov).setStake(true, this.tokenA.address);
+      await this.sl
+        .c(this.gov)
+        .tokenInit(this.tokenA.address, constants.AddressZero, this.lockA.address, false);
       await this.sl.c(this.gov).setWatsonsAddress(this.alice.address);
       await this.sl.c(this.gov).setInitialWeight();
       await this.sl.c(this.gov).setWeights([this.tokenA.address], [parseEther('1')], 0);
@@ -593,7 +599,7 @@ describe('SherX', function () {
       await this.tokenB.approve(this.sl.address, parseUnits('10000', this.tokenB.dec));
       await this.sl
         .c(this.gov)
-        .tokenAdd(this.tokenB.address, this.lockB.address, this.gov.address, false);
+        .tokenInit(this.tokenB.address, this.gov.address, constants.AddressZero, true);
       await this.sl.c(this.gov).protocolDepositAdd(this.protocolX, [this.tokenB.address]);
       await this.sl.depositProtocolBalance(
         this.protocolX,
@@ -601,7 +607,9 @@ describe('SherX', function () {
         this.tokenB.address,
       );
 
-      await this.sl.c(this.gov).setStake(true, this.tokenA.address);
+      await this.sl
+        .c(this.gov)
+        .tokenInit(this.tokenA.address, constants.AddressZero, this.lockA.address, false);
       await this.sl.c(this.gov).setWatsonsAddress(this.alice.address);
       await this.sl.c(this.gov).setInitialWeight();
       await this.sl.c(this.gov).setWeights([this.tokenA.address], [parseEther('1')], 0);
@@ -708,7 +716,9 @@ describe('SherX', function () {
   describe('watsons payout', function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
-      await this.sl.c(this.gov).setStake(true, this.tokenA.address);
+      await this.sl
+        .c(this.gov)
+        .tokenInit(this.tokenA.address, constants.AddressZero, this.lockA.address, false);
       await this.sl.c(this.gov).setWatsonsAddress(this.carol.address);
       await this.sl.c(this.gov).setInitialWeight();
       this.b0 = await blockNumber(

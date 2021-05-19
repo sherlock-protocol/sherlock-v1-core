@@ -61,10 +61,12 @@ describe('SherXERC20 - Active', function () {
     // Add tokenA as valid token
     await this.sl
       .c(this.gov)
-      .tokenAdd(this.tokenA.address, this.lockA.address, this.gov.address, true);
+      .tokenInit(this.tokenA.address, this.gov.address, this.lockA.address, true);
 
     // Add SherX token as valid tokens
-    await this.sl.c(this.gov).tokenAdd(this.sl.address, this.lockX.address, this.gov.address, true);
+    await this.sl
+      .c(this.gov)
+      .tokenInit(this.sl.address, this.gov.address, this.lockX.address, true);
 
     // Add protocol and allow to pay in tokenA
     await this.sl

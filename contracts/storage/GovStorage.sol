@@ -21,7 +21,8 @@ library GovStorage {
     uint256 unstakeCooldown;
     uint256 unstakeWindow;
     mapping(bytes32 => bool) protocolIsCovered;
-    IERC20[] tokens;
+    IERC20[] tokensStaker;
+    IERC20[] tokensProtocol;
     address watsonsAddress;
     uint256 watsonsSherxWeight;
   }

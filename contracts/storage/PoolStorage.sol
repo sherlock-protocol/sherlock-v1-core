@@ -18,27 +18,33 @@ library PoolStorage {
 
   struct Base {
     address govPool;
-    bool initialized;
-    // TODO find out how AlchemiX can pay a token, but people are not able to stake it
+    //
+    // Staking
+    //
     bool stakes;
+    ILock lockToken;
+    uint256 activateCooldownFee;
     uint256 stakeBalance;
+    mapping(address => UnstakeEntry[]) unstakeEntries;
     uint256 firstMoneyOut;
     uint256 unallocatedSherX;
+    // How much sherX is distributed to stakers of this token
+    uint256 sherXWeight;
+    // Non-native variables
+    mapping(address => uint256) sWithdrawn;
+    uint256 sWeight;
+    //
+    // Protocol payments
+    //
+    bool premiums;
     mapping(bytes32 => uint256) protocolBalance;
     mapping(bytes32 => uint256) protocolPremium;
     uint256 totalPremiumPerBlock;
     uint256 totalPremiumLastPaid;
-    // how much token (this) is available for sherX holders
+    // How much token (this) is available for sherX holders
     uint256 sherXUnderlying;
-    // non-native variables
-    mapping(address => uint256) sWithdrawn;
-    uint256 sWeight;
-    uint256 sherXWeight;
-    mapping(address => UnstakeEntry[]) unstakeEntries;
-    ILock lockToken;
     mapping(bytes32 => bool) isProtocol;
     bytes32[] protocols;
-    uint256 activateCooldownFee;
   }
 
   struct UnstakeEntry {
