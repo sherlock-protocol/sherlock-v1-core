@@ -4,6 +4,8 @@ pragma solidity ^0.7.1;
 /******************************************************************************\
 * Author: Evert Kors <dev@sherlock.xyz> (https://twitter.com/evert0x)
 * Sherlock Protocol: https://sherlock.xyz
+
+* Inspired by: https://github.com/pie-dao/PieVaults/blob/master/contracts/facets/ERC20/ERC20Facet.sol
 /******************************************************************************/
 
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';

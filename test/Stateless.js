@@ -1429,6 +1429,19 @@ describe('Stateless', function () {
         await this.sl.c(this.gov).decreaseApproval(this.alice.address, 1);
       });
     });
+    describe('approve()', function () {
+      it('Invalid spender', async function () {
+        await expect(this.sl.approve(constants.AddressZero, 1)).to.be.revertedWith('SPENDER');
+      });
+    });
+    describe('transfer()', function () {});
+    describe('transferFrom()', function () {
+      it('Invalid from', async function () {
+        await expect(
+          this.sl.transferFrom(constants.AddressZero, constants.AddressZero, 0),
+        ).to.be.revertedWith('FROM');
+      });
+    });
     // TODO test other erc20 methods
   });
   describe('ISherXERC20 ─ View Methods', function () {
