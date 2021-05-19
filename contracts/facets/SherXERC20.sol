@@ -14,7 +14,7 @@ import '../interfaces/ISherXERC20.sol';
 
 import '../libraries/LibSherXERC20.sol';
 
-import '../storage/LibSherXERC20.sol';
+import '../storage/SherXERC20Storage.sol';
 
 contract SherXERC20 is IERC20, ISherXERC20 {
   using SafeMath for uint256;

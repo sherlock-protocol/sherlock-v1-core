@@ -20,7 +20,7 @@ import '../libraries/LibPool.sol';
 import '../libraries/LibSherX.sol';
 import '../libraries/LibSherXERC20.sol';
 
-import '../storage/LibSherXERC20.sol';
+import '../storage/SherXERC20Storage.sol';
 
 contract SherX is ISherX {
   using SafeMath for uint256;

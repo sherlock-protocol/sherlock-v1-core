@@ -12,9 +12,9 @@ import '@openzeppelin/contracts/math/SafeMath.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 
-import '../storage/LibGov.sol';
-import '../storage/LibPool.sol';
-import '../storage/LibSherX.sol';
+import '../storage/GovStorage.sol';
+import '../storage/PoolStorage.sol';
+import '../storage/SherXStorage.sol';
 
 library LibPool {
   using SafeMath for uint256;

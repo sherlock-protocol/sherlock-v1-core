@@ -6,7 +6,7 @@ pragma solidity ^0.7.4;
 * Sherlock Protocol: https://sherlock.xyz
 /******************************************************************************/
 
-import '../storage/LibSherXERC20.sol';
+import '../storage/SherXERC20Storage.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/math/SafeMath.sol';
 

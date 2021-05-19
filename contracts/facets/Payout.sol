@@ -18,8 +18,8 @@ import '../interfaces/IPayout.sol';
 import '../libraries/LibSherX.sol';
 import '../libraries/LibSherXERC20.sol';
 
-import '../storage/LibPayout.sol';
-import '../storage/LibGov.sol';
+import '../storage/PayoutStorage.sol';
+import '../storage/GovStorage.sol';
 
 contract Payout is IPayout {
   using SafeMath for uint256;

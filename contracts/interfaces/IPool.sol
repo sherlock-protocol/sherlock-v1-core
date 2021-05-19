@@ -7,7 +7,7 @@ pragma abicoder v2;
 * Sherlock Protocol: https://sherlock.xyz
 /******************************************************************************/
 
-import '../storage/LibPool.sol';
+import '../storage/PoolStorage.sol';
 
 interface IPool {
   //

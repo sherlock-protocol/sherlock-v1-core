@@ -16,9 +16,9 @@ import 'diamond-2/contracts/libraries/LibDiamond.sol';
 
 import '../interfaces/IGov.sol';
 
-import '../storage/LibGov.sol';
-import '../storage/LibPool.sol';
-import '../storage/LibSherX.sol';
+import '../storage/GovStorage.sol';
+import '../storage/PoolStorage.sol';
+import '../storage/SherXStorage.sol';
 
 contract Gov is IGov {
   using SafeMath for uint256;
