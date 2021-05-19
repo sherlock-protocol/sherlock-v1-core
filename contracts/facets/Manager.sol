@@ -40,6 +40,7 @@ contract Manager is IManager {
   //
 
   function setTokenPrice(IERC20 _token, uint256 _newUsd) external override onlyGovInsurance {
+    LibPool.payOffDebtAll(_token);
     (uint256 usdPerBlock, uint256 usdPool) = _getData();
     (usdPerBlock, usdPool) = _setTokenPrice(_token, _newUsd, usdPerBlock, usdPool);
     _setData(usdPerBlock, usdPool);
@@ -50,9 +51,11 @@ contract Manager is IManager {
     override
     onlyGovInsurance
   {
-    (uint256 usdPerBlock, uint256 usdPool) = _getData();
     require(_token.length == _newUsd.length, 'LENGTH');
+
+    (uint256 usdPerBlock, uint256 usdPool) = _getData();
     for (uint256 i; i < _token.length; i++) {
+      LibPool.payOffDebtAll(_token[i]);
       (usdPerBlock, usdPool) = _setTokenPrice(_token[i], _newUsd[i], usdPerBlock, usdPool);
     }
     _setData(usdPerBlock, usdPool);
@@ -63,6 +66,7 @@ contract Manager is IManager {
     IERC20 _token,
     uint256 _premium
   ) external override onlyGovInsurance {
+    LibPool.payOffDebtAll(_token);
     (uint256 usdPerBlock, uint256 usdPool) = _getData();
     (usdPerBlock, usdPool) = _setProtocolPremium(_protocol, _token, _premium, usdPerBlock, usdPool);
     _setData(usdPerBlock, usdPool);
@@ -73,9 +77,12 @@ contract Manager is IManager {
     IERC20[] memory _token,
     uint256[] memory _premium
   ) external override onlyGovInsurance {
-    (uint256 usdPerBlock, uint256 usdPool) = _getData();
     require(_token.length == _premium.length, 'LENGTH');
+
+    (uint256 usdPerBlock, uint256 usdPool) = _getData();
+
     for (uint256 i; i < _token.length; i++) {
+      LibPool.payOffDebtAll(_token[i]);
       (usdPerBlock, usdPool) = _setProtocolPremium(
         _protocol,
         _token[i],
@@ -92,13 +99,15 @@ contract Manager is IManager {
     IERC20[][] memory _token,
     uint256[][] memory _premium
   ) external override onlyGovInsurance {
-    (uint256 usdPerBlock, uint256 usdPool) = _getData();
     require(_protocol.length == _token.length, 'LENGTH_1');
     require(_protocol.length == _premium.length, 'LENGTH_2');
+
+    (uint256 usdPerBlock, uint256 usdPool) = _getData();
 
     for (uint256 i; i < _protocol.length; i++) {
       require(_token[i].length == _premium[i].length, 'LENGTH_3');
       for (uint256 j; j < _token[i].length; j++) {
+        LibPool.payOffDebtAll(_token[i][j]);
         (usdPerBlock, usdPool) = _setProtocolPremium(
           _protocol[i],
           _token[i][j],
@@ -117,6 +126,7 @@ contract Manager is IManager {
     uint256 _premium,
     uint256 _newUsd
   ) external override onlyGovInsurance {
+    LibPool.payOffDebtAll(_token);
     (uint256 usdPerBlock, uint256 usdPool) = _getData();
 
     (usdPerBlock, usdPool) = _setProtocolPremiumAndTokenPrice(
@@ -142,6 +152,7 @@ contract Manager is IManager {
     (uint256 usdPerBlock, uint256 usdPool) = _getData();
 
     for (uint256 i; i < _token.length; i++) {
+      LibPool.payOffDebtAll(_token[i]);
       (usdPerBlock, usdPool) = _setProtocolPremiumAndTokenPrice(
         _protocol,
         _token[i],
@@ -205,6 +216,7 @@ contract Manager is IManager {
       require(_token[i].length == _premium[i].length, 'LENGTH_4');
       require(_token[i].length == _newUsd[i].length, 'LENGTH_5');
       for (uint256 j; j < _token[i].length; j++) {
+        LibPool.payOffDebtAll(_token[i][j]);
         (usdPerBlock, usdPool) = _setProtocolPremiumAndTokenPrice(
           _protocol[i],
           _token[i][j],
@@ -285,8 +297,6 @@ contract Manager is IManager {
   ) private returns (uint256 oldPremium, uint256 newPremium) {
     require(ps.isProtocol[_protocol], 'NON_PROTOCOL');
 
-    LibPool.payOffDebtAll(_token);
-
     oldPremium = ps.totalPremiumPerBlock;
     newPremium = oldPremium.sub(ps.protocolPremium[_protocol]).add(_premium);
 
@@ -343,10 +353,12 @@ contract Manager is IManager {
     }
 
     // Dont change usdPool is prices are equal
-    if (_newUsd > _oldUsd) {
-      usdPool = usdPool.add(_newUsd.sub(_oldUsd).mul(ps.sherXUnderlying).div(10**18));
-    } else if (_newUsd < _oldUsd) {
-      usdPool = usdPool.sub(_oldUsd.sub(_newUsd).mul(ps.sherXUnderlying).div(10**18));
+    if (ps.sherXUnderlying > 0) {
+      if (_newUsd > _oldUsd) {
+        usdPool = usdPool.add(_newUsd.sub(_oldUsd).mul(ps.sherXUnderlying).div(10**18));
+      } else if (_newUsd < _oldUsd) {
+        usdPool = usdPool.sub(_oldUsd.sub(_newUsd).mul(ps.sherXUnderlying).div(10**18));
+      }
     }
 
     return (usdPerBlock, usdPool);
