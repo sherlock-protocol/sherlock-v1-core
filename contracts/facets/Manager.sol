@@ -31,7 +31,7 @@ contract Manager is IManager {
   }
 
   function onlyValidToken(PoolStorage.Base storage ps, IERC20 _token) private {
-    require(address(_token) != address(this), 'SELF');
+    require(address(_token) != address(this), 'SHERX');
     require(ps.initialized, 'WHITELIST');
   }
 

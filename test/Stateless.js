@@ -424,6 +424,11 @@ describe('Stateless', function () {
           this.sl['setTokenPrice(address,uint256)'](this.tokenA.address, parseEther('1')),
         ).to.be.revertedWith('NOT_GOV_INS');
       });
+      it('Invalid token (sherx)', async function () {
+        await expect(
+          this.sl.c(this.gov)['setTokenPrice(address,uint256)'](this.sl.address, parseEther('1')),
+        ).to.be.revertedWith('SHERX');
+      });
       it('Invalid token', async function () {
         await expect(
           this.sl
@@ -447,6 +452,13 @@ describe('Stateless', function () {
               [parseEther('2'), parseEther('1')],
             ),
         ).to.be.revertedWith('LENGTH');
+      });
+      it('Invalid token (sherx)', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            ['setTokenPrice(address[],uint256[])']([this.sl.address], [parseEther('2')]),
+        ).to.be.revertedWith('SHERX');
       });
       it('Invalid token', async function () {
         await expect(
@@ -476,6 +488,17 @@ describe('Stateless', function () {
               parseEther('1'),
             ),
         ).to.be.revertedWith('NON_PROTOCOL');
+      });
+      it('Invalid token (sherx)', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            ['setProtocolPremium(bytes32,address,uint256)'](
+              this.protocolX,
+              this.sl.address,
+              parseEther('1'),
+            ),
+        ).to.be.revertedWith('SHERX');
       });
       it('Invalid token', async function () {
         await expect(
@@ -520,6 +543,17 @@ describe('Stateless', function () {
               [parseEther('1')],
             ),
         ).to.be.revertedWith('NON_PROTOCOL');
+      });
+      it('Invalid token (sherx)', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            ['setProtocolPremium(bytes32,address[],uint256[])'](
+              this.nonProtocol2,
+              [this.sl.address],
+              [parseEther('1')],
+            ),
+        ).to.be.revertedWith('SHERX');
       });
       it('Invalid token', async function () {
         await expect(
@@ -587,6 +621,17 @@ describe('Stateless', function () {
             ),
         ).to.be.revertedWith('NON_PROTOCOL');
       });
+      it('Invalid token (sherx)', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            ['setProtocolPremium(bytes32[],address[][],uint256[][])'](
+              [this.protocolX],
+              [[this.sl.address]],
+              [[parseEther('1')]],
+            ),
+        ).to.be.revertedWith('SHERX');
+      });
       it('Invalid token', async function () {
         await expect(
           this.sl
@@ -621,6 +666,18 @@ describe('Stateless', function () {
               parseEther('2'),
             ),
         ).to.be.revertedWith('NON_PROTOCOL');
+      });
+      it('Invalid token (sherx)', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            ['setProtocolPremiumAndTokenPrice(bytes32,address,uint256,uint256)'](
+              this.protocolX,
+              this.sl.address,
+              parseEther('1'),
+              parseEther('2'),
+            ),
+        ).to.be.revertedWith('SHERX');
       });
       it('Invalid token', async function () {
         await expect(
@@ -682,6 +739,18 @@ describe('Stateless', function () {
             ),
         ).to.be.revertedWith('NON_PROTOCOL');
       });
+      it('Invalid token (sherx)', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            ['setProtocolPremiumAndTokenPrice(bytes32,address[],uint256[],uint256[])'](
+              this.protocolX,
+              [this.sl.address],
+              [parseEther('1')],
+              [parseEther('10')],
+            ),
+        ).to.be.revertedWith('SHERX');
+      });
       it('Invalid token', async function () {
         await expect(
           this.sl
@@ -729,6 +798,18 @@ describe('Stateless', function () {
               parseEther('10'),
             ),
         ).to.be.revertedWith('NON_PROTOCOL');
+      });
+      it('Invalid token (sherx)', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            ['setProtocolPremiumAndTokenPrice(bytes32[],address,uint256[],uint256)'](
+              [this.protocolX],
+              this.sl.address,
+              [parseEther('1')],
+              parseEther('10'),
+            ),
+        ).to.be.revertedWith('SHERX');
       });
       it('Invalid token', async function () {
         await expect(
@@ -825,6 +906,18 @@ describe('Stateless', function () {
               [[parseEther('10')]],
             ),
         ).to.be.revertedWith('NON_PROTOCOL');
+      });
+      it('Invalid token (sherx)', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            ['setProtocolPremiumAndTokenPrice(bytes32[],address[][],uint256[][],uint256[][])'](
+              [this.protocolX],
+              [[this.sl.address]],
+              [[parseEther('1')]],
+              [[parseEther('10')]],
+            ),
+        ).to.be.revertedWith('SHERX');
       });
       it('Invalid token', async function () {
         await expect(
