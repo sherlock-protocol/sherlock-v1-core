@@ -1456,7 +1456,6 @@ describe('Stateless', function () {
         ).to.be.revertedWith('FROM');
       });
     });
-    // TODO test other erc20 methods
   });
   describe('ISherXERC20 ─ View Methods', function () {
     describe('name()', function () {});

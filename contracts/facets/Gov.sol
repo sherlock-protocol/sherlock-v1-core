@@ -196,7 +196,7 @@ contract Gov is IGov {
       IERC20 token = gs.tokensProtocol[i];
 
       PoolStorage.Base storage ps = PoolStorage.ps(token);
-      // basically need to check if accruedDebt > 0, but this is true in case premium > 0
+      // basically need to check if accruedDebt > 0, but this is true in case protocolPremium > 0
       require(ps.protocolPremium[_protocol] == 0, 'DEBT');
       require(!ps.isProtocol[_protocol], 'POOL_PROTOCOL');
     }

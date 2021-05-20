@@ -206,7 +206,6 @@ contract Manager is IManager {
     uint256[][] memory _premium,
     uint256[][] memory _newUsd
   ) external override onlyGovInsurance {
-    // TODO could be setting _newUsd multiple times
     (uint256 usdPerBlock, uint256 usdPool) = _getData();
     require(_protocol.length == _token.length, 'LENGTH_1');
     require(_protocol.length == _premium.length, 'LENGTH_2');

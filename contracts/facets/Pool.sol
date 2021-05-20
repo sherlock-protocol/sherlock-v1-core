@@ -260,7 +260,6 @@ contract Pool is IPool {
     if (totalLock == 0 || ps.stakeBalance == 0) {
       revert('NO_DATA');
     }
-    // TODO what if _amount > totalLock
     return ps.stakeBalance.mul(_amount).div(totalLock);
   }
 
@@ -274,7 +273,6 @@ contract Pool is IPool {
     if (totalLock == 0 || ps.stakeBalance == 0) {
       return 10**18;
     }
-    // TODO what if _amount > ps.stakeBalance
     return totalLock.mul(_amount).div(ps.stakeBalance);
   }
 
@@ -332,7 +330,6 @@ contract Pool is IPool {
     address _receiver,
     IERC20 _token
   ) external override {
-    // TODO check if suprise withdrawals have negative effects on other parts of the logic
     require(msg.sender == GovStorage.gs().protocolAgents[_protocol], 'SENDER');
     require(_amount > 0, 'AMOUNT');
     require(_receiver != address(0), 'RECEIVER');
@@ -469,7 +466,7 @@ contract Pool is IPool {
       require(accrued > ps.protocolBalance[_protocol], 'CAN_NOT_DELETE2');
     }
 
-    // send the remained of the protocol balance to the stkaer pool
+    // send the remained of the protocol balance to the staker pool
     if (_forceDebt && accrued > 0) {
       ps.stakeBalance = ps.stakeBalance.add(ps.protocolBalance[_protocol]);
       delete ps.protocolBalance[_protocol];

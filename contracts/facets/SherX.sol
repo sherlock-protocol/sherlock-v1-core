@@ -157,15 +157,17 @@ contract SherX is ISherX {
     for (uint256 i; i < gs.tokensProtocol.length; i++) {
       IERC20 token = gs.tokensProtocol[i];
 
-      // TODO callstack
-      PoolStorage.Base storage ps = PoolStorage.ps(token);
-      uint256 _temp =
-        ps.sherXUnderlying.add(LibPool.getTotalAccruedDebt(token)).mul(_amount).mul(
-          sx.tokenUSD[token]
-        );
       if (total > 0) {
-        _temp = _temp.div(10**18).div(total);
-        usd = usd.add(_temp);
+        usd = usd.add(
+          PoolStorage
+            .ps(token)
+            .sherXUnderlying
+            .add(LibPool.getTotalAccruedDebt(token))
+            .mul(_amount)
+            .mul(sx.tokenUSD[token])
+            .div(10**18)
+            .div(total)
+        );
       }
     }
   }

@@ -23,14 +23,12 @@ library LibPool {
 
   function accruedDebt(bytes32 _protocol, IERC20 _token) public view returns (uint256) {
     PoolStorage.Base storage ps = PoolStorage.ps(_token);
-
-    return block.number.sub(ps.totalPremiumLastPaid).mul(ps.protocolPremium[_protocol]);
+    return _accruedDebt(ps, _protocol, block.number.sub(ps.totalPremiumLastPaid));
   }
 
   function getTotalAccruedDebt(IERC20 _token) public view returns (uint256) {
     PoolStorage.Base storage ps = PoolStorage.ps(_token);
-
-    return block.number.sub(ps.totalPremiumLastPaid).mul(ps.totalPremiumPerBlock);
+    return _getTotalAccruedDebt(ps, block.number.sub(ps.totalPremiumLastPaid));
   }
 
   function getTotalUnmintedSherX(IERC20 _token) public view returns (uint256 sherX) {
@@ -78,20 +76,43 @@ library LibPool {
 
   function payOffDebtAll(IERC20 _token) external {
     PoolStorage.Base storage ps = PoolStorage.ps(_token);
-    for (uint256 i = 0; i < ps.protocols.length; i++) {
-      payOffDebt(ps.protocols[i], _token);
-    }
+    uint256 blocks = block.number.sub(ps.totalPremiumLastPaid);
 
-    uint256 totalAccruedDebt = getTotalAccruedDebt(_token);
+    for (uint256 i = 0; i < ps.protocols.length; i++) {
+      _payOffDebt(ps, ps.protocols[i], blocks);
+    }
+    // TODO gas optimalisation check
+    // _getTotalAccruedDebt reads 1 variable from storage (200 gas)
+    // is it cheaper to sum up the debt return value of _payOffDebt()
+    // and store that into ps.sherXUnderlying?
+    uint256 totalAccruedDebt = _getTotalAccruedDebt(ps, blocks);
     // move funds to the sherX etf
     ps.sherXUnderlying = ps.sherXUnderlying.add(totalAccruedDebt);
     ps.totalPremiumLastPaid = block.number;
   }
 
-  function payOffDebt(bytes32 _protocol, IERC20 _token) private {
-    PoolStorage.Base storage ps = PoolStorage.ps(_token);
-    // todo optimize by forwarding  block.number.sub(protocolPremiumLastPaid) instead of calculating every loop
-    uint256 debt = accruedDebt(_protocol, _token);
+  function _payOffDebt(
+    PoolStorage.Base storage ps,
+    bytes32 _protocol,
+    uint256 _blocks
+  ) private {
+    uint256 debt = _accruedDebt(ps, _protocol, _blocks);
     ps.protocolBalance[_protocol] = ps.protocolBalance[_protocol].sub(debt);
+  }
+
+  function _accruedDebt(
+    PoolStorage.Base storage ps,
+    bytes32 _protocol,
+    uint256 _blocks
+  ) private view returns (uint256) {
+    return _blocks.mul(ps.protocolPremium[_protocol]);
+  }
+
+  function _getTotalAccruedDebt(PoolStorage.Base storage ps, uint256 _blocks)
+    private
+    view
+    returns (uint256)
+  {
+    return _blocks.mul(ps.totalPremiumPerBlock);
   }
 }

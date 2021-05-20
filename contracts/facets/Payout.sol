@@ -90,7 +90,7 @@ contract Payout is IPayout {
         ps.sherXUnderlying = ps.sherXUnderlying.sub(amounts[i]);
 
         subUsdPool = subUsdPool.add(amounts[i].mul(sx.tokenUSD[tokens[i]]).div(10**18));
-        // TODO, optimize transfer
+        // NOTE: transfer can potentially be optimized, as payout call itself also does transfers
         tokens[i].safeTransfer(_payout, amounts[i]);
       }
     }
@@ -151,7 +151,8 @@ contract Payout is IPayout {
       if (address(token) == address(this)) {
         totalSherX = total;
       } else {
-        // TODO, transfer later for gas optimalization
+        // NOTE: Inside the _doSherX() call tokens are also transferred, potential gas optimalisation if tokens
+        // are transferred at once
         token.safeTransfer(_payout, total);
       }
     }
