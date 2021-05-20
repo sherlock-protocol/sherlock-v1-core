@@ -186,7 +186,7 @@ contract PoolBase is IPoolBase {
       );
   }
 
-  function getTotalUnmintedSherX(IERC20 _token) public view override returns (uint256 sherX) {
+  function getTotalUnmintedSherX(IERC20 _token) public view override returns (uint256) {
     return LibPool.getTotalUnmintedSherX(_token);
   }
 
@@ -208,41 +208,32 @@ contract PoolBase is IPoolBase {
     return LibPool.getUnallocatedSherXFor(_user, _token);
   }
 
-  function getTotalSherXPerBlock(IERC20 _token) public view override returns (uint256 amount) {
+  function getTotalSherXPerBlock(IERC20 _token) public view override returns (uint256) {
     PoolStorage.Base storage ps = PoolStorage.ps(_token);
     SherXStorage.Base storage sx = SherXStorage.sx();
 
-    amount = sx.sherXPerBlock.mul(ps.sherXWeight).div(10**18);
+    return sx.sherXPerBlock.mul(ps.sherXWeight).div(10**18);
   }
 
   function getSherXPerBlock(IERC20 _token) external view override returns (uint256) {
     return getSherXPerBlock(msg.sender, _token);
   }
 
-  function getSherXPerBlock(address _user, IERC20 _token)
-    public
-    view
-    override
-    returns (uint256 amount)
-  {
+  function getSherXPerBlock(address _user, IERC20 _token) public view override returns (uint256) {
     PoolStorage.Base storage ps = PoolStorage.ps(_token);
     if (ps.lockToken.totalSupply() == 0) {
       return 0;
     }
-    amount = getTotalSherXPerBlock(_token).mul(ps.lockToken.balanceOf(_user)).div(
-      ps.lockToken.totalSupply()
-    );
+    return
+      getTotalSherXPerBlock(_token).mul(ps.lockToken.balanceOf(_user)).div(
+        ps.lockToken.totalSupply()
+      );
   }
 
-  function getSherXPerBlock(uint256 _lock, IERC20 _token)
-    external
-    view
-    override
-    returns (uint256 amount)
-  {
+  function getSherXPerBlock(uint256 _lock, IERC20 _token) external view override returns (uint256) {
     // simulates staking (adding lock)
     (, PoolStorage.Base storage ps) = baseData();
-    amount = getTotalSherXPerBlock(_token).mul(_lock).div(ps.lockToken.totalSupply().add(_lock));
+    return getTotalSherXPerBlock(_token).mul(_lock).div(ps.lockToken.totalSupply().add(_lock));
   }
 
   function getSherXLastAccrued(IERC20 _token) external view override returns (uint256) {

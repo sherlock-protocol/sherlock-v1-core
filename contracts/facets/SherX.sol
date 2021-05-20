@@ -60,13 +60,12 @@ contract SherX is ISherX {
     return SherXStorage.sx().tokenUSD[_token];
   }
 
-  function getUnmintedSherX(IERC20 _token) internal view returns (uint256 amount) {
+  function getUnmintedSherX(IERC20 _token) internal view returns (uint256) {
     PoolStorage.Base storage ps = PoolStorage.ps(_token);
     SherXStorage.Base storage sx = SherXStorage.sx();
 
-    amount = block.number.sub(ps.sherXLastAccrued).mul(sx.sherXPerBlock).mul(ps.sherXWeight).div(
-      10**18
-    );
+    return
+      block.number.sub(ps.sherXLastAccrued).mul(sx.sherXPerBlock).mul(ps.sherXWeight).div(10**18);
   }
 
   function getTotalSherXUnminted() external view override returns (uint256) {
@@ -151,24 +150,24 @@ contract SherX is ISherX {
   function calcUnderlyingInStoredUSD(uint256 _amount) public view override returns (uint256 usd) {
     SherXStorage.Base storage sx = SherXStorage.sx();
     GovStorage.Base storage gs = GovStorage.gs();
-    SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
 
     uint256 total = LibSherX.getTotalSherX();
+    if (total == 0) {
+      return 0;
+    }
     for (uint256 i; i < gs.tokensProtocol.length; i++) {
       IERC20 token = gs.tokensProtocol[i];
 
-      if (total > 0) {
-        usd = usd.add(
-          PoolStorage
-            .ps(token)
-            .sherXUnderlying
-            .add(LibPool.getTotalAccruedDebt(token))
-            .mul(_amount)
-            .mul(sx.tokenUSD[token])
-            .div(10**18)
-            .div(total)
-        );
-      }
+      usd = usd.add(
+        PoolStorage
+          .ps(token)
+          .sherXUnderlying
+          .add(LibPool.getTotalAccruedDebt(token))
+          .mul(_amount)
+          .mul(sx.tokenUSD[token])
+          .div(10**18)
+          .div(total)
+      );
     }
   }
 

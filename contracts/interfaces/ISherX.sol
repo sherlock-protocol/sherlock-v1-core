@@ -58,7 +58,7 @@ interface ISherX {
     view
     returns (IERC20[] memory tokens, uint256[] memory amounts);
 
-  function calcUnderlyingInStoredUSD() external view returns (uint256 usd);
+  function calcUnderlyingInStoredUSD() external view returns (uint256);
 
   function calcUnderlyingInStoredUSD(uint256 _amount) external view returns (uint256 usd);
 

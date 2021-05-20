@@ -25,23 +25,23 @@ interface IGov {
 
   function getWatsonsSherxLastAccrued() external view returns (uint256);
 
-  function getWatsonsSherXPerBlock() external view returns (uint256 amount);
+  function getWatsonsSherXPerBlock() external view returns (uint256);
 
-  function getWatsonsUnmintedSherX() external view returns (uint256 sherX);
+  function getWatsonsUnmintedSherX() external view returns (uint256);
 
-  function getUnstakeWindow() external view returns (uint256 unstakeWindow);
+  function getUnstakeWindow() external view returns (uint256);
 
-  function getCooldown() external view returns (uint256 period);
+  function getCooldown() external view returns (uint256);
 
-  function getTokensStaker() external view returns (IERC20[] memory tokens);
+  function getTokensStaker() external view returns (IERC20[] memory);
 
-  function getTokensProtocol() external view returns (IERC20[] memory tokens);
+  function getTokensProtocol() external view returns (IERC20[] memory);
 
   function getProtocolIsCovered(bytes32 _protocol) external view returns (bool);
 
-  function getProtocolManager(bytes32 _protocol) external view returns (address manager);
+  function getProtocolManager(bytes32 _protocol) external view returns (address);
 
-  function getProtocolAgent(bytes32 _protocol) external view returns (address agent);
+  function getProtocolAgent(bytes32 _protocol) external view returns (address);
 
   //
   // State changing methods

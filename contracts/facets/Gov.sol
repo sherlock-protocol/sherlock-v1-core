@@ -53,49 +53,47 @@ contract Gov is IGov {
     return GovStorage.gs().watsonsSherxLastAccrued;
   }
 
-  function getWatsonsSherXPerBlock() public view override returns (uint256 amount) {
+  function getWatsonsSherXPerBlock() public view override returns (uint256) {
     GovStorage.Base storage gs = GovStorage.gs();
     SherXStorage.Base storage sx = SherXStorage.sx();
 
-    amount = sx.sherXPerBlock.mul(gs.watsonsSherxWeight).div(10**18);
+    return sx.sherXPerBlock.mul(gs.watsonsSherxWeight).div(10**18);
   }
 
-  function getWatsonsUnmintedSherX() external view override returns (uint256 sherX) {
+  function getWatsonsUnmintedSherX() external view override returns (uint256) {
     GovStorage.Base storage gs = GovStorage.gs();
     SherXStorage.Base storage sx = SherXStorage.sx();
 
-    sherX = block.number.sub(gs.watsonsSherxLastAccrued).mul(getWatsonsSherXPerBlock());
+    return block.number.sub(gs.watsonsSherxLastAccrued).mul(getWatsonsSherXPerBlock());
   }
 
-  function getUnstakeWindow() external view override returns (uint256 unstakeWindow) {
-    GovStorage.Base storage gs = GovStorage.gs();
-    unstakeWindow = gs.unstakeWindow;
+  function getUnstakeWindow() external view override returns (uint256) {
+    return GovStorage.gs().unstakeWindow;
   }
 
-  function getCooldown() external view override returns (uint256 period) {
-    GovStorage.Base storage gs = GovStorage.gs();
-    period = gs.unstakeCooldown;
+  function getCooldown() external view override returns (uint256) {
+    return GovStorage.gs().unstakeCooldown;
   }
 
-  function getTokensStaker() external view override returns (IERC20[] memory tokens) {
-    tokens = GovStorage.gs().tokensStaker;
+  function getTokensStaker() external view override returns (IERC20[] memory) {
+    return GovStorage.gs().tokensStaker;
   }
 
-  function getTokensProtocol() external view override returns (IERC20[] memory tokens) {
-    tokens = GovStorage.gs().tokensProtocol;
+  function getTokensProtocol() external view override returns (IERC20[] memory) {
+    return GovStorage.gs().tokensProtocol;
   }
 
   function getProtocolIsCovered(bytes32 _protocol) external view override returns (bool) {
     return GovStorage.gs().protocolIsCovered[_protocol];
   }
 
-  function getProtocolManager(bytes32 _protocol) external view override returns (address manager) {
+  function getProtocolManager(bytes32 _protocol) external view override returns (address) {
     // NOTE: UNUSED
-    manager = GovStorage.gs().protocolManagers[_protocol];
+    return GovStorage.gs().protocolManagers[_protocol];
   }
 
-  function getProtocolAgent(bytes32 _protocol) external view override returns (address agent) {
-    agent = GovStorage.gs().protocolAgents[_protocol];
+  function getProtocolAgent(bytes32 _protocol) external view override returns (address) {
+    return GovStorage.gs().protocolAgents[_protocol];
   }
 
   //
