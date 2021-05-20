@@ -15,6 +15,19 @@ function getSelectors(contract) {
   return signatures;
 }
 
+async function getDiamondCut(facets, action = FacetCutAction.Add) {
+  diamondCut = [];
+  for (let i = 0; i < facets.length; i++) {
+    const f = await facets[i].deploy();
+    diamondCut.push({
+      action,
+      facetAddress: f.address,
+      functionSelectors: getSelectors(f),
+    });
+  }
+  return diamondCut;
+}
+
 module.exports = {
   FacetCutAction: this.FacetCutAction,
   getSelectors: this.getSelectors,
@@ -59,7 +72,7 @@ module.exports = {
       await thisObject[contract[0]].deployed();
     }
   },
-  solution: async (thisObject, thisName, gov) => {
+  solution: async (thisObject, thisName, gov, production = false) => {
     libPool = await (await ethers.getContractFactory('LibPool')).deploy();
     libSherX = await (
       await ethers.getContractFactory('LibSherX', {
@@ -84,7 +97,7 @@ module.exports = {
           LibSherX: libSherX.address,
         },
       }),
-      await ethers.getContractFactory('Pool', {
+      await ethers.getContractFactory('PoolBase', {
         libraries: { LibPool: libPool.address },
       }),
       await ethers.getContractFactory('SherX', {
@@ -95,17 +108,21 @@ module.exports = {
       }),
       await ethers.getContractFactory('SherXERC20'),
     ];
-
-    diamondCut = [];
-    for (let i = 0; i < facets.length; i++) {
-      const f = await facets[i].deploy();
-      diamondCut.push({
-        action: FacetCutAction.Add,
-        facetAddress: f.address,
-        functionSelectors: getSelectors(f),
-      });
+    if (production) {
+      facets.push(
+        await ethers.getContractFactory('PoolDevOnly', {
+          libraries: { LibPool: libPool.address },
+        }),
+      );
+    } else {
+      facets.push(
+        await ethers.getContractFactory('PoolOpen', {
+          libraries: { LibPool: libPool.address },
+        }),
+      );
     }
 
+    diamondCut = await getDiamondCut(facets);
     Diamond = await ethers.getContractFactory('Diamond');
 
     const diamond = await Diamond.deploy(diamondCut, [gov.address]);
@@ -123,4 +140,6 @@ module.exports = {
   events: async (tx) => {
     return (await (await tx).wait()).events;
   },
+  getDiamondCut,
+  FacetCutAction,
 };

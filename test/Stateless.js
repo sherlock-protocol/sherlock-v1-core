@@ -421,13 +421,6 @@ describe('Stateless', function () {
           'SAME_DEV',
         );
       });
-      it('Success', async function () {
-        await this.sl.c(this.gov).transferGovDev(this.alice.address);
-        await this.sl.transferGovDev(this.gov.address);
-      });
-      // it("Success (renounce)", async function () {
-      //   await this.sl.c(this.gov).transferGovDev(constants.AddressZero);
-      // });
     });
     describe('updateSolution()', function () {
       it('Invalid sender', async function () {

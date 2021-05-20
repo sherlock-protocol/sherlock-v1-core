@@ -17,7 +17,8 @@ import './IGov.sol';
 import './IGovDev.sol';
 import './IPayout.sol';
 import './IManager.sol';
-import './IPool.sol';
+import './IPoolBase.sol';
+import './IPoolStake.sol';
 
 interface ISherlock is
   IERC173,
@@ -30,5 +31,6 @@ interface ISherlock is
   IGovDev,
   IPayout,
   IManager,
-  IPool
+  IPoolBase,
+  IPoolStake
 {}

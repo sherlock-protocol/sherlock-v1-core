@@ -14,11 +14,11 @@ import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 
 import '../interfaces/ILock.sol';
-import '../interfaces/IPool.sol';
+import '../interfaces/IPoolBase.sol';
 
 import '../libraries/LibPool.sol';
 
-contract Pool is IPool {
+contract PoolBase is IPoolBase {
   using SafeMath for uint256;
   using SafeERC20 for IERC20;
   using SafeERC20 for ILock;
@@ -343,23 +343,6 @@ contract Pool is IPool {
 
     _token.safeTransfer(_receiver, _amount);
     ps.protocolBalance[_protocol] = ps.protocolBalance[_protocol].sub(_amount);
-  }
-
-  // TODO initially make stake admin only for the initial fee exchange rate
-  // Upgrade contracts later by removing admin only (just a require(msg.sender="a"))
-  // We can do it gas efficient by moving the stake() function to a seperate facet
-  function stake(
-    uint256 _amount,
-    address _receiver,
-    IERC20 _token
-  ) external override returns (uint256 lock) {
-    require(_amount > 0, 'AMOUNT');
-    require(_receiver != address(0), 'RECEIVER');
-    (IERC20 token, PoolStorage.Base storage ps) = baseData();
-    require(ps.stakes, 'NO_STAKES');
-    token.safeTransferFrom(msg.sender, address(this), _amount);
-
-    lock = LibPool.stake(ps, _amount, _receiver);
   }
 
   function activateCooldown(uint256 _amount, IERC20 _token) external override returns (uint256) {

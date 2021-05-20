@@ -9,7 +9,7 @@ pragma abicoder v2;
 
 import '../storage/PoolStorage.sol';
 
-interface IPool {
+interface IPoolBase {
   //
   // Events
   //
@@ -108,12 +108,6 @@ interface IPool {
     address _receiver,
     IERC20 _token
   ) external;
-
-  function stake(
-    uint256 _amount,
-    address _receiver,
-    IERC20 _token
-  ) external returns (uint256);
 
   function activateCooldown(uint256 _amount, IERC20 _token) external returns (uint256);
 
