@@ -622,6 +622,11 @@ describe('SherX', function () {
       await this.sl
         .c(this.gov)
         .tokenInit(this.tokenA.address, constants.AddressZero, this.lockA.address, false);
+
+      // Add tokenC for staking (doesn't end up in sherx underlying)
+      await this.sl
+        .c(this.gov)
+        .tokenInit(this.tokenC.address, this.gov.address, this.lockC.address, false);
       await this.sl.c(this.gov).setWatsonsAddress(this.alice.address);
       await this.sl.c(this.gov).setInitialWeight();
       await this.sl.c(this.gov).setWeights([this.tokenA.address], [parseEther('1')], 0);
