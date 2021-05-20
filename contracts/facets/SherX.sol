@@ -60,8 +60,30 @@ contract SherX is ISherX {
     return SherXStorage.sx().tokenUSD[_token];
   }
 
+  function getUnmintedSherX(address _token) internal view returns (uint256 amount) {
+    PoolStorage.Base storage ps = PoolStorage.ps(_token);
+    SherXStorage.Base storage sx = SherXStorage.sx();
+
+    amount = block.number.sub(ps.sherXLastAccrued).mul(sx.sherXPerBlock).mul(ps.sherXWeight).div(
+      10**18
+    );
+  }
+
   function getTotalSherXUnminted() external view override returns (uint256) {
-    return LibSherX.getTotalSherXUnminted();
+    SherXStorage.Base storage sx = SherXStorage.sx();
+    GovStorage.Base storage gs = GovStorage.gs();
+
+    uint256 total =
+      block
+        .number
+        .sub(gs.watsonsSherxLastAccrued)
+        .mul(sx.sherXPerBlock)
+        .mul(gs.watsonsSherxWeight)
+        .div(10**18);
+    for (uint256 i; i < gs.tokensStaker.length; i++) {
+      total = total.add(getUnmintedSherX(address(gs.tokensStaker[i])));
+    }
+    return total;
   }
 
   function getTotalSherX() external view override returns (uint256) {
@@ -70,10 +92,6 @@ contract SherX is ISherX {
 
   function getSherXPerBlock() external view override returns (uint256) {
     return SherXStorage.sx().sherXPerBlock;
-  }
-
-  function getSherXLastAccrued() external view override returns (uint256) {
-    return SherXStorage.sx().sherXLastAccrued;
   }
 
   function getSherXBalance() external view override returns (uint256) {
@@ -88,6 +106,14 @@ contract SherX is ISherX {
       balance = balance.add(LibPool.getUnallocatedSherXFor(_user, address(gs.tokensStaker[i])));
     }
     return balance;
+  }
+
+  function getInternalTotalSupply() external view override returns (uint256) {
+    return SherXStorage.sx().internalTotalSupply;
+  }
+
+  function getInternalTotalSupplySettled() external view override returns (uint256) {
+    return SherXStorage.sx().internalTotalSupplySettled;
   }
 
   function calcUnderlying()
@@ -174,6 +200,9 @@ contract SherX is ISherX {
     uint256 _watsons
   ) external override onlyGovInsurance {
     require(_tokens.length == _weights.length, 'LENGTH');
+    // NOTE: can potentially be made more gas efficient
+    // Do not loop over all staker tokens
+    // But just over the tokens in the _tokens array
     LibSherX.accrueSherX();
 
     GovStorage.Base storage gs = GovStorage.gs();
@@ -263,10 +292,19 @@ contract SherX is ISherX {
     }
     sx.totalUsdPool = sx.totalUsdPool.sub(subUsdPool);
     LibSherXERC20.burn(msg.sender, _amount);
+    LibSherX.settleInternalSupply(_amount);
   }
 
   function accrueSherX() external override {
     LibSherX.accrueSherX();
+  }
+
+  function accrueSherX(IERC20 _token) external override {
+    LibSherX.accrueSherX(_token);
+  }
+
+  function accrueSherXWatsons() external override {
+    LibSherX.accrueSherXWatsons();
   }
 
   function doYield(
@@ -278,8 +316,8 @@ contract SherX is ISherX {
     address underlying = ILock(token).underlying();
     PoolStorage.Base storage ps = PoolStorage.ps(underlying);
     require(address(ps.lockToken) == token, 'Unexpected sender');
-    // TODO optimize, accure only for this token
-    LibSherX.accrueSherX();
+
+    LibSherX.accrueSherX(IERC20(underlying));
     uint256 userAmount = ps.lockToken.balanceOf(from);
     uint256 totalAmount = ps.lockToken.totalSupply();
 

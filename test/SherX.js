@@ -217,7 +217,7 @@ describe('SherX', function () {
       expect(await this.sl.getStakersPoolBalance(this.sl.address)).to.eq(0);
       expect(await this.sl.getFirstMoneyOut(this.sl.address)).to.eq(0);
 
-      expect(await this.sl.getSherXLastAccrued()).to.eq(this.bStart);
+      expect(await this.sl.getSherXLastAccrued(this.tokenA.address)).to.eq(this.bStart);
       expect(await this.sl.balanceOf(this.sl.address)).to.eq(0);
       expect(await this.lockX.balanceOf(this.alice.address)).to.eq(0);
 
@@ -235,7 +235,7 @@ describe('SherX', function () {
             [parseEther('1')],
           ),
       );
-      expect(await this.sl.getSherXLastAccrued()).to.eq(b0);
+      expect(await this.sl.getSherXLastAccrued(this.tokenA.address)).to.eq(b0);
       expect(await this.sl['getSherXPerBlock(address)'](this.tokenA.address)).to.eq(
         parseEther('1'),
       );
@@ -249,7 +249,7 @@ describe('SherX', function () {
         this.sl['harvestFor(address,address)'](this.alice.address, this.lockA.address),
       );
 
-      expect(await this.sl.getSherXLastAccrued()).to.eq(this.b1);
+      expect(await this.sl.getSherXLastAccrued(this.tokenA.address)).to.eq(this.b1);
       expect(await this.sl['getSherXPerBlock(address)'](this.tokenA.address)).to.eq(
         parseEther('1'),
       );
@@ -272,7 +272,7 @@ describe('SherX', function () {
     it('Do wait', async function () {
       await timeTraveler.mine(1);
 
-      expect(await this.sl.getSherXLastAccrued()).to.eq(this.b1);
+      expect(await this.sl.getSherXLastAccrued(this.tokenA.address)).to.eq(this.b1);
       expect(await this.sl['getSherXPerBlock(address)'](this.tokenA.address)).to.eq(
         parseEther('1'),
       );
@@ -297,7 +297,7 @@ describe('SherX', function () {
         this.sl['harvestFor(address,address)'](this.alice.address, this.lockA.address),
       );
 
-      expect(await this.sl.getSherXLastAccrued()).to.eq(this.b2);
+      expect(await this.sl.getSherXLastAccrued(this.tokenA.address)).to.eq(this.b2);
       expect(await this.sl['getSherXPerBlock(address)'](this.tokenA.address)).to.eq(
         parseEther('1'),
       );
@@ -430,6 +430,9 @@ describe('SherX', function () {
 
       expect(await this.sl['calcUnderlyingInStoredUSD()']()).to.eq(parseEther('3'));
 
+      expect(await this.sl.getInternalTotalSupply()).to.eq(parseEther('1'));
+      expect(await this.sl.getInternalTotalSupplySettled()).to.eq(this.b0);
+
       // pool variables
       expect(await this.sl.getTotalUsdLastSettled()).to.eq(this.b0);
       expect(await this.sl.getTotalUsdPoolStored()).to.eq(parseEther('3'));
@@ -462,6 +465,9 @@ describe('SherX', function () {
       expect(data.amounts.length).to.eq(3);
 
       expect(await this.sl['calcUnderlyingInStoredUSD()']()).to.eq(0);
+
+      expect(await this.sl.getInternalTotalSupply()).to.eq(0);
+      expect(await this.sl.getInternalTotalSupplySettled()).to.eq(b1);
 
       // pool variables
       expect(await this.sl.getTotalUsdLastSettled()).to.eq(b1);
@@ -542,6 +548,9 @@ describe('SherX', function () {
 
       expect(await this.sl['calcUnderlyingInStoredUSD()']()).to.eq(parseEther('3'));
 
+      expect(await this.sl.getInternalTotalSupply()).to.eq(0);
+      expect(await this.sl.getInternalTotalSupplySettled()).to.eq(this.b0);
+
       // pool variables
       expect(await this.sl.getTotalUsdLastSettled()).to.eq(this.b0);
       expect(await this.sl.getTotalUsdPoolStored()).to.eq(0);
@@ -576,6 +585,9 @@ describe('SherX', function () {
       expect(data.amounts.length).to.eq(3);
 
       expect(await this.sl['calcUnderlyingInStoredUSD()']()).to.eq(0);
+
+      expect(await this.sl.getInternalTotalSupply()).to.eq(this.userDiff.mul(parseEther('1')));
+      expect(await this.sl.getInternalTotalSupplySettled()).to.eq(this.b3);
 
       // pool variables
       expect(await this.sl.getTotalUsdLastSettled()).to.eq(this.b3);
@@ -713,7 +725,13 @@ describe('SherX', function () {
       expect(data.amounts.length).to.eq(3);
     });
   });
-  describe('watsons payout', function () {
+  describe('accrueSherX()', function () {
+    // TODO
+  });
+  describe('accrueSherX(address)', function () {
+    // TODO
+  });
+  describe('accrueSherXWatsons()', function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
       await this.sl
@@ -735,16 +753,16 @@ describe('SherX', function () {
     it('Initial state', async function () {
       await timeTraveler.mine(1);
 
-      expect(await this.sl.getSherXLastAccrued()).to.eq(this.b0);
       expect(await this.sl.getWatsonsSherXPerBlock()).to.eq(parseEther('1'));
+      expect(await this.sl.getWatsonsSherxLastAccrued()).to.eq(this.b0);
       expect(await this.sl.getWatsonsUnmintedSherX()).to.eq(parseEther('1'));
       expect(await this.sl.balanceOf(this.carol.address)).to.eq(0);
     });
     it('Accrue', async function () {
-      const b1 = await blockNumber(this.sl.accrueSherX());
+      const b1 = await blockNumber(this.sl.accrueSherXWatsons());
 
-      expect(await this.sl.getSherXLastAccrued()).to.eq(b1);
       expect(await this.sl.getWatsonsSherXPerBlock()).to.eq(parseEther('1'));
+      expect(await this.sl.getWatsonsSherxLastAccrued()).to.eq(b1);
       expect(await this.sl.getWatsonsUnmintedSherX()).to.eq(0);
       expect(await this.sl.balanceOf(this.carol.address)).to.eq(parseEther('2'));
     });

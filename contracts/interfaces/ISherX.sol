@@ -35,11 +35,13 @@ interface ISherX {
 
   function getSherXPerBlock() external view returns (uint256);
 
-  function getSherXLastAccrued() external view returns (uint256);
-
   function getSherXBalance() external view returns (uint256);
 
   function getSherXBalance(address _user) external view returns (uint256);
+
+  function getInternalTotalSupply() external view returns (uint256);
+
+  function getInternalTotalSupplySettled() external view returns (uint256);
 
   function calcUnderlying()
     external
@@ -93,4 +95,8 @@ interface ISherX {
   function redeem(uint256 _amount, address _receiver) external;
 
   function accrueSherX() external;
+
+  function accrueSherX(IERC20 _token) external;
+
+  function accrueSherXWatsons() external;
 }

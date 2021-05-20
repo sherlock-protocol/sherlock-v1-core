@@ -36,8 +36,9 @@ library LibPool {
   function getTotalUnmintedSherX(address _token) public view returns (uint256 sherX) {
     PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
     SherXStorage.Base storage sx = SherXStorage.sx();
-    uint256 amount = block.number.sub(sx.sherXLastAccrued).mul(sx.sherXPerBlock);
-    sherX = amount.mul(ps.sherXWeight).div(10**18);
+    sherX = block.number.sub(ps.sherXLastAccrued).mul(sx.sherXPerBlock).mul(ps.sherXWeight).div(
+      10**18
+    );
   }
 
   function getUnallocatedSherXFor(address _user, address _token)

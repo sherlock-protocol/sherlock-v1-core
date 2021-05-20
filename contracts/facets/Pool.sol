@@ -245,6 +245,11 @@ contract Pool is IPool {
     amount = getTotalSherXPerBlock(_token).mul(_lock).div(ps.lockToken.totalSupply().add(_lock));
   }
 
+  function getSherXLastAccrued(address _token) external view override returns (uint256) {
+    (, PoolStorage.Base storage ps) = baseData();
+    return ps.sherXLastAccrued;
+  }
+
   function LockToTokenXRate(address _token) external view override returns (uint256) {
     return LockToToken(10**18, _token);
   }

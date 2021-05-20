@@ -24,9 +24,6 @@ import './LibPool.sol';
 library LibSherX {
   using SafeMath for uint256;
 
-  // TODO accrueSherX(address token), to just accrue for a certain token
-  // do accrueSherX() to loop over all if updating weights
-
   function viewAccrueUSDPool() public view returns (uint256 totalUsdPool) {
     SherXStorage.Base storage sx = SherXStorage.sx();
     totalUsdPool = sx.totalUsdPool.add(
@@ -41,22 +38,20 @@ library LibSherX {
     sx.totalUsdLastSettled = block.number;
   }
 
-  function getUnmintedSherX(address _token) external view returns (uint256 amount) {
+  function settleInternalSupply(uint256 _deduct) external {
     SherXStorage.Base storage sx = SherXStorage.sx();
-    uint256 total = block.number.sub(sx.sherXLastAccrued).mul(sx.sherXPerBlock);
-
-    PoolStorage.Base storage ps = PoolStorage.ps(_token);
-    amount = total.mul(ps.sherXWeight).div(10**18);
-  }
-
-  function getTotalSherXUnminted() public view returns (uint256) {
-    SherXStorage.Base storage sx = SherXStorage.sx();
-    return block.number.sub(sx.sherXLastAccrued).mul(sx.sherXPerBlock);
+    sx.internalTotalSupply = getTotalSherX().sub(_deduct);
+    sx.internalTotalSupplySettled = block.number;
   }
 
   function getTotalSherX() public view returns (uint256) {
-    SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
-    return sx20.totalSupply.add(getTotalSherXUnminted());
+    // calc by taking base supply, block at, and calc it by taking base + now - block_at * sherxperblock
+    // update baseSupply on every premium update
+    SherXStorage.Base storage sx = SherXStorage.sx();
+    return
+      sx.internalTotalSupply.add(
+        block.number.sub(sx.internalTotalSupplySettled).mul(sx.sherXPerBlock)
+      );
   }
 
   function calcUnderlying(uint256 _amount)
@@ -87,43 +82,70 @@ library LibSherX {
     }
   }
 
+  function accrueSherX(IERC20 _token) public {
+    SherXStorage.Base storage sx = SherXStorage.sx();
+    uint256 sherX = _accrueSherX(_token, sx.sherXPerBlock);
+    if (sherX > 0) {
+      LibSherXERC20.mint(address(this), sherX);
+    }
+  }
+
+  function accrueSherXWatsons() public {
+    SherXStorage.Base storage sx = SherXStorage.sx();
+    _accrueSherXWatsons(sx.sherXPerBlock);
+  }
+
   function accrueSherX() external {
     // loop over pools, increase the pool + pool_weight based on the distribution weights
-
-    GovStorage.Base storage gs = GovStorage.gs();
     SherXStorage.Base storage sx = SherXStorage.sx();
+    GovStorage.Base storage gs = GovStorage.gs();
+    uint256 sherXPerBlock = sx.sherXPerBlock;
+    uint256 sherX;
+    for (uint256 i; i < gs.tokensStaker.length; i++) {
+      sherX = sherX.add(_accrueSherX(gs.tokensStaker[i], sherXPerBlock));
+    }
+    if (sherX > 0) {
+      LibSherXERC20.mint(address(this), sherX);
+    }
 
-    // mint sherX tokens op basis van (sx.sherXPerBlock) diff
+    _accrueSherXWatsons(sherXPerBlock);
+  }
 
-    uint256 amount = block.number.sub(sx.sherXLastAccrued).mul(sx.sherXPerBlock);
-    sx.sherXLastAccrued = block.number;
-    if (amount == 0) {
+  function _accrueSherXWatsons(uint256 sherXPerBlock) private {
+    GovStorage.Base storage gs = GovStorage.gs();
+
+    uint256 sherX =
+      block
+        .number
+        .sub(gs.watsonsSherxLastAccrued)
+        .mul(sherXPerBlock)
+        .mul(gs.watsonsSherxWeight)
+        .div(10**18);
+    // need to settle before return, as updating the sherxperlblock/weight
+    // after it was 0 will result in a too big amount (accured will be < block.number)
+    gs.watsonsSherxLastAccrued = block.number;
+    if (sherX == 0) {
       return;
     }
+    LibSherXERC20.mint(gs.watsonsAddress, sherX);
+  }
 
-    for (uint256 i; i < gs.tokensStaker.length; i++) {
-      IERC20 token = gs.tokensStaker[i];
-
-      PoolStorage.Base storage ps = PoolStorage.ps(address(token));
-
-      uint256 sherX = amount.mul(ps.sherXWeight).div(10**18);
-      if (sherX == 0) {
-        continue;
-      }
-
-      if (address(token) == address(this)) {
-        ps.stakeBalance = ps.stakeBalance.add(sherX);
-      } else {
-        ps.unallocatedSherX = ps.unallocatedSherX.add(sherX);
-        ps.sWeight = ps.sWeight.add(sherX);
-      }
+  function _accrueSherX(IERC20 _token, uint256 sherXPerBlock) private returns (uint256 sherX) {
+    PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
+    sherX = block.number.sub(ps.sherXLastAccrued).mul(sherXPerBlock).mul(ps.sherXWeight).div(
+      10**18
+    );
+    // need to settle before return, as updating the sherxperlblock/weight
+    // after it was 0 will result in a too big amount (accured will be < block.number)
+    ps.sherXLastAccrued = block.number;
+    if (sherX == 0) {
+      return 0;
     }
-
-    uint256 watsonsAmount = amount.mul(gs.watsonsSherxWeight).div(10**18);
-    if (watsonsAmount > 0) {
-      LibSherXERC20.mint(gs.watsonsAddress, watsonsAmount);
+    if (address(_token) == address(this)) {
+      ps.stakeBalance = ps.stakeBalance.add(sherX);
+    } else {
+      ps.unallocatedSherX = ps.unallocatedSherX.add(sherX);
+      ps.sWeight = ps.sWeight.add(sherX);
     }
-
-    LibSherXERC20.mint(address(this), amount.sub(watsonsAmount));
   }
 }

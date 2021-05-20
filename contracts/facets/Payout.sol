@@ -117,6 +117,7 @@ contract Payout is IPayout {
     require(_tokens.length == _unallocatedSherX.length, 'LENGTH_3');
 
     LibSherX.accrueSherX();
+
     uint256 totalUnallocatedSherX;
     uint256 totalSherX;
 
@@ -172,7 +173,10 @@ contract Payout is IPayout {
       // usd excluded, divided by the price per SherX token = amount of sherx to not burn.
       uint256 deduction = excludeUsd.div(curTotalUsdPool.div(totalSupply)).div(10e17);
       // deduct that amount from the tokens being burned, to keep the same USD value
-      LibSherXERC20.burn(address(this), totalSherX.sub(deduction));
+      uint256 burnAmount = totalSherX.sub(deduction);
+
+      LibSherXERC20.burn(address(this), burnAmount);
+      LibSherX.settleInternalSupply(burnAmount);
     }
   }
 }

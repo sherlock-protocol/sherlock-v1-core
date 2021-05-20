@@ -25,6 +25,7 @@ library GovStorage {
     IERC20[] tokensProtocol;
     address watsonsAddress;
     uint256 watsonsSherxWeight;
+    uint256 watsonsSherxLastAccrued;
   }
 
   function gs() internal pure returns (Base storage bs) {

@@ -49,6 +49,10 @@ contract Gov is IGov {
     return GovStorage.gs().watsonsSherxWeight;
   }
 
+  function getWatsonsSherxLastAccrued() external view override returns (uint256) {
+    return GovStorage.gs().watsonsSherxLastAccrued;
+  }
+
   function getWatsonsSherXPerBlock() public view override returns (uint256 amount) {
     GovStorage.Base storage gs = GovStorage.gs();
     SherXStorage.Base storage sx = SherXStorage.sx();
@@ -57,8 +61,10 @@ contract Gov is IGov {
   }
 
   function getWatsonsUnmintedSherX() external view override returns (uint256 sherX) {
+    GovStorage.Base storage gs = GovStorage.gs();
     SherXStorage.Base storage sx = SherXStorage.sx();
-    sherX = block.number.sub(sx.sherXLastAccrued).mul(getWatsonsSherXPerBlock());
+
+    sherX = block.number.sub(gs.watsonsSherxLastAccrued).mul(getWatsonsSherXPerBlock());
   }
 
   function getUnstakeWindow() external view override returns (uint256 unstakeWindow) {

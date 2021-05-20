@@ -23,6 +23,8 @@ interface IGov {
 
   function getWatsonsSherXWeight() external view returns (uint256);
 
+  function getWatsonsSherxLastAccrued() external view returns (uint256);
+
   function getWatsonsSherXPerBlock() external view returns (uint256 amount);
 
   function getWatsonsUnmintedSherX() external view returns (uint256 sherX);

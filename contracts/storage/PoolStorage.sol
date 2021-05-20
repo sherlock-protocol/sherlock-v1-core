@@ -30,6 +30,7 @@ library PoolStorage {
     uint256 unallocatedSherX;
     // How much sherX is distributed to stakers of this token
     uint256 sherXWeight;
+    uint256 sherXLastAccrued;
     // Non-native variables
     mapping(address => uint256) sWithdrawn;
     uint256 sWeight;

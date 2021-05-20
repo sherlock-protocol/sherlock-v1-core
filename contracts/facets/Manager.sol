@@ -370,14 +370,19 @@ contract Manager is IManager {
 
     LibSherX.accrueSherX();
 
-    if (usdPerBlock > 0 && sx20.totalSupply == 0) {
+    uint256 _currentTotalSupply = sx20.totalSupply;
+
+    if (usdPerBlock > 0 && _currentTotalSupply == 0) {
       // initial accrue
       sx.sherXPerBlock = 10**18;
     } else if (usdPool > 0) {
-      sx.sherXPerBlock = sx20.totalSupply.mul(usdPerBlock).div(usdPool);
+      sx.sherXPerBlock = _currentTotalSupply.mul(usdPerBlock).div(usdPool);
     } else {
       sx.sherXPerBlock = 0;
     }
+    sx.internalTotalSupply = _currentTotalSupply;
+    sx.internalTotalSupplySettled = block.number;
+
     sx.totalUsdPerBlock = usdPerBlock;
     sx.totalUsdPool = usdPool;
     sx.totalUsdLastSettled = block.number;

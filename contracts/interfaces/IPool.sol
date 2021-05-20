@@ -80,6 +80,8 @@ interface IPool {
 
   function getSherXPerBlock(uint256 _amount, address _token) external view returns (uint256);
 
+  function getSherXLastAccrued(address _token) external view returns (uint256);
+
   function LockToTokenXRate(address _token) external view returns (uint256);
 
   function LockToToken(uint256 _amount, address _token) external view returns (uint256);

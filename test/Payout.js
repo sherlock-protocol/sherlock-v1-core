@@ -48,14 +48,16 @@ describe('Payout', function () {
 
     await this.sl.stake(parseEther('10'), this.alice.address, this.tokenA.address);
     await this.sl.depositProtocolBalance(this.protocolX, parseEther('100'), this.tokenA.address);
-    await this.sl
-      .c(this.gov)
-      ['setProtocolPremiumAndTokenPrice(bytes32,address,uint256,uint256)'](
-        this.protocolX,
-        this.tokenA.address,
-        parseEther('1'),
-        parseEther('1'),
-      );
+    this.b0 = await blockNumber(
+      this.sl
+        .c(this.gov)
+        ['setProtocolPremiumAndTokenPrice(bytes32,address,uint256,uint256)'](
+          this.protocolX,
+          this.tokenA.address,
+          parseEther('1'),
+          parseEther('1'),
+        ),
+    );
     await timeTraveler.snapshot();
   });
   it('Initital state', async function () {
@@ -80,6 +82,8 @@ describe('Payout', function () {
           [0],
           constants.AddressZero,
         );
+      expect(await this.sl.getInternalTotalSupply()).to.eq(0);
+      expect(await this.sl.getInternalTotalSupplySettled()).to.eq(this.b0);
 
       expect(await this.sl.getFirstMoneyOut(this.tokenA.address)).to.eq(parseEther('2'));
       expect(await this.sl.getStakersPoolBalance(this.tokenA.address)).to.eq(parseEther('10'));
@@ -104,6 +108,9 @@ describe('Payout', function () {
           constants.AddressZero,
         );
 
+      expect(await this.sl.getInternalTotalSupply()).to.eq(0);
+      expect(await this.sl.getInternalTotalSupplySettled()).to.eq(this.b0);
+
       expect(await this.sl.getFirstMoneyOut(this.tokenA.address)).to.eq(parseEther('10'));
       expect(await this.sl.getStakersPoolBalance(this.tokenA.address)).to.eq(parseEther('4'));
       expect(await this.sl.getUnallocatedSherXTotal(this.tokenA.address)).to.eq(parseEther('2'));
@@ -116,16 +123,25 @@ describe('Payout', function () {
       await timeTraveler.revertSnapshot();
     });
     it('Do', async function () {
-      await this.sl
-        .c(this.gov)
-        .payout(
-          this.bob.address,
-          [this.tokenA.address],
-          [0],
-          [0],
-          [parseEther('1.5')],
-          constants.AddressZero,
-        );
+      const before = await this.sl.getTotalSherX();
+
+      const b1 = await blockNumber(
+        this.sl
+          .c(this.gov)
+          .payout(
+            this.bob.address,
+            [this.tokenA.address],
+            [0],
+            [0],
+            [parseEther('1.5')],
+            constants.AddressZero,
+          ),
+      );
+      // before + 1 for this block minus payout
+      expect(await this.sl.getInternalTotalSupply()).to.eq(
+        before.add(parseEther('1')).sub(parseEther('1.5')),
+      );
+      expect(await this.sl.getInternalTotalSupplySettled()).to.eq(b1);
 
       expect(await this.sl.getFirstMoneyOut(this.tokenA.address)).to.eq(parseEther('10'));
       expect(await this.sl.getStakersPoolBalance(this.tokenA.address)).to.eq(parseEther('10'));
@@ -204,14 +220,16 @@ describe('Payout - SherX', function () {
     await this.sl.stake(parseEther('10'), this.alice.address, this.tokenA.address);
     await this.sl.activateCooldown(parseEther('1'), this.tokenA.address);
 
-    await this.sl
-      .c(this.gov)
-      ['setProtocolPremiumAndTokenPrice(bytes32,address[],uint256[],uint256[])'](
-        this.protocolX,
-        [this.tokenA.address, this.tokenC.address],
-        [parseEther('0'), parseUnits('0', this.tokenC.dec)],
-        [parseEther('1'), parseUnits('1', this.tokenC.usdDec)],
-      );
+    this.b0 = await blockNumber(
+      this.sl
+        .c(this.gov)
+        ['setProtocolPremiumAndTokenPrice(bytes32,address[],uint256[],uint256[])'](
+          this.protocolX,
+          [this.tokenA.address, this.tokenC.address],
+          [parseEther('0'), parseUnits('0', this.tokenC.dec)],
+          [parseEther('1'), parseUnits('1', this.tokenC.usdDec)],
+        ),
+    );
 
     await timeTraveler.snapshot();
   });
@@ -235,6 +253,9 @@ describe('Payout - SherX', function () {
     expect(data.amounts[1]).to.eq(parseUnits('1', this.tokenC.dec));
     expect(data.amounts.length).to.eq(2);
 
+    expect(await this.sl.getInternalTotalSupply()).to.eq(parseEther('6'));
+    expect(await this.sl.getInternalTotalSupplySettled()).to.eq(this.b0);
+
     // Payout balances
     expect(await this.tokenA.balanceOf(this.bob.address)).to.eq(0);
     expect(await this.tokenC.balanceOf(this.bob.address)).to.eq(0);
@@ -244,16 +265,18 @@ describe('Payout - SherX', function () {
       await timeTraveler.revertSnapshot();
     });
     it('Do', async function () {
-      await this.sl
-        .c(this.gov)
-        .payout(
-          this.bob.address,
-          [this.sl.address],
-          [0],
-          [parseEther('2')],
-          [0],
-          constants.AddressZero,
-        );
+      const b1 = await blockNumber(
+        this.sl
+          .c(this.gov)
+          .payout(
+            this.bob.address,
+            [this.sl.address],
+            [0],
+            [parseEther('2')],
+            [0],
+            constants.AddressZero,
+          ),
+      );
 
       // Token A
       expect(await this.sl.getStakersPoolBalance(this.tokenA.address)).to.eq(parseEther('10'));
@@ -274,6 +297,9 @@ describe('Payout - SherX', function () {
       expect(data.amounts[1]).to.eq(parseUnits('1', this.tokenC.dec));
       expect(data.amounts.length).to.eq(2);
 
+      expect(await this.sl.getInternalTotalSupply()).to.eq(parseEther('4'));
+      expect(await this.sl.getInternalTotalSupplySettled()).to.eq(b1);
+
       // Payout balances
       expect(await this.tokenA.balanceOf(this.bob.address)).to.eq(parseEther('2'));
       expect(await this.tokenC.balanceOf(this.bob.address)).to.eq(parseUnits('2', this.tokenC.dec));
@@ -284,16 +310,18 @@ describe('Payout - SherX', function () {
       await timeTraveler.revertSnapshot();
     });
     it('Do', async function () {
-      await this.sl
-        .c(this.gov)
-        .payout(
-          this.bob.address,
-          [this.sl.address],
-          [0],
-          [parseEther('2')],
-          [0],
-          this.tokenC.address,
-        );
+      const b1 = await blockNumber(
+        this.sl
+          .c(this.gov)
+          .payout(
+            this.bob.address,
+            [this.sl.address],
+            [0],
+            [parseEther('2')],
+            [0],
+            this.tokenC.address,
+          ),
+      );
 
       // Token A
       expect(await this.sl.getStakersPoolBalance(this.tokenA.address)).to.eq(parseEther('10'));
@@ -313,6 +341,9 @@ describe('Payout - SherX', function () {
       expect(data.amounts[0]).to.eq(parseEther('0.8'));
       expect(data.amounts[1]).to.eq(parseUnits('1.2', this.tokenC.dec));
       expect(data.amounts.length).to.eq(2);
+
+      expect(await this.sl.getInternalTotalSupply()).to.eq(parseEther('5'));
+      expect(await this.sl.getInternalTotalSupplySettled()).to.eq(b1);
 
       // Payout balances
       expect(await this.tokenA.balanceOf(this.bob.address)).to.eq(parseEther('2'));

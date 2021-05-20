@@ -26,12 +26,12 @@ describe('Manager - Clean', function () {
     // Add tokenA as valid token
     await this.sl
       .c(this.gov)
-      .tokenInit(this.tokenA.address, this.gov.address, constants.AddressZero, true);
+      .tokenInit(this.tokenA.address, this.gov.address, this.lockA.address, true);
 
     // Add tokenb as valid token
     await this.sl
       .c(this.gov)
-      .tokenInit(this.tokenB.address, this.gov.address, constants.AddressZero, true);
+      .tokenInit(this.tokenB.address, this.gov.address, this.lockB.address, true);
 
     // Add protocolX as valid protocol
     await this.sl
@@ -71,13 +71,18 @@ describe('Manager - Clean', function () {
       parseUnits('100', this.tokenB.dec),
       this.tokenB.address,
     );
+
+    // otherwise sherxperblock stays 0. as there is nothing minted
+    await this.sl.c(this.gov).setWatsonsAddress(this.alice.address);
+    await this.sl.c(this.gov).setInitialWeight();
     await timeTraveler.snapshot();
   });
   it('Initial state', async function () {
     // SherX
     expect(await this.sl['getSherXPerBlock()']()).to.eq(0);
-    expect(await this.sl.getSherXLastAccrued()).to.eq(0);
     expect(await this.sl.totalSupply()).to.eq(0);
+    expect(await this.sl.getInternalTotalSupply()).to.eq(0);
+    expect(await this.sl.getInternalTotalSupplySettled()).to.eq(0);
 
     // USD
     expect(await this.sl.getTotalUsdPerBlock()).to.eq(0);
@@ -85,6 +90,7 @@ describe('Manager - Clean', function () {
     expect(await this.sl.getTotalUsdPoolStored()).to.eq(0);
 
     // token A
+    expect(await this.sl.getSherXLastAccrued(this.tokenA.address)).to.eq(0);
     expect(await this.sl.getTotalPremiumPerBlock(this.tokenA.address)).to.eq(0);
     expect(await this.sl.getPremiumLastPaid(this.tokenA.address)).to.eq(0);
     expect(await this.sl.getStoredUsd(this.tokenA.address)).to.eq(0);
@@ -92,6 +98,7 @@ describe('Manager - Clean', function () {
     expect(await this.sl.getProtocolPremium(this.protocolY, this.tokenA.address)).to.eq(0);
 
     // token B
+    expect(await this.sl.getSherXLastAccrued(this.tokenB.address)).to.eq(0);
     expect(await this.sl.getTotalPremiumPerBlock(this.tokenB.address)).to.eq(0);
     expect(await this.sl.getPremiumLastPaid(this.tokenB.address)).to.eq(0);
     expect(await this.sl.getStoredUsd(this.tokenB.address)).to.eq(0);
@@ -115,8 +122,9 @@ describe('Manager - Clean', function () {
 
       // SherX
       expect(await this.sl['getSherXPerBlock()']()).to.eq(0);
-      expect(await this.sl.getSherXLastAccrued()).to.eq(b0);
       expect(await this.sl.totalSupply()).to.eq(0);
+      expect(await this.sl.getInternalTotalSupply()).to.eq(0);
+      expect(await this.sl.getInternalTotalSupplySettled()).to.eq(b0);
 
       // USD
       expect(await this.sl.getTotalUsdPerBlock()).to.eq(0);
@@ -124,6 +132,7 @@ describe('Manager - Clean', function () {
       expect(await this.sl.getTotalUsdPoolStored()).to.eq(0);
 
       // token A
+      expect(await this.sl.getSherXLastAccrued(this.tokenA.address)).to.eq(b0);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenA.address)).to.eq(0);
       expect(await this.sl.getPremiumLastPaid(this.tokenA.address)).to.eq(b0);
       expect(await this.sl.getStoredUsd(this.tokenA.address)).to.eq(aPrice);
@@ -131,6 +140,7 @@ describe('Manager - Clean', function () {
       expect(await this.sl.getProtocolPremium(this.protocolY, this.tokenA.address)).to.eq(0);
 
       // token B
+      expect(await this.sl.getSherXLastAccrued(this.tokenB.address)).to.eq(b0);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenB.address)).to.eq(0);
       expect(await this.sl.getPremiumLastPaid(this.tokenB.address)).to.eq(0);
       expect(await this.sl.getStoredUsd(this.tokenB.address)).to.eq(0);
@@ -145,8 +155,9 @@ describe('Manager - Clean', function () {
 
       // SherX
       expect(await this.sl['getSherXPerBlock()']()).to.eq(0);
-      expect(await this.sl.getSherXLastAccrued()).to.eq(b1);
       expect(await this.sl.totalSupply()).to.eq(0);
+      expect(await this.sl.getInternalTotalSupply()).to.eq(0);
+      expect(await this.sl.getInternalTotalSupplySettled()).to.eq(b1);
 
       // USD
       expect(await this.sl.getTotalUsdPerBlock()).to.eq(0);
@@ -154,6 +165,7 @@ describe('Manager - Clean', function () {
       expect(await this.sl.getTotalUsdPoolStored()).to.eq(0);
 
       // token A
+      expect(await this.sl.getSherXLastAccrued(this.tokenA.address)).to.eq(b1);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenA.address)).to.eq(0);
       expect(await this.sl.getPremiumLastPaid(this.tokenA.address)).to.eq(b1);
       expect(await this.sl.getStoredUsd(this.tokenA.address)).to.eq(aPrice);
@@ -161,6 +173,7 @@ describe('Manager - Clean', function () {
       expect(await this.sl.getProtocolPremium(this.protocolY, this.tokenA.address)).to.eq(0);
 
       // token B
+      expect(await this.sl.getSherXLastAccrued(this.tokenB.address)).to.eq(b1);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenB.address)).to.eq(0);
       expect(await this.sl.getPremiumLastPaid(this.tokenB.address)).to.eq(0);
       expect(await this.sl.getStoredUsd(this.tokenB.address)).to.eq(0);
@@ -186,8 +199,9 @@ describe('Manager - Clean', function () {
 
       // SherX
       expect(await this.sl['getSherXPerBlock()']()).to.eq(0);
-      expect(await this.sl.getSherXLastAccrued()).to.eq(b0);
       expect(await this.sl.totalSupply()).to.eq(0);
+      expect(await this.sl.getInternalTotalSupply()).to.eq(0);
+      expect(await this.sl.getInternalTotalSupplySettled()).to.eq(b0);
 
       // USD
       expect(await this.sl.getTotalUsdPerBlock()).to.eq(0);
@@ -195,6 +209,7 @@ describe('Manager - Clean', function () {
       expect(await this.sl.getTotalUsdPoolStored()).to.eq(0);
 
       // token A
+      expect(await this.sl.getSherXLastAccrued(this.tokenA.address)).to.eq(b0);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenA.address)).to.eq(0);
       expect(await this.sl.getPremiumLastPaid(this.tokenA.address)).to.eq(b0);
       expect(await this.sl.getStoredUsd(this.tokenA.address)).to.eq(aPrice);
@@ -202,6 +217,7 @@ describe('Manager - Clean', function () {
       expect(await this.sl.getProtocolPremium(this.protocolY, this.tokenA.address)).to.eq(0);
 
       // token B
+      expect(await this.sl.getSherXLastAccrued(this.tokenB.address)).to.eq(b0);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenB.address)).to.eq(0);
       expect(await this.sl.getPremiumLastPaid(this.tokenB.address)).to.eq(b0);
       expect(await this.sl.getStoredUsd(this.tokenB.address)).to.eq(bPrice);
@@ -222,8 +238,9 @@ describe('Manager - Clean', function () {
 
       // SherX
       expect(await this.sl['getSherXPerBlock()']()).to.eq(0);
-      expect(await this.sl.getSherXLastAccrued()).to.eq(b1);
       expect(await this.sl.totalSupply()).to.eq(0);
+      expect(await this.sl.getInternalTotalSupply()).to.eq(0);
+      expect(await this.sl.getInternalTotalSupplySettled()).to.eq(b1);
 
       // USD
       expect(await this.sl.getTotalUsdPerBlock()).to.eq(0);
@@ -231,6 +248,7 @@ describe('Manager - Clean', function () {
       expect(await this.sl.getTotalUsdPoolStored()).to.eq(0);
 
       // token A
+      expect(await this.sl.getSherXLastAccrued(this.tokenA.address)).to.eq(b1);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenA.address)).to.eq(0);
       expect(await this.sl.getPremiumLastPaid(this.tokenA.address)).to.eq(b1);
       expect(await this.sl.getStoredUsd(this.tokenA.address)).to.eq(aPrice);
@@ -238,6 +256,7 @@ describe('Manager - Clean', function () {
       expect(await this.sl.getProtocolPremium(this.protocolY, this.tokenA.address)).to.eq(0);
 
       // token B
+      expect(await this.sl.getSherXLastAccrued(this.tokenB.address)).to.eq(b1);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenB.address)).to.eq(0);
       expect(await this.sl.getPremiumLastPaid(this.tokenB.address)).to.eq(b1);
       expect(await this.sl.getStoredUsd(this.tokenB.address)).to.eq(bPrice);
@@ -263,8 +282,9 @@ describe('Manager - Clean', function () {
 
       // SherX
       expect(await this.sl['getSherXPerBlock()']()).to.eq(0);
-      expect(await this.sl.getSherXLastAccrued()).to.eq(b0);
       expect(await this.sl.totalSupply()).to.eq(0);
+      expect(await this.sl.getInternalTotalSupply()).to.eq(0);
+      expect(await this.sl.getInternalTotalSupplySettled()).to.eq(b0);
 
       // USD
       expect(await this.sl.getTotalUsdPerBlock()).to.eq(0);
@@ -272,6 +292,7 @@ describe('Manager - Clean', function () {
       expect(await this.sl.getTotalUsdPoolStored()).to.eq(0);
 
       // token A
+      expect(await this.sl.getSherXLastAccrued(this.tokenA.address)).to.eq(b0);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenA.address)).to.eq(aPremium);
       expect(await this.sl.getPremiumLastPaid(this.tokenA.address)).to.eq(b0);
       expect(await this.sl.getStoredUsd(this.tokenA.address)).to.eq(0);
@@ -279,6 +300,7 @@ describe('Manager - Clean', function () {
       expect(await this.sl.getProtocolPremium(this.protocolY, this.tokenA.address)).to.eq(0);
 
       // token B
+      expect(await this.sl.getSherXLastAccrued(this.tokenB.address)).to.eq(b0);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenB.address)).to.eq(0);
       expect(await this.sl.getPremiumLastPaid(this.tokenB.address)).to.eq(0);
       expect(await this.sl.getStoredUsd(this.tokenB.address)).to.eq(0);
@@ -299,8 +321,9 @@ describe('Manager - Clean', function () {
 
       // SherX
       expect(await this.sl['getSherXPerBlock()']()).to.eq(0);
-      expect(await this.sl.getSherXLastAccrued()).to.eq(b1);
       expect(await this.sl.totalSupply()).to.eq(0);
+      expect(await this.sl.getInternalTotalSupply()).to.eq(0);
+      expect(await this.sl.getInternalTotalSupplySettled()).to.eq(b1);
 
       // USD
       expect(await this.sl.getTotalUsdPerBlock()).to.eq(0);
@@ -308,6 +331,7 @@ describe('Manager - Clean', function () {
       expect(await this.sl.getTotalUsdPoolStored()).to.eq(0);
 
       // token A
+      expect(await this.sl.getSherXLastAccrued(this.tokenA.address)).to.eq(b1);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenA.address)).to.eq(aPremium);
       expect(await this.sl.getPremiumLastPaid(this.tokenA.address)).to.eq(b1);
       expect(await this.sl.getStoredUsd(this.tokenA.address)).to.eq(0);
@@ -315,6 +339,7 @@ describe('Manager - Clean', function () {
       expect(await this.sl.getProtocolPremium(this.protocolY, this.tokenA.address)).to.eq(0);
 
       // token B
+      expect(await this.sl.getSherXLastAccrued(this.tokenB.address)).to.eq(b1);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenB.address)).to.eq(0);
       expect(await this.sl.getPremiumLastPaid(this.tokenB.address)).to.eq(0);
       expect(await this.sl.getStoredUsd(this.tokenB.address)).to.eq(0);
@@ -341,8 +366,9 @@ describe('Manager - Clean', function () {
 
       // SherX
       expect(await this.sl['getSherXPerBlock()']()).to.eq(0);
-      expect(await this.sl.getSherXLastAccrued()).to.eq(b0);
       expect(await this.sl.totalSupply()).to.eq(0);
+      expect(await this.sl.getInternalTotalSupply()).to.eq(0);
+      expect(await this.sl.getInternalTotalSupplySettled()).to.eq(b0);
 
       // USD
       expect(await this.sl.getTotalUsdPerBlock()).to.eq(0);
@@ -350,6 +376,7 @@ describe('Manager - Clean', function () {
       expect(await this.sl.getTotalUsdPoolStored()).to.eq(0);
 
       // token A
+      expect(await this.sl.getSherXLastAccrued(this.tokenA.address)).to.eq(b0);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenA.address)).to.eq(aPremium);
       expect(await this.sl.getPremiumLastPaid(this.tokenA.address)).to.eq(b0);
       expect(await this.sl.getStoredUsd(this.tokenA.address)).to.eq(0);
@@ -357,6 +384,7 @@ describe('Manager - Clean', function () {
       expect(await this.sl.getProtocolPremium(this.protocolY, this.tokenA.address)).to.eq(0);
 
       // token B
+      expect(await this.sl.getSherXLastAccrued(this.tokenB.address)).to.eq(b0);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenB.address)).to.eq(bPremium);
       expect(await this.sl.getPremiumLastPaid(this.tokenB.address)).to.eq(b0);
       expect(await this.sl.getStoredUsd(this.tokenB.address)).to.eq(0);
@@ -378,8 +406,9 @@ describe('Manager - Clean', function () {
 
       // SherX
       expect(await this.sl['getSherXPerBlock()']()).to.eq(0);
-      expect(await this.sl.getSherXLastAccrued()).to.eq(b1);
       expect(await this.sl.totalSupply()).to.eq(0);
+      expect(await this.sl.getInternalTotalSupply()).to.eq(0);
+      expect(await this.sl.getInternalTotalSupplySettled()).to.eq(b1);
 
       // USD
       expect(await this.sl.getTotalUsdPerBlock()).to.eq(0);
@@ -387,6 +416,7 @@ describe('Manager - Clean', function () {
       expect(await this.sl.getTotalUsdPoolStored()).to.eq(0);
 
       // token A
+      expect(await this.sl.getSherXLastAccrued(this.tokenA.address)).to.eq(b1);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenA.address)).to.eq(aPremium);
       expect(await this.sl.getPremiumLastPaid(this.tokenA.address)).to.eq(b1);
       expect(await this.sl.getStoredUsd(this.tokenA.address)).to.eq(0);
@@ -394,6 +424,7 @@ describe('Manager - Clean', function () {
       expect(await this.sl.getProtocolPremium(this.protocolY, this.tokenA.address)).to.eq(0);
 
       // token B
+      expect(await this.sl.getSherXLastAccrued(this.tokenB.address)).to.eq(b1);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenB.address)).to.eq(bPremium);
       expect(await this.sl.getPremiumLastPaid(this.tokenB.address)).to.eq(b1);
       expect(await this.sl.getStoredUsd(this.tokenB.address)).to.eq(0);
@@ -421,8 +452,9 @@ describe('Manager - Clean', function () {
 
       // SherX
       expect(await this.sl['getSherXPerBlock()']()).to.eq(0);
-      expect(await this.sl.getSherXLastAccrued()).to.eq(b0);
       expect(await this.sl.totalSupply()).to.eq(0);
+      expect(await this.sl.getInternalTotalSupply()).to.eq(0);
+      expect(await this.sl.getInternalTotalSupplySettled()).to.eq(b0);
 
       // USD
       expect(await this.sl.getTotalUsdPerBlock()).to.eq(0);
@@ -430,6 +462,7 @@ describe('Manager - Clean', function () {
       expect(await this.sl.getTotalUsdPoolStored()).to.eq(0);
 
       // token A
+      expect(await this.sl.getSherXLastAccrued(this.tokenA.address)).to.eq(b0);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenA.address)).to.eq(
         aPremiumX.add(aPremiumY),
       );
@@ -443,6 +476,7 @@ describe('Manager - Clean', function () {
       );
 
       // token B
+      expect(await this.sl.getSherXLastAccrued(this.tokenB.address)).to.eq(b0);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenB.address)).to.eq(bPremium);
       expect(await this.sl.getPremiumLastPaid(this.tokenB.address)).to.eq(b0);
       expect(await this.sl.getStoredUsd(this.tokenB.address)).to.eq(0);
@@ -465,8 +499,9 @@ describe('Manager - Clean', function () {
 
       // SherX
       expect(await this.sl['getSherXPerBlock()']()).to.eq(0);
-      expect(await this.sl.getSherXLastAccrued()).to.eq(b1);
       expect(await this.sl.totalSupply()).to.eq(0);
+      expect(await this.sl.getInternalTotalSupply()).to.eq(0);
+      expect(await this.sl.getInternalTotalSupplySettled()).to.eq(b1);
 
       // USD
       expect(await this.sl.getTotalUsdPerBlock()).to.eq(0);
@@ -474,6 +509,7 @@ describe('Manager - Clean', function () {
       expect(await this.sl.getTotalUsdPoolStored()).to.eq(0);
 
       // token A
+      expect(await this.sl.getSherXLastAccrued(this.tokenA.address)).to.eq(b1);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenA.address)).to.eq(
         aPremiumX.add(aPremiumY),
       );
@@ -487,6 +523,7 @@ describe('Manager - Clean', function () {
       );
 
       // token B
+      expect(await this.sl.getSherXLastAccrued(this.tokenB.address)).to.eq(b1);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenB.address)).to.eq(bPremium);
       expect(await this.sl.getPremiumLastPaid(this.tokenB.address)).to.eq(b1);
       expect(await this.sl.getStoredUsd(this.tokenB.address)).to.eq(0);
@@ -514,8 +551,9 @@ describe('Manager - Clean', function () {
 
       // SherX
       expect(await this.sl['getSherXPerBlock()']()).to.eq(parseEther('1'));
-      expect(await this.sl.getSherXLastAccrued()).to.eq(b0);
       expect(await this.sl.totalSupply()).to.eq(0);
+      expect(await this.sl.getInternalTotalSupply()).to.eq(0);
+      expect(await this.sl.getInternalTotalSupplySettled()).to.eq(b0);
 
       // USD
       expect(await this.sl.getTotalUsdPerBlock()).to.eq(parseEther('2'));
@@ -523,6 +561,7 @@ describe('Manager - Clean', function () {
       expect(await this.sl.getTotalUsdPoolStored()).to.eq(0);
 
       // token A
+      expect(await this.sl.getSherXLastAccrued(this.tokenA.address)).to.eq(b0);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenA.address)).to.eq(aPremium);
       expect(await this.sl.getPremiumLastPaid(this.tokenA.address)).to.eq(b0);
       expect(await this.sl.getStoredUsd(this.tokenA.address)).to.eq(aPrice);
@@ -530,6 +569,7 @@ describe('Manager - Clean', function () {
       expect(await this.sl.getProtocolPremium(this.protocolY, this.tokenA.address)).to.eq(0);
 
       // token B
+      expect(await this.sl.getSherXLastAccrued(this.tokenB.address)).to.eq(b0);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenB.address)).to.eq(0);
       expect(await this.sl.getPremiumLastPaid(this.tokenB.address)).to.eq(0);
       expect(await this.sl.getStoredUsd(this.tokenB.address)).to.eq(0);
@@ -554,8 +594,9 @@ describe('Manager - Clean', function () {
       // doubles as the usd pool / usd per block is equally incremented.
       // only differ is double in token amount
       expect(await this.sl['getSherXPerBlock()']()).to.eq(parseEther('2'));
-      expect(await this.sl.getSherXLastAccrued()).to.eq(b1);
       expect(await this.sl.totalSupply()).to.eq(parseEther('1'));
+      expect(await this.sl.getInternalTotalSupply()).to.eq(parseEther('1'));
+      expect(await this.sl.getInternalTotalSupplySettled()).to.eq(b1);
 
       // USD
       expect(await this.sl.getTotalUsdPerBlock()).to.eq(parseEther('8'));
@@ -563,6 +604,7 @@ describe('Manager - Clean', function () {
       expect(await this.sl.getTotalUsdPoolStored()).to.eq(parseEther('4'));
 
       // token A
+      expect(await this.sl.getSherXLastAccrued(this.tokenA.address)).to.eq(b1);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenA.address)).to.eq(aPremium);
       expect(await this.sl.getPremiumLastPaid(this.tokenA.address)).to.eq(b1);
       expect(await this.sl.getStoredUsd(this.tokenA.address)).to.eq(aPrice);
@@ -570,6 +612,7 @@ describe('Manager - Clean', function () {
       expect(await this.sl.getProtocolPremium(this.protocolY, this.tokenA.address)).to.eq(0);
 
       // token B
+      expect(await this.sl.getSherXLastAccrued(this.tokenB.address)).to.eq(b1);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenB.address)).to.eq(0);
       expect(await this.sl.getPremiumLastPaid(this.tokenB.address)).to.eq(0);
       expect(await this.sl.getStoredUsd(this.tokenB.address)).to.eq(0);
@@ -599,8 +642,9 @@ describe('Manager - Clean', function () {
 
       // SherX
       expect(await this.sl['getSherXPerBlock()']()).to.eq(parseEther('1'));
-      expect(await this.sl.getSherXLastAccrued()).to.eq(b0);
       expect(await this.sl.totalSupply()).to.eq(0);
+      expect(await this.sl.getInternalTotalSupply()).to.eq(0);
+      expect(await this.sl.getInternalTotalSupplySettled()).to.eq(b0);
 
       // USD
       expect(await this.sl.getTotalUsdPerBlock()).to.eq(parseEther('50'));
@@ -608,6 +652,7 @@ describe('Manager - Clean', function () {
       expect(await this.sl.getTotalUsdPoolStored()).to.eq(0);
 
       // token A
+      expect(await this.sl.getSherXLastAccrued(this.tokenA.address)).to.eq(b0);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenA.address)).to.eq(aPremium);
       expect(await this.sl.getPremiumLastPaid(this.tokenA.address)).to.eq(b0);
       expect(await this.sl.getStoredUsd(this.tokenA.address)).to.eq(aPrice);
@@ -615,6 +660,7 @@ describe('Manager - Clean', function () {
       expect(await this.sl.getProtocolPremium(this.protocolY, this.tokenA.address)).to.eq(0);
 
       // token B
+      expect(await this.sl.getSherXLastAccrued(this.tokenB.address)).to.eq(b0);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenB.address)).to.eq(bPremium);
       expect(await this.sl.getPremiumLastPaid(this.tokenB.address)).to.eq(b0);
       expect(await this.sl.getStoredUsd(this.tokenB.address)).to.eq(bPrice);
@@ -639,8 +685,9 @@ describe('Manager - Clean', function () {
 
       // SherX
       expect(await this.sl['getSherXPerBlock()']()).to.eq(parseEther('10'));
-      expect(await this.sl.getSherXLastAccrued()).to.eq(b1);
       expect(await this.sl.totalSupply()).to.eq(parseEther('1'));
+      expect(await this.sl.getInternalTotalSupply()).to.eq(parseEther('1'));
+      expect(await this.sl.getInternalTotalSupplySettled()).to.eq(b1);
 
       // USD
       expect(await this.sl.getTotalUsdPerBlock()).to.eq(parseEther('5000'));
@@ -649,6 +696,7 @@ describe('Manager - Clean', function () {
       expect(await this.sl.getTotalUsdPoolStored()).to.eq(parseEther('500'));
 
       // token A
+      expect(await this.sl.getSherXLastAccrued(this.tokenA.address)).to.eq(b1);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenA.address)).to.eq(aPremium);
       expect(await this.sl.getPremiumLastPaid(this.tokenA.address)).to.eq(b1);
       expect(await this.sl.getStoredUsd(this.tokenA.address)).to.eq(aPrice);
@@ -656,6 +704,7 @@ describe('Manager - Clean', function () {
       expect(await this.sl.getProtocolPremium(this.protocolY, this.tokenA.address)).to.eq(0);
 
       // token B
+      expect(await this.sl.getSherXLastAccrued(this.tokenB.address)).to.eq(b1);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenB.address)).to.eq(bPremium);
       expect(await this.sl.getPremiumLastPaid(this.tokenB.address)).to.eq(b1);
       expect(await this.sl.getStoredUsd(this.tokenB.address)).to.eq(bPrice);
@@ -684,8 +733,9 @@ describe('Manager - Clean', function () {
 
       // SherX
       expect(await this.sl['getSherXPerBlock()']()).to.eq(parseEther('1'));
-      expect(await this.sl.getSherXLastAccrued()).to.eq(b0);
       expect(await this.sl.totalSupply()).to.eq(0);
+      expect(await this.sl.getInternalTotalSupply()).to.eq(0);
+      expect(await this.sl.getInternalTotalSupplySettled()).to.eq(b0);
 
       // USD
       expect(await this.sl.getTotalUsdPerBlock()).to.eq(parseEther('30'));
@@ -693,6 +743,7 @@ describe('Manager - Clean', function () {
       expect(await this.sl.getTotalUsdPoolStored()).to.eq(0);
 
       // token A
+      expect(await this.sl.getSherXLastAccrued(this.tokenA.address)).to.eq(b0);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenA.address)).to.eq(
         aPremiumX.add(aPremiumY),
       );
@@ -706,6 +757,7 @@ describe('Manager - Clean', function () {
       );
 
       // token B
+      expect(await this.sl.getSherXLastAccrued(this.tokenB.address)).to.eq(b0);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenB.address)).to.eq(0);
       expect(await this.sl.getPremiumLastPaid(this.tokenB.address)).to.eq(0);
       expect(await this.sl.getStoredUsd(this.tokenB.address)).to.eq(0);
@@ -729,8 +781,9 @@ describe('Manager - Clean', function () {
 
       // SherX
       expect(await this.sl['getSherXPerBlock()']()).to.eq(parseEther('2'));
-      expect(await this.sl.getSherXLastAccrued()).to.eq(b1);
       expect(await this.sl.totalSupply()).to.eq(parseEther('1'));
+      expect(await this.sl.getInternalTotalSupply()).to.eq(parseEther('1'));
+      expect(await this.sl.getInternalTotalSupplySettled()).to.eq(b1);
 
       // USD
       expect(await this.sl.getTotalUsdPerBlock()).to.eq(parseEther('120'));
@@ -738,6 +791,7 @@ describe('Manager - Clean', function () {
       expect(await this.sl.getTotalUsdPoolStored()).to.eq(parseEther('60'));
 
       // token A
+      expect(await this.sl.getSherXLastAccrued(this.tokenA.address)).to.eq(b1);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenA.address)).to.eq(
         aPremiumX.add(aPremiumY),
       );
@@ -751,6 +805,7 @@ describe('Manager - Clean', function () {
       );
 
       // token B
+      expect(await this.sl.getSherXLastAccrued(this.tokenB.address)).to.eq(b1);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenB.address)).to.eq(0);
       expect(await this.sl.getPremiumLastPaid(this.tokenB.address)).to.eq(0);
       expect(await this.sl.getStoredUsd(this.tokenB.address)).to.eq(0);
@@ -782,8 +837,9 @@ describe('Manager - Clean', function () {
 
       // SherX
       expect(await this.sl['getSherXPerBlock()']()).to.eq(parseEther('1'));
-      expect(await this.sl.getSherXLastAccrued()).to.eq(b0);
       expect(await this.sl.totalSupply()).to.eq(0);
+      expect(await this.sl.getInternalTotalSupply()).to.eq(0);
+      expect(await this.sl.getInternalTotalSupplySettled()).to.eq(b0);
 
       // USD
       expect(await this.sl.getTotalUsdPerBlock()).to.eq(parseEther('80'));
@@ -791,6 +847,7 @@ describe('Manager - Clean', function () {
       expect(await this.sl.getTotalUsdPoolStored()).to.eq(0);
 
       // token A
+      expect(await this.sl.getSherXLastAccrued(this.tokenA.address)).to.eq(b0);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenA.address)).to.eq(
         aPremiumX.add(aPremiumY),
       );
@@ -804,6 +861,7 @@ describe('Manager - Clean', function () {
       );
 
       // token B
+      expect(await this.sl.getSherXLastAccrued(this.tokenB.address)).to.eq(b0);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenB.address)).to.eq(bPremiumX);
       expect(await this.sl.getPremiumLastPaid(this.tokenB.address)).to.eq(b0);
       expect(await this.sl.getStoredUsd(this.tokenB.address)).to.eq(bPrice);
@@ -833,8 +891,9 @@ describe('Manager - Clean', function () {
 
       // SherX
       expect(await this.sl['getSherXPerBlock()']()).to.eq(parseEther('2'));
-      expect(await this.sl.getSherXLastAccrued()).to.eq(b1);
       expect(await this.sl.totalSupply()).to.eq(parseEther('1'));
+      expect(await this.sl.getInternalTotalSupply()).to.eq(parseEther('1'));
+      expect(await this.sl.getInternalTotalSupplySettled()).to.eq(b1);
 
       // USD
       expect(await this.sl.getTotalUsdPerBlock()).to.eq(parseEther('1600'));
@@ -842,6 +901,7 @@ describe('Manager - Clean', function () {
       expect(await this.sl.getTotalUsdPoolStored()).to.eq(parseEther('800'));
 
       // token A
+      expect(await this.sl.getSherXLastAccrued(this.tokenA.address)).to.eq(b1);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenA.address)).to.eq(
         aPremiumX.add(aPremiumY),
       );
@@ -855,6 +915,7 @@ describe('Manager - Clean', function () {
       );
 
       // token B
+      expect(await this.sl.getSherXLastAccrued(this.tokenB.address)).to.eq(b1);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenB.address)).to.eq(bPremiumX);
       expect(await this.sl.getPremiumLastPaid(this.tokenB.address)).to.eq(b1);
       expect(await this.sl.getStoredUsd(this.tokenB.address)).to.eq(bPrice);
@@ -887,12 +948,12 @@ describe('Manager - Active', function () {
     // Add tokenA as valid token
     await this.sl
       .c(this.gov)
-      .tokenInit(this.tokenA.address, this.gov.address, constants.AddressZero, true);
+      .tokenInit(this.tokenA.address, this.gov.address, this.lockA.address, true);
 
     // Add tokenb as valid token
     await this.sl
       .c(this.gov)
-      .tokenInit(this.tokenB.address, this.gov.address, constants.AddressZero, true);
+      .tokenInit(this.tokenB.address, this.gov.address, this.lockB.address, true);
 
     // Add protocolX as valid protocol
     await this.sl
@@ -933,6 +994,10 @@ describe('Manager - Active', function () {
       this.tokenB.address,
     );
 
+    // otherwise sherxperblock stays 0. as there is nothing minted
+    await this.sl.c(this.gov).setWatsonsAddress(this.alice.address);
+    await this.sl.c(this.gov).setInitialWeight();
+
     this.aPremium = parseUnits('1', this.tokenA.dec);
     this.aPrice = parseUnits('10', this.tokenA.usdDec);
     this.bPremium = parseUnits('2', this.tokenB.dec);
@@ -964,9 +1029,10 @@ describe('Manager - Active', function () {
   it('Initial state', async function () {
     // SherX
     expect(await this.sl['getSherXPerBlock()']()).to.eq(parseEther('2'));
-    expect(await this.sl.getSherXLastAccrued()).to.eq(this.b1);
     expect(await this.sl.totalSupply()).to.eq(parseEther('5'));
     expect(await this.sl.getTotalSherX()).to.eq(parseEther('15'));
+    expect(await this.sl.getInternalTotalSupply()).to.eq(parseEther('5'));
+    expect(await this.sl.getInternalTotalSupplySettled()).to.eq(this.b1);
 
     // USD
     expect(await this.sl.getTotalUsdPerBlock()).to.eq(parseEther('50'));
@@ -990,6 +1056,8 @@ describe('Manager - Active', function () {
       this.bPremium,
     );
     expect(await this.sl.getProtocolPremium(this.protocolY, this.tokenB.address)).to.eq(0);
+
+    // INFO: getWatsonsSherxLastAccrued also updates.
   });
   describe('setTokenPrice(address,uint256)', function () {
     before(async function () {
@@ -1005,9 +1073,10 @@ describe('Manager - Active', function () {
       // SherX;
       // stays the same as the composition of tokenA in block rewards is same as sherx underlying (33%)
       expect(await this.sl['getSherXPerBlock()']()).to.eq(parseEther('2'));
-      expect(await this.sl.getSherXLastAccrued()).to.eq(b2);
       expect(await this.sl.totalSupply()).to.eq(parseEther('17'));
       expect(await this.sl.getTotalSherX()).to.eq(parseEther('17'));
+      expect(await this.sl.getInternalTotalSupply()).to.eq(parseEther('17'));
+      expect(await this.sl.getInternalTotalSupplySettled()).to.eq(b2);
 
       // USD
       // 1*10 + 2*20 (50) --> 1*20 + 2*20 (60)
@@ -1018,6 +1087,7 @@ describe('Manager - Active', function () {
       expect(await this.sl.getTotalUsdPoolStored()).to.eq(parseEther('510'));
 
       // token A
+      expect(await this.sl.getSherXLastAccrued(this.tokenA.address)).to.eq(b2);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenA.address)).to.eq(this.aPremium);
       expect(await this.sl.getPremiumLastPaid(this.tokenA.address)).to.eq(b2);
       expect(await this.sl.getStoredUsd(this.tokenA.address)).to.eq(this.aPrice.mul(2));
@@ -1027,6 +1097,7 @@ describe('Manager - Active', function () {
       expect(await this.sl.getProtocolPremium(this.protocolY, this.tokenA.address)).to.eq(0);
 
       // token B
+      expect(await this.sl.getSherXLastAccrued(this.tokenB.address)).to.eq(b2);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenB.address)).to.eq(this.bPremium);
       expect(await this.sl.getPremiumLastPaid(this.tokenB.address)).to.eq(this.b1);
       expect(await this.sl.getStoredUsd(this.tokenB.address)).to.eq(this.bPrice);
@@ -1053,9 +1124,10 @@ describe('Manager - Active', function () {
       // SherX;
       // stays the same as the composition of tokenA/tokenB in block rewards is same as sherx underlying (33%)
       expect(await this.sl['getSherXPerBlock()']()).to.eq(parseEther('2'));
-      expect(await this.sl.getSherXLastAccrued()).to.eq(b2);
       expect(await this.sl.totalSupply()).to.eq(parseEther('17'));
       expect(await this.sl.getTotalSherX()).to.eq(parseEther('17'));
+      expect(await this.sl.getInternalTotalSupply()).to.eq(parseEther('17'));
+      expect(await this.sl.getInternalTotalSupplySettled()).to.eq(b2);
 
       // USD
       // 1*10 + 2*20 (50) --> 1*20 + 2*40 (100)
@@ -1066,6 +1138,7 @@ describe('Manager - Active', function () {
       expect(await this.sl.getTotalUsdPoolStored()).to.eq(parseEther('850'));
 
       // token A
+      expect(await this.sl.getSherXLastAccrued(this.tokenA.address)).to.eq(b2);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenA.address)).to.eq(this.aPremium);
       expect(await this.sl.getPremiumLastPaid(this.tokenA.address)).to.eq(b2);
       expect(await this.sl.getStoredUsd(this.tokenA.address)).to.eq(this.aPrice.mul(2));
@@ -1075,6 +1148,7 @@ describe('Manager - Active', function () {
       expect(await this.sl.getProtocolPremium(this.protocolY, this.tokenA.address)).to.eq(0);
 
       // token B
+      expect(await this.sl.getSherXLastAccrued(this.tokenB.address)).to.eq(b2);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenB.address)).to.eq(this.bPremium);
       expect(await this.sl.getPremiumLastPaid(this.tokenB.address)).to.eq(b2);
       expect(await this.sl.getStoredUsd(this.tokenB.address)).to.eq(this.bPrice.mul(2));
@@ -1102,9 +1176,10 @@ describe('Manager - Active', function () {
       // SherX;
       // increase of 50 -> 60 usd per block = 120%, 1,2 * 2 = 2.4
       expect(await this.sl['getSherXPerBlock()']()).to.eq(parseEther('2.4'));
-      expect(await this.sl.getSherXLastAccrued()).to.eq(b2);
       expect(await this.sl.totalSupply()).to.eq(parseEther('17'));
       expect(await this.sl.getTotalSherX()).to.eq(parseEther('17'));
+      expect(await this.sl.getInternalTotalSupply()).to.eq(parseEther('17'));
+      expect(await this.sl.getInternalTotalSupplySettled()).to.eq(b2);
 
       // USD
       // 1*10 + 2*20 (50) --> 2*10 + 2*20 (60)
@@ -1115,6 +1190,7 @@ describe('Manager - Active', function () {
       expect(await this.sl.getTotalUsdPoolStored()).to.eq(parseEther('425'));
 
       // token A
+      expect(await this.sl.getSherXLastAccrued(this.tokenA.address)).to.eq(b2);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenA.address)).to.eq(
         this.aPremium.mul(2),
       );
@@ -1126,6 +1202,7 @@ describe('Manager - Active', function () {
       expect(await this.sl.getProtocolPremium(this.protocolY, this.tokenA.address)).to.eq(0);
 
       // token B
+      expect(await this.sl.getSherXLastAccrued(this.tokenB.address)).to.eq(b2);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenB.address)).to.eq(this.bPremium);
       expect(await this.sl.getPremiumLastPaid(this.tokenB.address)).to.eq(this.b1);
       expect(await this.sl.getStoredUsd(this.tokenB.address)).to.eq(this.bPrice);
@@ -1153,9 +1230,10 @@ describe('Manager - Active', function () {
       // SherX;
       // increase of 50 -> 100 usd per block = 200%, 2,0 * 2 = 4.0
       expect(await this.sl['getSherXPerBlock()']()).to.eq(parseEther('4.0'));
-      expect(await this.sl.getSherXLastAccrued()).to.eq(b2);
       expect(await this.sl.totalSupply()).to.eq(parseEther('17'));
       expect(await this.sl.getTotalSherX()).to.eq(parseEther('17'));
+      expect(await this.sl.getInternalTotalSupply()).to.eq(parseEther('17'));
+      expect(await this.sl.getInternalTotalSupplySettled()).to.eq(b2);
 
       // USD
       // 1*10 + 2*20 (50) --> 2*10 + 4*20 (100)
@@ -1166,6 +1244,7 @@ describe('Manager - Active', function () {
       expect(await this.sl.getTotalUsdPoolStored()).to.eq(parseEther('425'));
 
       // token A
+      expect(await this.sl.getSherXLastAccrued(this.tokenA.address)).to.eq(b2);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenA.address)).to.eq(
         this.aPremium.mul(2),
       );
@@ -1177,6 +1256,7 @@ describe('Manager - Active', function () {
       expect(await this.sl.getProtocolPremium(this.protocolY, this.tokenA.address)).to.eq(0);
 
       // token B
+      expect(await this.sl.getSherXLastAccrued(this.tokenB.address)).to.eq(b2);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenB.address)).to.eq(
         this.bPremium.mul(2),
       );
@@ -1205,9 +1285,10 @@ describe('Manager - Active', function () {
       // SherX;
       // increase of 50 -> 120 usd per block = 240%, 2,4 * 2 = 4.8
       expect(await this.sl['getSherXPerBlock()']()).to.eq(parseEther('4.8'));
-      expect(await this.sl.getSherXLastAccrued()).to.eq(b2);
       expect(await this.sl.totalSupply()).to.eq(parseEther('17'));
       expect(await this.sl.getTotalSherX()).to.eq(parseEther('17'));
+      expect(await this.sl.getInternalTotalSupply()).to.eq(parseEther('17'));
+      expect(await this.sl.getInternalTotalSupplySettled()).to.eq(b2);
 
       // USD
       // 1*10 + 2*20 (50) --> 2*10 + 4*20 + 2*10 (120)
@@ -1218,6 +1299,7 @@ describe('Manager - Active', function () {
       expect(await this.sl.getTotalUsdPoolStored()).to.eq(parseEther('425'));
 
       // token A
+      expect(await this.sl.getSherXLastAccrued(this.tokenA.address)).to.eq(b2);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenA.address)).to.eq(
         this.aPremium.mul(4),
       );
@@ -1231,6 +1313,7 @@ describe('Manager - Active', function () {
       );
 
       // token B
+      expect(await this.sl.getSherXLastAccrued(this.tokenB.address)).to.eq(b2);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenB.address)).to.eq(
         this.bPremium.mul(2),
       );
@@ -1262,9 +1345,10 @@ describe('Manager - Active', function () {
       // usdpool increased from 425 -> 510 = 120% increase
       // 3.2 / 1.2 = 2.66666
       expect(await this.sl['getSherXPerBlock()']()).to.eq(parseEther('2.666666666666666666'));
-      expect(await this.sl.getSherXLastAccrued()).to.eq(b2);
       expect(await this.sl.totalSupply()).to.eq(parseEther('17'));
       expect(await this.sl.getTotalSherX()).to.eq(parseEther('17'));
+      expect(await this.sl.getInternalTotalSupply()).to.eq(parseEther('17'));
+      expect(await this.sl.getInternalTotalSupplySettled()).to.eq(b2);
 
       // USD
       // 1*10 + 2*20 (50) --> 2*20 + 2*20 (80)
@@ -1275,6 +1359,7 @@ describe('Manager - Active', function () {
       expect(await this.sl.getTotalUsdPoolStored()).to.eq(parseEther('510'));
 
       // token A
+      expect(await this.sl.getSherXLastAccrued(this.tokenA.address)).to.eq(b2);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenA.address)).to.eq(
         this.aPremium.mul(2),
       );
@@ -1286,6 +1371,7 @@ describe('Manager - Active', function () {
       expect(await this.sl.getProtocolPremium(this.protocolY, this.tokenA.address)).to.eq(0);
 
       // token B
+      expect(await this.sl.getSherXLastAccrued(this.tokenB.address)).to.eq(b2);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenB.address)).to.eq(this.bPremium);
       expect(await this.sl.getPremiumLastPaid(this.tokenB.address)).to.eq(this.b1);
       expect(await this.sl.getStoredUsd(this.tokenB.address)).to.eq(this.bPrice);
@@ -1315,9 +1401,10 @@ describe('Manager - Active', function () {
       // usdpool increased from 425 -> 850 = 200% increase
       // 8 / 2 = 4
       expect(await this.sl['getSherXPerBlock()']()).to.eq(parseEther('4'));
-      expect(await this.sl.getSherXLastAccrued()).to.eq(b2);
       expect(await this.sl.totalSupply()).to.eq(parseEther('17'));
       expect(await this.sl.getTotalSherX()).to.eq(parseEther('17'));
+      expect(await this.sl.getInternalTotalSupply()).to.eq(parseEther('17'));
+      expect(await this.sl.getInternalTotalSupplySettled()).to.eq(b2);
 
       // USD
       // 1*10 + 2*20 (50) --> 2*20 + 4*40 (200)
@@ -1328,6 +1415,7 @@ describe('Manager - Active', function () {
       expect(await this.sl.getTotalUsdPoolStored()).to.eq(parseEther('850'));
 
       // token A
+      expect(await this.sl.getSherXLastAccrued(this.tokenA.address)).to.eq(b2);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenA.address)).to.eq(
         this.aPremium.mul(2),
       );
@@ -1339,6 +1427,7 @@ describe('Manager - Active', function () {
       expect(await this.sl.getProtocolPremium(this.protocolY, this.tokenA.address)).to.eq(0);
 
       // token B
+      expect(await this.sl.getSherXLastAccrued(this.tokenB.address)).to.eq(b2);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenB.address)).to.eq(
         this.bPremium.mul(2),
       );
@@ -1370,10 +1459,10 @@ describe('Manager - Active', function () {
       // usdpool increased from 425 -> 510 = 120% increase
       // 4,8 / 1,2 = 4
       expect(await this.sl['getSherXPerBlock()']()).to.eq(parseEther('4'));
-      expect(await this.sl.getSherXLastAccrued()).to.eq(b2);
       expect(await this.sl.totalSupply()).to.eq(parseEther('17'));
       expect(await this.sl.getTotalSherX()).to.eq(parseEther('17'));
-
+      expect(await this.sl.getInternalTotalSupply()).to.eq(parseEther('17'));
+      expect(await this.sl.getInternalTotalSupplySettled()).to.eq(b2);
       // USD
       // 1*10 + 2*20 (50) --> 2*20 + 2*20 + 2*20 (120)
       expect(await this.sl.getTotalUsdPerBlock()).to.eq(parseEther('120'));
@@ -1383,6 +1472,7 @@ describe('Manager - Active', function () {
       expect(await this.sl.getTotalUsdPoolStored()).to.eq(parseEther('510'));
 
       // token A
+      expect(await this.sl.getSherXLastAccrued(this.tokenA.address)).to.eq(b2);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenA.address)).to.eq(
         this.aPremium.mul(4),
       );
@@ -1396,6 +1486,7 @@ describe('Manager - Active', function () {
       );
 
       // token B
+      expect(await this.sl.getSherXLastAccrued(this.tokenB.address)).to.eq(b2);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenB.address)).to.eq(this.bPremium);
       expect(await this.sl.getPremiumLastPaid(this.tokenB.address)).to.eq(this.b1);
       expect(await this.sl.getStoredUsd(this.tokenB.address)).to.eq(this.bPrice);
@@ -1425,9 +1516,10 @@ describe('Manager - Active', function () {
       // usdpool increased from 425 -> 850 = 200% increase
       // 9,6 / 2 = 4,8
       expect(await this.sl['getSherXPerBlock()']()).to.eq(parseEther('4.8'));
-      expect(await this.sl.getSherXLastAccrued()).to.eq(b2);
       expect(await this.sl.totalSupply()).to.eq(parseEther('17'));
       expect(await this.sl.getTotalSherX()).to.eq(parseEther('17'));
+      expect(await this.sl.getInternalTotalSupply()).to.eq(parseEther('17'));
+      expect(await this.sl.getInternalTotalSupplySettled()).to.eq(b2);
 
       // USD
       // 1*10 + 2*20 (50) --> 2*20 + 4*40 + 2*20 (240)
@@ -1438,6 +1530,7 @@ describe('Manager - Active', function () {
       expect(await this.sl.getTotalUsdPoolStored()).to.eq(parseEther('850'));
 
       // token A
+      expect(await this.sl.getSherXLastAccrued(this.tokenA.address)).to.eq(b2);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenA.address)).to.eq(
         this.aPremium.mul(4),
       );
@@ -1451,6 +1544,7 @@ describe('Manager - Active', function () {
       );
 
       // token B
+      expect(await this.sl.getSherXLastAccrued(this.tokenB.address)).to.eq(b2);
       expect(await this.sl.getTotalPremiumPerBlock(this.tokenB.address)).to.eq(
         this.bPremium.mul(2),
       );

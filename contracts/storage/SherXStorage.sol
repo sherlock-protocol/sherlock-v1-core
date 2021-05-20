@@ -21,7 +21,8 @@ library SherXStorage {
     uint256 totalUsdPool;
     uint256 totalUsdLastSettled;
     uint256 sherXPerBlock;
-    uint256 sherXLastAccrued;
+    uint256 internalTotalSupply;
+    uint256 internalTotalSupplySettled;
   }
 
   function sx() internal pure returns (Base storage sx) {
