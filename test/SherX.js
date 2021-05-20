@@ -730,11 +730,147 @@ describe('SherX', function () {
       expect(data.amounts.length).to.eq(3);
     });
   });
-  describe('accrueSherX()', function () {
-    // TODO
-  });
   describe('accrueSherX(address)', function () {
-    // TODO
+    before(async function () {
+      await timeTraveler.revertSnapshot();
+      await this.sl
+        .c(this.gov)
+        .tokenInit(this.tokenA.address, constants.AddressZero, this.lockA.address, false);
+      await this.sl.c(this.gov).setWatsonsAddress(this.carol.address);
+      await this.sl.c(this.gov).setInitialWeight();
+      await this.sl
+        .c(this.gov)
+        .setWeights(
+          [this.sl.address, this.tokenA.address],
+          [parseEther('0.3'), parseEther('0.7')],
+          0,
+        );
+      this.b0 = await blockNumber(
+        this.sl
+          .c(this.gov)
+          ['setProtocolPremiumAndTokenPrice(bytes32,address[],uint256[],uint256[])'](
+            this.protocolX,
+            [this.tokenA.address],
+            [parseEther('1')],
+            [parseEther('1')],
+          ),
+      );
+    });
+    it('Initial state', async function () {
+      await timeTraveler.mine(1);
+
+      expect(await this.sl.getWatsonsSherXPerBlock()).to.eq(0);
+      expect(await this.sl.getWatsonsSherxLastAccrued()).to.eq(this.b0);
+      expect(await this.sl.getWatsonsUnmintedSherX()).to.eq(0);
+      expect(await this.sl.balanceOf(this.carol.address)).to.eq(0);
+
+      expect(await this.sl.getUnallocatedSherXStored(this.sl.address)).to.eq(0);
+      expect(await this.sl.getTotalUnmintedSherX(this.sl.address)).to.eq(parseEther('0.3'));
+      expect(await this.sl.getUnallocatedSherXTotal(this.sl.address)).to.eq(parseEther('0.3'));
+      expect(await this.sl.getStakersPoolBalance(this.sl.address)).to.eq(0);
+      expect(await this.sl.getSherXLastAccrued(this.sl.address)).to.eq(this.b0);
+
+      expect(await this.sl.getUnallocatedSherXStored(this.tokenA.address)).to.eq(0);
+      expect(await this.sl.getTotalUnmintedSherX(this.tokenA.address)).to.eq(parseEther('0.7'));
+      expect(await this.sl.getUnallocatedSherXTotal(this.tokenA.address)).to.eq(parseEther('0.7'));
+      expect(await this.sl.getStakersPoolBalance(this.tokenA.address)).to.eq(0);
+      expect(await this.sl.getSherXLastAccrued(this.tokenA.address)).to.eq(this.b0);
+
+      expect(await this.sl.balanceOf(this.sl.address)).to.eq(parseEther('0'));
+    });
+    it('Do', async function () {
+      const b1 = await blockNumber(this.sl['accrueSherX(address)'](this.tokenA.address));
+
+      expect(await this.sl.getWatsonsSherXPerBlock()).to.eq(0);
+      expect(await this.sl.getWatsonsSherxLastAccrued()).to.eq(this.b0);
+      expect(await this.sl.getWatsonsUnmintedSherX()).to.eq(0);
+      expect(await this.sl.balanceOf(this.carol.address)).to.eq(0);
+
+      expect(await this.sl.getUnallocatedSherXStored(this.sl.address)).to.eq(0);
+      expect(await this.sl.getTotalUnmintedSherX(this.sl.address)).to.eq(parseEther('0.6'));
+      expect(await this.sl.getUnallocatedSherXTotal(this.sl.address)).to.eq(parseEther('0.6'));
+      expect(await this.sl.getStakersPoolBalance(this.sl.address)).to.eq(0);
+      expect(await this.sl.getSherXLastAccrued(this.sl.address)).to.eq(this.b0);
+
+      expect(await this.sl.getUnallocatedSherXStored(this.tokenA.address)).to.eq(parseEther('1.4'));
+      expect(await this.sl.getTotalUnmintedSherX(this.tokenA.address)).to.eq(0);
+      expect(await this.sl.getUnallocatedSherXTotal(this.tokenA.address)).to.eq(parseEther('1.4'));
+      expect(await this.sl.getStakersPoolBalance(this.tokenA.address)).to.eq(0);
+      expect(await this.sl.getSherXLastAccrued(this.tokenA.address)).to.eq(b1);
+
+      expect(await this.sl.balanceOf(this.sl.address)).to.eq(parseEther('1.4'));
+    });
+  });
+  describe('accrueSherX()', function () {
+    before(async function () {
+      await timeTraveler.revertSnapshot();
+      await this.sl
+        .c(this.gov)
+        .tokenInit(this.tokenA.address, constants.AddressZero, this.lockA.address, false);
+      await this.sl.c(this.gov).setWatsonsAddress(this.carol.address);
+      await this.sl.c(this.gov).setInitialWeight();
+      await this.sl
+        .c(this.gov)
+        .setWeights(
+          [this.sl.address, this.tokenA.address],
+          [parseEther('0.3'), parseEther('0.7')],
+          0,
+        );
+      this.b0 = await blockNumber(
+        this.sl
+          .c(this.gov)
+          ['setProtocolPremiumAndTokenPrice(bytes32,address[],uint256[],uint256[])'](
+            this.protocolX,
+            [this.tokenA.address],
+            [parseEther('1')],
+            [parseEther('1')],
+          ),
+      );
+    });
+    it('Initial state', async function () {
+      await timeTraveler.mine(1);
+
+      expect(await this.sl.getWatsonsSherXPerBlock()).to.eq(0);
+      expect(await this.sl.getWatsonsSherxLastAccrued()).to.eq(this.b0);
+      expect(await this.sl.getWatsonsUnmintedSherX()).to.eq(0);
+      expect(await this.sl.balanceOf(this.carol.address)).to.eq(0);
+
+      expect(await this.sl.getUnallocatedSherXStored(this.sl.address)).to.eq(0);
+      expect(await this.sl.getTotalUnmintedSherX(this.sl.address)).to.eq(parseEther('0.3'));
+      expect(await this.sl.getUnallocatedSherXTotal(this.sl.address)).to.eq(parseEther('0.3'));
+      expect(await this.sl.getStakersPoolBalance(this.sl.address)).to.eq(0);
+      expect(await this.sl.getSherXLastAccrued(this.sl.address)).to.eq(this.b0);
+
+      expect(await this.sl.getUnallocatedSherXStored(this.tokenA.address)).to.eq(0);
+      expect(await this.sl.getTotalUnmintedSherX(this.tokenA.address)).to.eq(parseEther('0.7'));
+      expect(await this.sl.getUnallocatedSherXTotal(this.tokenA.address)).to.eq(parseEther('0.7'));
+      expect(await this.sl.getStakersPoolBalance(this.tokenA.address)).to.eq(0);
+      expect(await this.sl.getSherXLastAccrued(this.tokenA.address)).to.eq(this.b0);
+
+      expect(await this.sl.balanceOf(this.sl.address)).to.eq(parseEther('0'));
+    });
+    it('Do', async function () {
+      const b1 = await blockNumber(this.sl['accrueSherX()']());
+
+      expect(await this.sl.getWatsonsSherXPerBlock()).to.eq(0);
+      expect(await this.sl.getWatsonsSherxLastAccrued()).to.eq(b1);
+      expect(await this.sl.getWatsonsUnmintedSherX()).to.eq(0);
+      expect(await this.sl.balanceOf(this.carol.address)).to.eq(0);
+
+      expect(await this.sl.getUnallocatedSherXStored(this.sl.address)).to.eq(0);
+      expect(await this.sl.getTotalUnmintedSherX(this.sl.address)).to.eq(0);
+      expect(await this.sl.getUnallocatedSherXTotal(this.sl.address)).to.eq(0);
+      expect(await this.sl.getStakersPoolBalance(this.sl.address)).to.eq(parseEther('0.6'));
+      expect(await this.sl.getSherXLastAccrued(this.sl.address)).to.eq(b1);
+
+      expect(await this.sl.getUnallocatedSherXStored(this.tokenA.address)).to.eq(parseEther('1.4'));
+      expect(await this.sl.getTotalUnmintedSherX(this.tokenA.address)).to.eq(0);
+      expect(await this.sl.getUnallocatedSherXTotal(this.tokenA.address)).to.eq(parseEther('1.4'));
+      expect(await this.sl.getStakersPoolBalance(this.tokenA.address)).to.eq(0);
+      expect(await this.sl.getSherXLastAccrued(this.tokenA.address)).to.eq(b1);
+
+      expect(await this.sl.balanceOf(this.sl.address)).to.eq(parseEther('2'));
+    });
   });
   describe('accrueSherXWatsons()', function () {
     before(async function () {
@@ -763,7 +899,7 @@ describe('SherX', function () {
       expect(await this.sl.getWatsonsUnmintedSherX()).to.eq(parseEther('1'));
       expect(await this.sl.balanceOf(this.carol.address)).to.eq(0);
     });
-    it('Accrue', async function () {
+    it('Do', async function () {
       const b1 = await blockNumber(this.sl.accrueSherXWatsons());
 
       expect(await this.sl.getWatsonsSherXPerBlock()).to.eq(parseEther('1'));
