@@ -11,7 +11,7 @@ import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 interface ILock is IERC20 {
   function getOwner() external view returns (address);
 
-  function underlying() external view returns (address);
+  function underlying() external view returns (IERC20);
 
   function mint(address _account, uint256 _amount) external;
 

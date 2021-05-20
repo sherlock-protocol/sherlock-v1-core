@@ -179,7 +179,7 @@ contract Gov is IGov {
     require(gs.protocolIsCovered[_protocol], 'NOT_COVERED');
 
     for (uint256 i; i < _tokens.length; i++) {
-      PoolStorage.Base storage ps = PoolStorage.ps(address(_tokens[i]));
+      PoolStorage.Base storage ps = PoolStorage.ps(_tokens[i]);
       require(ps.premiums, 'INIT');
       require(!ps.isProtocol[_protocol], 'ALREADY_ADDED');
 
@@ -195,7 +195,7 @@ contract Gov is IGov {
     for (uint256 i; i < gs.tokensProtocol.length; i++) {
       IERC20 token = gs.tokensProtocol[i];
 
-      PoolStorage.Base storage ps = PoolStorage.ps(address(token));
+      PoolStorage.Base storage ps = PoolStorage.ps(token);
       // basically need to check if accruedDebt > 0, but this is true in case premium > 0
       require(ps.protocolPremium[_protocol] == 0, 'DEBT');
       require(!ps.isProtocol[_protocol], 'POOL_PROTOCOL');
@@ -212,7 +212,7 @@ contract Gov is IGov {
     bool _protocolPremium
   ) external override onlyGovInsurance {
     GovStorage.Base storage gs = GovStorage.gs();
-    PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
+    PoolStorage.Base storage ps = PoolStorage.ps(_token);
     require(address(_token) != address(0), 'ZERO_TOKEN');
 
     if (_govPool != address(0)) {
@@ -226,7 +226,7 @@ contract Gov is IGov {
         require(_lock.totalSupply() == 0, 'SUPPLY');
         // If not native (e.g. NOT SherX), verify underlying mapping
         if (address(_token) != address(this)) {
-          require(_lock.underlying() == address(_token), 'UNDERLYING');
+          require(_lock.underlying() == _token, 'UNDERLYING');
         }
         ps.lockToken = _lock;
       }
@@ -248,7 +248,7 @@ contract Gov is IGov {
 
   function tokenDisableStakers(IERC20 _token, uint256 _index) external override onlyGovInsurance {
     GovStorage.Base storage gs = GovStorage.gs();
-    PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
+    PoolStorage.Base storage ps = PoolStorage.ps(_token);
     require(gs.tokensStaker[_index] == _token, 'INDEX');
     require(ps.sherXWeight == 0, 'ACTIVE_WEIGHT');
 
@@ -261,7 +261,7 @@ contract Gov is IGov {
 
   function tokenDisableProtocol(IERC20 _token, uint256 _index) external override onlyGovInsurance {
     GovStorage.Base storage gs = GovStorage.gs();
-    PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
+    PoolStorage.Base storage ps = PoolStorage.ps(_token);
     require(gs.tokensProtocol[_index] == _token, 'INDEX');
     require(ps.totalPremiumPerBlock == 0, 'ACTIVE_PREMIUM');
     require(ps.sherXUnderlying == 0, 'ACTIVE_SHERX');
@@ -276,7 +276,7 @@ contract Gov is IGov {
 
     GovStorage.Base storage gs = GovStorage.gs();
 
-    PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
+    PoolStorage.Base storage ps = PoolStorage.ps(_token);
     // Moved from disable to remove, as disable can be skipped
     // in case protocol only pay premium with this token
     require(ps.govPool != address(0), 'EMPTY');

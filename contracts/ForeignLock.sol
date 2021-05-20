@@ -16,8 +16,8 @@ contract ForeignLock is NativeLock {
   constructor(
     string memory _name,
     string memory _symbol,
-    address _sherlock,
-    address _underlying
+    IERC20 _sherlock,
+    IERC20 _underlying
   ) public NativeLock(_name, _symbol, _sherlock) {
     underlying = _underlying;
   }

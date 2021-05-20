@@ -13,7 +13,7 @@ interface ISherX {
   // Events
   //
 
-  event Harvest(address indexed user, address indexed token);
+  event Harvest(address indexed user, IERC20 indexed token);
 
   //
   // View methods
@@ -75,22 +75,22 @@ interface ISherX {
   function setInitialWeight() external;
 
   function setWeights(
-    address[] memory _tokens,
+    IERC20[] memory _tokens,
     uint256[] memory _weights,
     uint256 _watsons
   ) external;
 
   function harvest() external;
 
-  function harvest(address _token) external;
+  function harvest(IERC20 _token) external;
 
-  function harvest(address[] calldata _tokens) external;
+  function harvest(IERC20[] calldata _tokens) external;
 
   function harvestFor(address _user) external;
 
-  function harvestFor(address _user, address _token) external;
+  function harvestFor(address _user, IERC20 _token) external;
 
-  function harvestFor(address _user, address[] calldata _tokens) external;
+  function harvestFor(address _user, IERC20[] calldata _tokens) external;
 
   function redeem(uint256 _amount, address _receiver) external;
 

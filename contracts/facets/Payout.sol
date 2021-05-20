@@ -78,7 +78,7 @@ contract Payout is IPayout {
     uint256 subUsdPool;
 
     for (uint256 i; i < tokens.length; i++) {
-      PoolStorage.Base storage ps = PoolStorage.ps(address(tokens[i]));
+      PoolStorage.Base storage ps = PoolStorage.ps(tokens[i]);
 
       if (amounts[i] > ps.sherXUnderlying) {
         LibPool.payOffDebtAll(tokens[i]);
@@ -127,7 +127,7 @@ contract Payout is IPayout {
       uint256 amounts = _amounts[i];
       uint256 unallocatedSherX = _unallocatedSherX[i];
 
-      PoolStorage.Base storage ps = PoolStorage.ps(address(token));
+      PoolStorage.Base storage ps = PoolStorage.ps(token);
       require(ps.govPool != address(0), 'INIT');
       require(ps.unallocatedSherX >= unallocatedSherX, 'ERR_UNALLOC_FEE');
 

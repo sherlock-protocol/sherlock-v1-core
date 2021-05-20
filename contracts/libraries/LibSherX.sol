@@ -72,7 +72,7 @@ library LibSherX {
       tokens[i] = token;
 
       if (total > 0) {
-        PoolStorage.Base storage ps = PoolStorage.ps(address(token));
+        PoolStorage.Base storage ps = PoolStorage.ps(token);
         amounts[i] = ps.sherXUnderlying.add(LibPool.getTotalAccruedDebt(token)).mul(_amount).div(
           total
         );
@@ -131,7 +131,7 @@ library LibSherX {
   }
 
   function _accrueSherX(IERC20 _token, uint256 sherXPerBlock) private returns (uint256 sherX) {
-    PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
+    PoolStorage.Base storage ps = PoolStorage.ps(_token);
     sherX = block.number.sub(ps.sherXLastAccrued).mul(sherXPerBlock).mul(ps.sherXWeight).div(
       10**18
     );

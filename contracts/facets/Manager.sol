@@ -172,7 +172,7 @@ contract Manager is IManager {
     uint256 _newUsd
   ) external override onlyGovInsurance {
     require(_protocol.length == _premium.length, 'LENGTH');
-    PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
+    PoolStorage.Base storage ps = PoolStorage.ps(_token);
     onlyValidToken(ps, _token);
     LibPool.payOffDebtAll(_token);
 
@@ -236,7 +236,7 @@ contract Manager is IManager {
     uint256 usdPerBlock,
     uint256 usdPool
   ) private returns (uint256, uint256) {
-    PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
+    PoolStorage.Base storage ps = PoolStorage.ps(_token);
     onlyValidToken(ps, _token);
 
     uint256 oldUsd = _setTokenPrice(_token, _newUsd);
@@ -271,7 +271,7 @@ contract Manager is IManager {
     uint256 usdPool
   ) private returns (uint256, uint256) {
     SherXStorage.Base storage sx = SherXStorage.sx();
-    PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
+    PoolStorage.Base storage ps = PoolStorage.ps(_token);
     onlyValidToken(ps, _token);
 
     (uint256 oldPremium, uint256 newPremium) = _setProtocolPremium(ps, _protocol, _token, _premium);
@@ -312,7 +312,7 @@ contract Manager is IManager {
     uint256 usdPerBlock,
     uint256 usdPool
   ) private returns (uint256, uint256) {
-    PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
+    PoolStorage.Base storage ps = PoolStorage.ps(_token);
     onlyValidToken(ps, _token);
 
     uint256 oldUsd = _setTokenPrice(_token, _newUsd);

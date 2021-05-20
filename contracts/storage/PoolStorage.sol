@@ -53,7 +53,7 @@ library PoolStorage {
     uint256 lock;
   }
 
-  function ps(address _token) internal pure returns (Base storage bs) {
+  function ps(IERC20 _token) internal pure returns (Base storage bs) {
     bytes32 position = keccak256(abi.encode(POOL_STORAGE_PREFIX, _token));
     assembly {
       bs.slot := position

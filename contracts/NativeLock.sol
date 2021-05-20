@@ -11,14 +11,14 @@ import '@openzeppelin/contracts/access/Ownable.sol';
 import './interfaces/ILock.sol';
 
 contract NativeLock is ERC20, ILock, Ownable {
-  address public override underlying;
+  IERC20 public override underlying;
 
   constructor(
     string memory _name,
     string memory _symbol,
-    address _sherlock
+    IERC20 _sherlock
   ) public ERC20(_name, _symbol) {
-    transferOwnership(_sherlock);
+    transferOwnership(address(_sherlock));
     underlying = _sherlock;
   }
 

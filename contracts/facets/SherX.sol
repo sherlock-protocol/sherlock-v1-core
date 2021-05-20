@@ -60,7 +60,7 @@ contract SherX is ISherX {
     return SherXStorage.sx().tokenUSD[_token];
   }
 
-  function getUnmintedSherX(address _token) internal view returns (uint256 amount) {
+  function getUnmintedSherX(IERC20 _token) internal view returns (uint256 amount) {
     PoolStorage.Base storage ps = PoolStorage.ps(_token);
     SherXStorage.Base storage sx = SherXStorage.sx();
 
@@ -81,7 +81,7 @@ contract SherX is ISherX {
         .mul(gs.watsonsSherxWeight)
         .div(10**18);
     for (uint256 i; i < gs.tokensStaker.length; i++) {
-      total = total.add(getUnmintedSherX(address(gs.tokensStaker[i])));
+      total = total.add(getUnmintedSherX(gs.tokensStaker[i]));
     }
     return total;
   }
@@ -103,7 +103,7 @@ contract SherX is ISherX {
     uint256 balance = sx20.balances[_user];
     GovStorage.Base storage gs = GovStorage.gs();
     for (uint256 i; i < gs.tokensStaker.length; i++) {
-      balance = balance.add(LibPool.getUnallocatedSherXFor(_user, address(gs.tokensStaker[i])));
+      balance = balance.add(LibPool.getUnallocatedSherXFor(_user, gs.tokensStaker[i]));
     }
     return balance;
   }
@@ -158,7 +158,7 @@ contract SherX is ISherX {
       IERC20 token = gs.tokensProtocol[i];
 
       // TODO callstack
-      PoolStorage.Base storage ps = PoolStorage.ps(address(token));
+      PoolStorage.Base storage ps = PoolStorage.ps(token);
       uint256 _temp =
         ps.sherXUnderlying.add(LibPool.getTotalAccruedDebt(token)).mul(_amount).mul(
           sx.tokenUSD[token]
@@ -179,7 +179,7 @@ contract SherX is ISherX {
     address to,
     uint256 amount
   ) external override {
-    doYield(msg.sender, from, to, amount);
+    doYield(ILock(msg.sender), from, to, amount);
   }
 
   function setInitialWeight() external override onlyGovInsurance {
@@ -187,7 +187,7 @@ contract SherX is ISherX {
     require(gs.watsonsAddress != address(0), 'WATS_UNSET');
     require(gs.watsonsSherxWeight == 0, 'ALREADY_INIT');
     for (uint256 i; i < gs.tokensStaker.length; i++) {
-      PoolStorage.Base storage ps = PoolStorage.ps(address(gs.tokensStaker[i]));
+      PoolStorage.Base storage ps = PoolStorage.ps(gs.tokensStaker[i]);
       require(ps.sherXWeight == 0, 'ALREADY_INIT_2');
     }
 
@@ -195,7 +195,7 @@ contract SherX is ISherX {
   }
 
   function setWeights(
-    address[] memory _tokens,
+    IERC20[] memory _tokens,
     uint256[] memory _weights,
     uint256 _watsons
   ) external override onlyGovInsurance {
@@ -233,11 +233,11 @@ contract SherX is ISherX {
     harvestFor(msg.sender);
   }
 
-  function harvest(address _token) external override {
+  function harvest(IERC20 _token) external override {
     harvestFor(msg.sender, _token);
   }
 
-  function harvest(address[] calldata _tokens) external override {
+  function harvest(IERC20[] calldata _tokens) external override {
     for (uint256 i; i < _tokens.length; i++) {
       harvestFor(msg.sender, _tokens[i]);
     }
@@ -246,22 +246,22 @@ contract SherX is ISherX {
   function harvestFor(address _user) public override {
     GovStorage.Base storage gs = GovStorage.gs();
     for (uint256 i; i < gs.tokensStaker.length; i++) {
-      PoolStorage.Base storage ps = PoolStorage.ps(address(gs.tokensStaker[i]));
-      harvestFor(_user, address(ps.lockToken));
+      PoolStorage.Base storage ps = PoolStorage.ps(gs.tokensStaker[i]);
+      harvestFor(_user, ps.lockToken);
     }
   }
 
-  function harvestFor(address _user, address _token) public override {
+  function harvestFor(address _user, IERC20 _token) public override {
     // could potentially call harvest function for token that are not in the pool
     // if balance > 0, tx will revert
-    uint256 stakeBalance = IERC20(_token).balanceOf(_user);
+    uint256 stakeBalance = _token.balanceOf(_user);
     if (stakeBalance > 0) {
-      doYield(_token, _user, _user, 0);
+      doYield(ILock(address(_token)), _user, _user, 0);
     }
     emit Harvest(_user, _token);
   }
 
-  function harvestFor(address _user, address[] calldata _tokens) external override {
+  function harvestFor(address _user, IERC20[] calldata _tokens) external override {
     for (uint256 i; i < _tokens.length; i++) {
       harvestFor(_user, _tokens[i]);
     }
@@ -279,7 +279,7 @@ contract SherX is ISherX {
 
     uint256 subUsdPool = 0;
     for (uint256 i; i < tokens.length; i++) {
-      PoolStorage.Base storage ps = PoolStorage.ps(address(tokens[i]));
+      PoolStorage.Base storage ps = PoolStorage.ps(tokens[i]);
 
       if (amounts[i] > ps.sherXUnderlying) {
         LibPool.payOffDebtAll(tokens[i]);
@@ -308,16 +308,16 @@ contract SherX is ISherX {
   }
 
   function doYield(
-    address token,
+    ILock token,
     address from,
     address to,
     uint256 amount
   ) private {
-    address underlying = ILock(token).underlying();
+    IERC20 underlying = ILock(token).underlying();
     PoolStorage.Base storage ps = PoolStorage.ps(underlying);
-    require(address(ps.lockToken) == token, 'Unexpected sender');
+    require(ps.lockToken == token, 'Unexpected sender');
 
-    LibSherX.accrueSherX(IERC20(underlying));
+    LibSherX.accrueSherX(underlying);
     uint256 userAmount = ps.lockToken.balanceOf(from);
     uint256 totalAmount = ps.lockToken.totalSupply();
 
@@ -336,7 +336,7 @@ contract SherX is ISherX {
         ps.sWithdrawn[from] = raw_amount.sub(ineglible_yield_amount);
 
         ps.unallocatedSherX = ps.unallocatedSherX.sub(withdrawable_amount);
-        PoolStorage.Base storage psSherX = PoolStorage.ps(address(this));
+        PoolStorage.Base storage psSherX = PoolStorage.ps(IERC20(address(this)));
         if (from == address(this)) {
           // add SherX harvested by the pool itself to first money out pool.
           psSherX.firstMoneyOut = psSherX.firstMoneyOut.add(withdrawable_amount);

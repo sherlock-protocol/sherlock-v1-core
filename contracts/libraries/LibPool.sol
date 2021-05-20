@@ -22,31 +22,31 @@ library LibPool {
   using SafeERC20 for ILock;
 
   function accruedDebt(bytes32 _protocol, IERC20 _token) public view returns (uint256) {
-    PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
+    PoolStorage.Base storage ps = PoolStorage.ps(_token);
 
     return block.number.sub(ps.totalPremiumLastPaid).mul(ps.protocolPremium[_protocol]);
   }
 
   function getTotalAccruedDebt(IERC20 _token) public view returns (uint256) {
-    PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
+    PoolStorage.Base storage ps = PoolStorage.ps(_token);
 
     return block.number.sub(ps.totalPremiumLastPaid).mul(ps.totalPremiumPerBlock);
   }
 
-  function getTotalUnmintedSherX(address _token) public view returns (uint256 sherX) {
-    PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
+  function getTotalUnmintedSherX(IERC20 _token) public view returns (uint256 sherX) {
+    PoolStorage.Base storage ps = PoolStorage.ps(_token);
     SherXStorage.Base storage sx = SherXStorage.sx();
     sherX = block.number.sub(ps.sherXLastAccrued).mul(sx.sherXPerBlock).mul(ps.sherXWeight).div(
       10**18
     );
   }
 
-  function getUnallocatedSherXFor(address _user, address _token)
+  function getUnallocatedSherXFor(address _user, IERC20 _token)
     external
     view
     returns (uint256 withdrawable_amount)
   {
-    PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
+    PoolStorage.Base storage ps = PoolStorage.ps(_token);
 
     uint256 userAmount = ps.lockToken.balanceOf(_user);
     uint256 totalAmount = ps.lockToken.totalSupply();
@@ -77,7 +77,7 @@ library LibPool {
   }
 
   function payOffDebtAll(IERC20 _token) external {
-    PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
+    PoolStorage.Base storage ps = PoolStorage.ps(_token);
     for (uint256 i = 0; i < ps.protocols.length; i++) {
       payOffDebt(ps.protocols[i], _token);
     }
@@ -89,7 +89,7 @@ library LibPool {
   }
 
   function payOffDebt(bytes32 _protocol, IERC20 _token) private {
-    PoolStorage.Base storage ps = PoolStorage.ps(address(_token));
+    PoolStorage.Base storage ps = PoolStorage.ps(_token);
     // todo optimize by forwarding  block.number.sub(protocolPremiumLastPaid) instead of calculating every loop
     uint256 debt = accruedDebt(_protocol, _token);
     ps.protocolBalance[_protocol] = ps.protocolBalance[_protocol].sub(debt);
