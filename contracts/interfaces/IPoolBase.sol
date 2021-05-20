@@ -32,7 +32,7 @@ interface IPoolBase {
 
   function getProtocolPremium(bytes32 _protocol, IERC20 _token) external view returns (uint256);
 
-  function getLockToken(IERC20 _token) external view returns (address);
+  function getLockToken(IERC20 _token) external view returns (ILock);
 
   function isProtocol(bytes32 _protocol, IERC20 _token) external view returns (bool);
 

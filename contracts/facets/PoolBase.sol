@@ -28,28 +28,23 @@ contract PoolBase is IPoolBase {
   //
 
   function getCooldownFee(IERC20 _token) external view override returns (uint256) {
-    (, PoolStorage.Base storage ps) = baseData();
-    return ps.activateCooldownFee;
+    return baseData().activateCooldownFee;
   }
 
   function getSherXWeight(IERC20 _token) external view override returns (uint256) {
-    (, PoolStorage.Base storage ps) = baseData();
-    return ps.sherXWeight;
+    return baseData().sherXWeight;
   }
 
   function getGovPool(IERC20 _token) external view override returns (address) {
-    (, PoolStorage.Base storage ps) = baseData();
-    return ps.govPool;
+    return baseData().govPool;
   }
 
   function isPremium(IERC20 _token) external view override returns (bool) {
-    (, PoolStorage.Base storage ps) = baseData();
-    return ps.premiums;
+    return baseData().premiums;
   }
 
   function isStake(IERC20 _token) external view override returns (bool) {
-    (, PoolStorage.Base storage ps) = baseData();
-    return ps.stakes;
+    return baseData().stakes;
   }
 
   function getProtocolBalance(bytes32 _protocol, IERC20 _token)
@@ -58,8 +53,7 @@ contract PoolBase is IPoolBase {
     override
     returns (uint256)
   {
-    (, PoolStorage.Base storage ps) = baseData();
-    return ps.protocolBalance[_protocol];
+    return baseData().protocolBalance[_protocol];
   }
 
   function getProtocolPremium(bytes32 _protocol, IERC20 _token)
@@ -68,23 +62,19 @@ contract PoolBase is IPoolBase {
     override
     returns (uint256)
   {
-    (, PoolStorage.Base storage ps) = baseData();
-    return ps.protocolPremium[_protocol];
+    return baseData().protocolPremium[_protocol];
   }
 
-  function getLockToken(IERC20 _token) external view override returns (address) {
-    (, PoolStorage.Base storage ps) = baseData();
-    return address(ps.lockToken);
+  function getLockToken(IERC20 _token) external view override returns (ILock) {
+    return baseData().lockToken;
   }
 
   function isProtocol(bytes32 _protocol, IERC20 _token) external view override returns (bool) {
-    (, PoolStorage.Base storage ps) = baseData();
-    return ps.isProtocol[_protocol];
+    return baseData().isProtocol[_protocol];
   }
 
   function getProtocols(IERC20 _token) external view override returns (bytes32[] memory) {
-    (, PoolStorage.Base storage ps) = baseData();
-    return ps.protocols;
+    return baseData().protocols;
   }
 
   function getUnstakeEntry(
@@ -92,18 +82,16 @@ contract PoolBase is IPoolBase {
     uint256 _id,
     IERC20 _token
   ) external view override returns (PoolStorage.UnstakeEntry memory) {
-    (, PoolStorage.Base storage ps) = baseData();
-    return ps.unstakeEntries[_staker][_id];
+    return baseData().unstakeEntries[_staker][_id];
   }
 
   function getTotalAccruedDebt(IERC20 _token) external view override returns (uint256) {
-    (IERC20 _token, ) = baseData();
+    baseData();
     return LibPool.getTotalAccruedDebt(_token);
   }
 
   function getFirstMoneyOut(IERC20 _token) external view override returns (uint256) {
-    (, PoolStorage.Base storage ps) = baseData();
-    return ps.firstMoneyOut;
+    return baseData().firstMoneyOut;
   }
 
   function getAccruedDebt(bytes32 _protocol, IERC20 _token)
@@ -112,23 +100,20 @@ contract PoolBase is IPoolBase {
     override
     returns (uint256)
   {
-    (IERC20 _token, ) = baseData();
+    baseData();
     return LibPool.accruedDebt(_protocol, _token);
   }
 
   function getTotalPremiumPerBlock(IERC20 _token) external view override returns (uint256) {
-    (, PoolStorage.Base storage ps) = baseData();
-    return ps.totalPremiumPerBlock;
+    return baseData().totalPremiumPerBlock;
   }
 
   function getPremiumLastPaid(IERC20 _token) external view override returns (uint256) {
-    (, PoolStorage.Base storage ps) = baseData();
-    return ps.totalPremiumLastPaid;
+    return baseData().totalPremiumLastPaid;
   }
 
   function getSherXUnderlying(IERC20 _token) external view override returns (uint256) {
-    (, PoolStorage.Base storage ps) = baseData();
-    return ps.sherXUnderlying;
+    return baseData().sherXUnderlying;
   }
 
   function getUnstakeEntrySize(address _staker, IERC20 _token)
@@ -137,8 +122,7 @@ contract PoolBase is IPoolBase {
     override
     returns (uint256)
   {
-    (, PoolStorage.Base storage ps) = baseData();
-    return ps.unstakeEntries[_staker].length;
+    return baseData().unstakeEntries[_staker].length;
   }
 
   function getInitialUnstakeEntry(address _staker, IERC20 _token)
@@ -147,7 +131,7 @@ contract PoolBase is IPoolBase {
     override
     returns (uint256)
   {
-    (, PoolStorage.Base storage ps) = baseData();
+    PoolStorage.Base storage ps = baseData();
     GovStorage.Base storage gs = GovStorage.gs();
     for (uint256 i = 0; i < ps.unstakeEntries[_staker].length; i++) {
       if (ps.unstakeEntries[_staker][i].blockInitiated == 0) {
@@ -166,8 +150,7 @@ contract PoolBase is IPoolBase {
   }
 
   function getStakersPoolBalance(IERC20 _token) public view override returns (uint256) {
-    (, PoolStorage.Base storage ps) = baseData();
-    return ps.stakeBalance;
+    return baseData().stakeBalance;
   }
 
   function getStakerPoolBalance(address _staker, IERC20 _token)
@@ -176,7 +159,7 @@ contract PoolBase is IPoolBase {
     override
     returns (uint256)
   {
-    (, PoolStorage.Base storage ps) = baseData();
+    PoolStorage.Base storage ps = baseData();
     if (ps.lockToken.totalSupply() == 0) {
       return 0;
     }
@@ -187,12 +170,12 @@ contract PoolBase is IPoolBase {
   }
 
   function getTotalUnmintedSherX(IERC20 _token) public view override returns (uint256) {
+    baseData();
     return LibPool.getTotalUnmintedSherX(_token);
   }
 
   function getUnallocatedSherXStored(IERC20 _token) public view override returns (uint256) {
-    (, PoolStorage.Base storage ps) = baseData();
-    return ps.unallocatedSherX;
+    return baseData().unallocatedSherX;
   }
 
   function getUnallocatedSherXTotal(IERC20 _token) external view override returns (uint256) {
@@ -205,14 +188,12 @@ contract PoolBase is IPoolBase {
     override
     returns (uint256)
   {
+    baseData();
     return LibPool.getUnallocatedSherXFor(_user, _token);
   }
 
   function getTotalSherXPerBlock(IERC20 _token) public view override returns (uint256) {
-    PoolStorage.Base storage ps = PoolStorage.ps(_token);
-    SherXStorage.Base storage sx = SherXStorage.sx();
-
-    return sx.sherXPerBlock.mul(ps.sherXWeight).div(10**18);
+    return SherXStorage.sx().sherXPerBlock.mul(baseData().sherXWeight).div(10**18);
   }
 
   function getSherXPerBlock(IERC20 _token) external view override returns (uint256) {
@@ -220,7 +201,7 @@ contract PoolBase is IPoolBase {
   }
 
   function getSherXPerBlock(address _user, IERC20 _token) public view override returns (uint256) {
-    PoolStorage.Base storage ps = PoolStorage.ps(_token);
+    PoolStorage.Base storage ps = baseData();
     if (ps.lockToken.totalSupply() == 0) {
       return 0;
     }
@@ -232,13 +213,12 @@ contract PoolBase is IPoolBase {
 
   function getSherXPerBlock(uint256 _lock, IERC20 _token) external view override returns (uint256) {
     // simulates staking (adding lock)
-    (, PoolStorage.Base storage ps) = baseData();
-    return getTotalSherXPerBlock(_token).mul(_lock).div(ps.lockToken.totalSupply().add(_lock));
+    return
+      getTotalSherXPerBlock(_token).mul(_lock).div(baseData().lockToken.totalSupply().add(_lock));
   }
 
   function getSherXLastAccrued(IERC20 _token) external view override returns (uint256) {
-    (, PoolStorage.Base storage ps) = baseData();
-    return ps.sherXLastAccrued;
+    return baseData().sherXLastAccrued;
   }
 
   function LockToTokenXRate(IERC20 _token) external view override returns (uint256) {
@@ -246,7 +226,7 @@ contract PoolBase is IPoolBase {
   }
 
   function LockToToken(uint256 _amount, IERC20 _token) public view override returns (uint256) {
-    (, PoolStorage.Base storage ps) = baseData();
+    PoolStorage.Base storage ps = baseData();
     uint256 totalLock = ps.lockToken.totalSupply();
     if (totalLock == 0 || ps.stakeBalance == 0) {
       revert('NO_DATA');
@@ -259,7 +239,7 @@ contract PoolBase is IPoolBase {
   }
 
   function TokenToLock(uint256 _amount, IERC20 _token) public view override returns (uint256) {
-    (, PoolStorage.Base storage ps) = baseData();
+    PoolStorage.Base storage ps = baseData();
     uint256 totalLock = ps.lockToken.totalSupply();
     if (totalLock == 0 || ps.stakeBalance == 0) {
       return 10**18;
@@ -271,9 +251,8 @@ contract PoolBase is IPoolBase {
   // Internal view methods
   //
 
-  function baseData() internal view returns (IERC20 token, PoolStorage.Base storage ps) {
-    token = bps();
-    ps = PoolStorage.ps(token);
+  function baseData() internal view returns (PoolStorage.Base storage ps) {
+    ps = PoolStorage.ps(bps());
     require(ps.govPool != address(0), 'INVALID_TOKEN');
   }
 
@@ -297,8 +276,7 @@ contract PoolBase is IPoolBase {
     require(msg.sender == GovStorage.gs().govInsurance, 'NOT_GOV_INS');
     require(_fee <= 10**18, 'MAX_VALUE');
 
-    (, PoolStorage.Base storage ps) = baseData();
-    ps.activateCooldownFee = _fee;
+    baseData().activateCooldownFee = _fee;
   }
 
   function depositProtocolBalance(
@@ -308,10 +286,10 @@ contract PoolBase is IPoolBase {
   ) external override {
     require(_amount > 0, 'AMOUNT');
     require(GovStorage.gs().protocolIsCovered[_protocol], 'PROTOCOL');
-    (IERC20 token, PoolStorage.Base storage ps) = baseData();
+    PoolStorage.Base storage ps = baseData();
     require(ps.isProtocol[_protocol], 'NO_DEPOSIT');
 
-    token.safeTransferFrom(msg.sender, address(this), _amount);
+    _token.safeTransferFrom(msg.sender, address(this), _amount);
     ps.protocolBalance[_protocol] = ps.protocolBalance[_protocol].add(_amount);
   }
 
@@ -324,7 +302,7 @@ contract PoolBase is IPoolBase {
     require(msg.sender == GovStorage.gs().protocolAgents[_protocol], 'SENDER');
     require(_amount > 0, 'AMOUNT');
     require(_receiver != address(0), 'RECEIVER');
-    (IERC20 _token, PoolStorage.Base storage ps) = baseData();
+    PoolStorage.Base storage ps = baseData();
 
     LibPool.payOffDebtAll(_token);
 
@@ -338,7 +316,7 @@ contract PoolBase is IPoolBase {
 
   function activateCooldown(uint256 _amount, IERC20 _token) external override returns (uint256) {
     require(_amount > 0, 'AMOUNT');
-    (, PoolStorage.Base storage ps) = baseData();
+    PoolStorage.Base storage ps = baseData();
 
     ps.lockToken.safeTransferFrom(msg.sender, address(this), _amount);
     uint256 fee = _amount.mul(ps.activateCooldownFee).div(10**18);
@@ -358,7 +336,7 @@ contract PoolBase is IPoolBase {
   }
 
   function cancelCooldown(uint256 _id, IERC20 _token) external override {
-    (, PoolStorage.Base storage ps) = baseData();
+    PoolStorage.Base storage ps = baseData();
     GovStorage.Base storage gs = GovStorage.gs();
 
     PoolStorage.UnstakeEntry memory withdraw = ps.unstakeEntries[msg.sender][_id];
@@ -374,7 +352,7 @@ contract PoolBase is IPoolBase {
     uint256 _id,
     IERC20 _token
   ) external override {
-    (, PoolStorage.Base storage ps) = baseData();
+    PoolStorage.Base storage ps = baseData();
     GovStorage.Base storage gs = GovStorage.gs();
 
     PoolStorage.UnstakeEntry memory withdraw = ps.unstakeEntries[_account][_id];
@@ -393,7 +371,7 @@ contract PoolBase is IPoolBase {
     address _receiver,
     IERC20 _token
   ) external override returns (uint256 amount) {
-    (IERC20 token, PoolStorage.Base storage ps) = baseData();
+    PoolStorage.Base storage ps = baseData();
     require(_receiver != address(0), 'RECEIVER');
     GovStorage.Base storage gs = GovStorage.gs();
     PoolStorage.UnstakeEntry memory withdraw = ps.unstakeEntries[msg.sender][_id];
@@ -409,11 +387,11 @@ contract PoolBase is IPoolBase {
     ps.stakeBalance = ps.stakeBalance.sub(amount);
     ps.lockToken.burn(address(this), withdraw.lock);
     delete ps.unstakeEntries[msg.sender][_id];
-    token.safeTransfer(_receiver, amount);
+    _token.safeTransfer(_receiver, amount);
   }
 
   function payOffDebtAll(IERC20 _token) external override {
-    (IERC20 _token, ) = baseData();
+    baseData();
     LibPool.payOffDebtAll(_token);
   }
 
@@ -427,7 +405,7 @@ contract PoolBase is IPoolBase {
     require(msg.sender == GovStorage.gs().govInsurance, 'NOT_GOV_INS');
     require(_receiver != address(0), 'RECEIVER');
 
-    (IERC20 _token, PoolStorage.Base storage ps) = baseData();
+    PoolStorage.Base storage ps = baseData();
     require(ps.protocols[_index] == _protocol, 'INDEX');
 
     // If protocol has 0 accrued debt, the premium should also be 0
