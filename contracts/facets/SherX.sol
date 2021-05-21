@@ -316,7 +316,7 @@ contract SherX is ISherX {
   ) private {
     IERC20 underlying = ILock(token).underlying();
     PoolStorage.Base storage ps = PoolStorage.ps(underlying);
-    require(ps.lockToken == token, 'Unexpected sender');
+    require(ps.lockToken == token, 'SENDER');
 
     LibSherX.accrueSherX(underlying);
     uint256 userAmount = ps.lockToken.balanceOf(from);

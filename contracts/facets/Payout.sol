@@ -164,20 +164,17 @@ contract Payout is IPayout {
       return;
     }
 
+    // NOTE: sx20().totalSupply is always > 0 when this codes hit.
+
     uint256 curTotalUsdPool = LibSherX.viewAccrueUSDPool();
     uint256 excludeUsd = _doSherX(_payout, _exclude, curTotalUsdPool, totalSherX);
 
-    SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
-    uint256 totalSupply = sx20.totalSupply;
+    // usd excluded, divided by the price per SherX token = amount of sherx to not burn.
+    uint256 deduction = excludeUsd.div(curTotalUsdPool.div(SherXERC20Storage.sx20().totalSupply)).div(10e17);
+    // deduct that amount from the tokens being burned, to keep the same USD value
+    uint256 burnAmount = totalSherX.sub(deduction);
 
-    if (totalSupply > 0) {
-      // usd excluded, divided by the price per SherX token = amount of sherx to not burn.
-      uint256 deduction = excludeUsd.div(curTotalUsdPool.div(totalSupply)).div(10e17);
-      // deduct that amount from the tokens being burned, to keep the same USD value
-      uint256 burnAmount = totalSherX.sub(deduction);
-
-      LibSherXERC20.burn(address(this), burnAmount);
-      LibSherX.settleInternalSupply(burnAmount);
-    }
+    LibSherXERC20.burn(address(this), burnAmount);
+    LibSherX.settleInternalSupply(burnAmount);
   }
 }

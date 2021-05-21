@@ -19,8 +19,6 @@ library LibSherXERC20 {
   event Transfer(address indexed from, address indexed to, uint256 amount);
 
   function mint(address _to, uint256 _amount) internal {
-    require(_to != address(0), 'INVALID_TO_ADDRESS');
-
     SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
 
     sx20.balances[_to] = sx20.balances[_to].add(_amount);
