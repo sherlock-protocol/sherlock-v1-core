@@ -713,4 +713,59 @@ describe('Gov', function () {
       expect(await this.sl.getSherXUnderlying(this.tokenB.address)).to.eq(parseUnits('3', 6));
     });
   });
+  describe('tokenRemove() ─ Readd, verify unstake', function () {
+    before(async function () {
+      await timeTraveler.revertSnapshot();
+
+      await this.sl.c(this.gov).setUnstakeWindow(1);
+      await this.sl
+        .c(this.gov)
+        .tokenInit(this.tokenA.address, this.gov.address, this.lockA.address, false);
+
+      await this.tokenA.approve(this.sl.address, parseEther('10000'));
+      await this.lockA.approve(this.sl.address, parseEther('10000'));
+      await this.sl.stake(parseEther('10'), this.alice.address, this.tokenA.address);
+      await this.sl.activateCooldown(parseEther('1'), this.tokenA.address);
+      await this.sl.unstake(0, this.alice.address, this.tokenA.address);
+    });
+    it('Initial state', async function () {
+      await expect(
+        await this.sl.getUnstakeEntrySize(this.alice.address, this.tokenA.address),
+      ).to.eq(1);
+      await expect(
+        await this.sl.getInitialUnstakeEntry(this.alice.address, this.tokenA.address),
+      ).to.eq(1);
+    });
+    it('Do', async function () {
+      await this.sl.c(this.gov).tokenDisableStakers(this.tokenA.address, 0);
+
+      await this.sl
+        .c(this.gov)
+        .tokenRemove(this.tokenA.address, this.carol.address, this.carol.address);
+    });
+    it('Readd', async function () {
+      await this.sl
+        .c(this.gov)
+        .tokenInit(this.tokenA.address, this.gov.address, this.lockA.address, false);
+
+      await expect(
+        await this.sl.getUnstakeEntrySize(this.alice.address, this.tokenA.address),
+      ).to.eq(1);
+      await expect(
+        await this.sl.getInitialUnstakeEntry(this.alice.address, this.tokenA.address),
+      ).to.eq(1);
+    });
+    it('Stake', async function () {
+      await this.sl.stake(parseEther('10'), this.alice.address, this.tokenA.address);
+      await this.sl.activateCooldown(parseEther('1'), this.tokenA.address);
+      await this.sl.unstake(1, this.alice.address, this.tokenA.address);
+
+      await expect(
+        await this.sl.getUnstakeEntrySize(this.alice.address, this.tokenA.address),
+      ).to.eq(2);
+      await expect(
+        await this.sl.getInitialUnstakeEntry(this.alice.address, this.tokenA.address),
+      ).to.eq(2);
+    });
+  });
 });
