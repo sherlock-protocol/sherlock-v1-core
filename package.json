@@ -4,7 +4,9 @@
   "description": "Core contracts for Sherlock protocol",
   "scripts": {
     "prettier": "prettier --write contracts/*.sol contracts/**/*.sol",
-    "prettier-diff": "prettier --list-different  contracts/*.sol contracts/**/*.sol"
+    "prettier-diff": "prettier --list-different  contracts/*.sol contracts/**/*.sol",
+    "test": "npx hardhat test",
+    "coverage": "npx hardhat coverage"
   },
   "prettier": {
     "tabWidth": 2,
@@ -28,6 +30,7 @@
     "@openzeppelin/contracts": "^3.2.1-solc-0.7",
     "diamond-2": "git://github.com/mudgen/diamond-2",
     "dotenv": "^8.2.0",
-    "prettier-plugin-solidity": "^1.0.0-beta.10"
+    "prettier-plugin-solidity": "^1.0.0-beta.10",
+    "solidity-coverage": "^0.7.16"
   }
 }
