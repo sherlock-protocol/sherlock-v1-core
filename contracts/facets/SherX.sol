@@ -155,8 +155,8 @@ contract SherX is ISherX {
     if (total == 0) {
       return 0;
     }
-    for (uint256 i; i < gs.tokensProtocol.length; i++) {
-      IERC20 token = gs.tokensProtocol[i];
+    for (uint256 i; i < gs.tokensSherX.length; i++) {
+      IERC20 token = gs.tokensSherX[i];
 
       usd = usd.add(
         PoolStorage

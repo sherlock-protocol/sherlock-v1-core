@@ -399,8 +399,8 @@ describe('Payout - Non active', function () {
     const stakers = await this.sl.getTokensStaker();
     expect(stakers.length).to.eq(0);
 
-    const protocols = await this.sl.getTokensProtocol();
-    expect(protocols.length).to.eq(0);
+    const tokensSherX = await this.sl.getTokensSherX();
+    expect(tokensSherX.length).to.eq(0);
   });
   it('Do', async function () {
     await blockNumber(
@@ -425,7 +425,7 @@ describe('Payout - Non active', function () {
     const stakers = await this.sl.getTokensStaker();
     expect(stakers.length).to.eq(0);
 
-    const protocols = await this.sl.getTokensProtocol();
-    expect(protocols.length).to.eq(0);
+    const tokensSherX = await this.sl.getTokensSherX();
+    expect(tokensSherX.length).to.eq(0);
   });
 });

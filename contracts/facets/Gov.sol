@@ -79,8 +79,8 @@ contract Gov is IGov {
     return GovStorage.gs().tokensStaker;
   }
 
-  function getTokensProtocol() external view override returns (IERC20[] memory) {
-    return GovStorage.gs().tokensProtocol;
+  function getTokensSherX() external view override returns (IERC20[] memory) {
+    return GovStorage.gs().tokensSherX;
   }
 
   function getProtocolIsCovered(bytes32 _protocol) external view override returns (bool) {
@@ -190,8 +190,8 @@ contract Gov is IGov {
     GovStorage.Base storage gs = GovStorage.gs();
     require(gs.protocolIsCovered[_protocol], 'NOT_COVERED');
 
-    for (uint256 i; i < gs.tokensProtocol.length; i++) {
-      IERC20 token = gs.tokensProtocol[i];
+    for (uint256 i; i < gs.tokensSherX.length; i++) {
+      IERC20 token = gs.tokensSherX[i];
 
       PoolStorage.Base storage ps = PoolStorage.ps(token);
       // basically need to check if accruedDebt > 0, but this is true in case protocolPremium > 0
@@ -240,7 +240,7 @@ contract Gov is IGov {
     if (_protocolPremium) {
       require(!ps.premiums, 'PREMIUMS_SET');
       ps.premiums = true;
-      gs.tokensProtocol.push(_token);
+      gs.tokensSherX.push(_token);
     }
   }
 
@@ -260,12 +260,12 @@ contract Gov is IGov {
   function tokenDisableProtocol(IERC20 _token, uint256 _index) external override onlyGovInsurance {
     GovStorage.Base storage gs = GovStorage.gs();
     PoolStorage.Base storage ps = PoolStorage.ps(_token);
-    require(gs.tokensProtocol[_index] == _token, 'INDEX');
+    require(gs.tokensSherX[_index] == _token, 'INDEX');
     require(ps.totalPremiumPerBlock == 0, 'ACTIVE_PREMIUM');
 
     delete ps.premiums;
-    gs.tokensProtocol[_index] = gs.tokensProtocol[gs.tokensProtocol.length - 1];
-    gs.tokensProtocol.pop();
+    gs.tokensSherX[_index] = gs.tokensSherX[gs.tokensSherX.length - 1];
+    gs.tokensSherX.pop();
   }
 
   function tokenRemove(

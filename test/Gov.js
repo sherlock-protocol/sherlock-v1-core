@@ -273,9 +273,9 @@ describe('Gov', function () {
       expect(tokensStaker.length).to.eq(1);
       expect(tokensStaker[0]).to.eq(this.tokenA.address);
 
-      const tokensProtocol = await this.sl.getTokensProtocol();
-      expect(tokensProtocol.length).to.eq(1);
-      expect(tokensProtocol[0]).to.eq(this.tokenA.address);
+      const tokensSherX = await this.sl.getTokensSherX();
+      expect(tokensSherX.length).to.eq(1);
+      expect(tokensSherX[0]).to.eq(this.tokenA.address);
 
       expect(await this.sl.isStake(this.tokenA.address)).to.eq(true);
       expect(await this.sl.isPremium(this.tokenA.address)).to.eq(true);
@@ -292,9 +292,9 @@ describe('Gov', function () {
       expect(tokensStaker[0]).to.eq(this.tokenA.address);
       expect(tokensStaker[1]).to.eq(this.tokenB.address);
 
-      const tokensProtocol = await this.sl.getTokensProtocol();
-      expect(tokensProtocol.length).to.eq(1);
-      expect(tokensProtocol[0]).to.eq(this.tokenA.address);
+      const tokensSherX = await this.sl.getTokensSherX();
+      expect(tokensSherX.length).to.eq(1);
+      expect(tokensSherX[0]).to.eq(this.tokenA.address);
 
       expect(await this.sl.isStake(this.tokenB.address)).to.eq(true);
       expect(await this.sl.isPremium(this.tokenB.address)).to.eq(false);
@@ -311,10 +311,10 @@ describe('Gov', function () {
       expect(tokensStaker[0]).to.eq(this.tokenA.address);
       expect(tokensStaker[1]).to.eq(this.tokenB.address);
 
-      const tokensProtocol = await this.sl.getTokensProtocol();
-      expect(tokensProtocol.length).to.eq(2);
-      expect(tokensProtocol[0]).to.eq(this.tokenA.address);
-      expect(tokensProtocol[1]).to.eq(this.tokenC.address);
+      const tokensSherX = await this.sl.getTokensSherX();
+      expect(tokensSherX.length).to.eq(2);
+      expect(tokensSherX[0]).to.eq(this.tokenA.address);
+      expect(tokensSherX[1]).to.eq(this.tokenC.address);
 
       expect(await this.sl.isStake(this.tokenC.address)).to.eq(false);
       expect(await this.sl.isPremium(this.tokenC.address)).to.eq(true);
@@ -341,9 +341,9 @@ describe('Gov', function () {
       expect(tokensStaker.length).to.eq(1);
       expect(tokensStaker[0]).to.eq(this.tokenA.address);
 
-      const tokensProtocol = await this.sl.getTokensProtocol();
-      expect(tokensProtocol.length).to.eq(1);
-      expect(tokensProtocol[0]).to.eq(this.tokenA.address);
+      const tokensSherX = await this.sl.getTokensSherX();
+      expect(tokensSherX.length).to.eq(1);
+      expect(tokensSherX[0]).to.eq(this.tokenA.address);
 
       expect(await this.sl.isStake(this.tokenA.address)).to.eq(true);
       expect(await this.sl.isPremium(this.tokenA.address)).to.eq(true);
@@ -361,9 +361,9 @@ describe('Gov', function () {
       expect(tokensStaker.length).to.eq(1);
       expect(tokensStaker[0]).to.eq(this.tokenA.address);
 
-      const tokensProtocol = await this.sl.getTokensProtocol();
-      expect(tokensProtocol.length).to.eq(1);
-      expect(tokensProtocol[0]).to.eq(this.tokenA.address);
+      const tokensSherX = await this.sl.getTokensSherX();
+      expect(tokensSherX.length).to.eq(1);
+      expect(tokensSherX[0]).to.eq(this.tokenA.address);
 
       expect(await this.sl.isStake(this.tokenA.address)).to.eq(true);
       expect(await this.sl.isPremium(this.tokenA.address)).to.eq(true);
@@ -537,8 +537,8 @@ describe('Gov', function () {
     it('Do', async function () {
       await this.sl.c(this.gov).tokenDisableProtocol(this.tokenA.address, 0);
 
-      const tokensProtocol = await this.sl.getTokensProtocol();
-      expect(tokensProtocol.length).to.eq(0);
+      const tokensSherX = await this.sl.getTokensSherX();
+      expect(tokensSherX.length).to.eq(0);
 
       expect(await this.sl.isStake(this.tokenA.address)).to.eq(true);
       expect(await this.sl.isPremium(this.tokenA.address)).to.eq(false);

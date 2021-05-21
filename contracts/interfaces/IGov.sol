@@ -36,7 +36,7 @@ interface IGov {
 
   function getTokensStaker() external view returns (IERC20[] memory);
 
-  function getTokensProtocol() external view returns (IERC20[] memory);
+  function getTokensSherX() external view returns (IERC20[] memory);
 
   function getProtocolIsCovered(bytes32 _protocol) external view returns (bool);
 
