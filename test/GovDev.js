@@ -39,7 +39,7 @@ describe('GovDev', function () {
       expect(await this.sl.getGovDev()).to.eq(constants.AddressZero);
     });
   });
-  describe('updateSolution()', function () {
+  describe('updateSolution() [ @skip-on-coverage ]', function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
       await this.sl
