@@ -21,6 +21,7 @@ describe('Pool', function () {
       ['lockA', this.ForeignLock, ['Lock TokenA', 'lockA', this.sl.address, this.tokenA.address]],
       ['lockB', this.ForeignLock, ['Lock TokenB', 'lockB', this.sl.address, this.tokenB.address]],
       ['lockC', this.ForeignLock, ['Lock TokenC', 'lockC', this.sl.address, this.tokenC.address]],
+      ['lockX', this.NativeLock, ['Lock TokenX', 'lockX', this.sl.address]],
     ]);
     // Add tokenA as valid token
     await this.sl
@@ -538,14 +539,99 @@ describe('Pool', function () {
       );
     });
   });
+  describe('unstake() ─ First Money Out', function () {
+    before(async function () {
+      await timeTraveler.revertSnapshot();
+
+      await this.sl.c(this.gov).setWatsonsAddress(this.alice.address);
+      await this.sl.c(this.gov).setInitialWeight();
+      await this.sl.c(this.gov).setWeights([this.tokenA.address], [parseEther('1')], 0);
+
+      await this.sl
+        .c(this.gov)
+        .tokenInit(this.sl.address, this.gov.address, this.lockX.address, true);
+
+      await this.sl
+        .c(this.gov)
+        .protocolAdd(this.protocolY, this.gov.address, this.gov.address, [this.tokenA.address]);
+
+      await this.sl
+        .c(this.gov)
+        ['setProtocolPremiumAndTokenPrice(bytes32,address,uint256,uint256)'](
+          this.protocolX,
+          this.tokenA.address,
+          parseEther('1'),
+          parseEther('1'),
+        );
+
+      await this.sl.c(this.gov).setUnstakeWindow(1);
+      await this.tokenA.approve(this.sl.address, parseEther('10000'));
+      await this.lockA.approve(this.sl.address, parseEther('10000'));
+      await this.sl.stake(parseEther('10'), this.alice.address, this.tokenA.address);
+      await this.sl.activateCooldown(parseEther('1'), this.tokenA.address);
+    });
+    it('Initial state', async function () {
+      expect(await this.sl.getFirstMoneyOut(this.sl.address)).to.eq(0);
+      expect(await this.sl.getFirstMoneyOut(this.tokenA.address)).to.eq(0);
+      expect(await this.tokenA.balanceOf(this.bob.address)).to.eq(0);
+      expect(await this.tokenA.balanceOf(this.sl.address)).to.eq(parseEther('10'));
+    });
+    it('Do', async function () {
+      await this.sl.unstake(0, this.bob.address, this.tokenA.address);
+
+      expect(await this.sl.getFirstMoneyOut(this.sl.address)).to.eq(parseEther('1'));
+      expect(await this.sl.getFirstMoneyOut(this.tokenA.address)).to.eq(0);
+      expect(await this.tokenA.balanceOf(this.bob.address)).to.eq(parseEther('10'));
+      expect(await this.tokenA.balanceOf(this.sl.address)).to.eq(0);
+    });
+  });
   describe('payOffDebtAll()', function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
+
+      // Add protocolY as valid protocol
+      await this.sl
+        .c(this.gov)
+        .protocolAdd(this.protocolY, this.gov.address, this.gov.address, [this.tokenA.address]);
+
+      await this.tokenA.approve(this.sl.address, parseEther('10000'));
+      await this.sl.depositProtocolBalance(this.protocolX, parseEther('10'), this.tokenA.address);
+      await this.sl.depositProtocolBalance(this.protocolY, parseEther('10'), this.tokenA.address);
+
+      this.b0 = await blockNumber(
+        this.sl
+          .c(this.gov)
+          ['setProtocolPremiumAndTokenPrice(bytes32[],address,uint256[],uint256)'](
+            [this.protocolX, this.protocolY],
+            this.tokenA.address,
+            [parseEther('1'), parseEther('2')],
+            parseEther('1'),
+          ),
+      );
+    });
+    it('Initial state', async function () {
+      expect(await this.sl.getPremiumLastPaid(this.tokenA.address)).to.eq(this.b0);
+      expect(await this.sl.getTotalAccruedDebt(this.tokenA.address)).to.eq(0);
+      expect(await this.sl.getAccruedDebt(this.protocolX, this.tokenA.address)).to.eq(0);
+      expect(await this.sl.getAccruedDebt(this.protocolY, this.tokenA.address)).to.eq(0);
+    });
+    it('t=1', async function () {
+      await timeTraveler.mine(1);
+      expect(await this.sl.getPremiumLastPaid(this.tokenA.address)).to.eq(this.b0);
+      expect(await this.sl.getTotalAccruedDebt(this.tokenA.address)).to.eq(parseEther('3'));
+      expect(await this.sl.getAccruedDebt(this.protocolX, this.tokenA.address)).to.eq(
+        parseEther('1'),
+      );
+      expect(await this.sl.getAccruedDebt(this.protocolY, this.tokenA.address)).to.eq(
+        parseEther('2'),
+      );
     });
     it('Do', async function () {
-      expect(await this.sl.getPremiumLastPaid(this.tokenA.address)).to.eq(0);
-      const b0 = await blockNumber(this.sl.payOffDebtAll(this.tokenA.address));
-      expect(await this.sl.getPremiumLastPaid(this.tokenA.address)).to.eq(b0);
+      const b2 = await blockNumber(this.sl.payOffDebtAll(this.tokenA.address));
+      expect(await this.sl.getPremiumLastPaid(this.tokenA.address)).to.eq(b2);
+      expect(await this.sl.getTotalAccruedDebt(this.tokenA.address)).to.eq(0);
+      expect(await this.sl.getAccruedDebt(this.protocolX, this.tokenA.address)).to.eq(0);
+      expect(await this.sl.getAccruedDebt(this.protocolY, this.tokenA.address)).to.eq(0);
     });
   });
   describe('cleanProtocol()', function () {
