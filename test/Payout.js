@@ -118,6 +118,25 @@ describe('Payout', function () {
       expect(await this.sl.balanceOf(this.bob.address)).to.eq(parseEther('0'));
     });
   });
+  describe('Unallocated too big', function () {
+    before(async function () {
+      await timeTraveler.revertSnapshot();
+    });
+    it('Do', async function () {
+      await expect(
+        this.sl
+          .c(this.gov)
+          .payout(
+            this.bob.address,
+            [this.tokenA.address],
+            [0],
+            [0],
+            [parseEther('2.1')],
+            constants.AddressZero,
+          ),
+      ).to.be.revertedWith('ERR_UNALLOC_FEE');
+    });
+  });
   describe('Unallocated', function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
