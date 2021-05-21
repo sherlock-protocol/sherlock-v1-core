@@ -712,6 +712,11 @@ describe('Gov', function () {
       expect(await this.sl.getFirstMoneyOut(this.tokenB.address)).to.eq(parseUnits('2', 6));
       expect(await this.sl.getSherXUnderlying(this.tokenB.address)).to.eq(parseUnits('3', 6));
     });
+    it('Harvest fail', async function () {
+      await expect(
+        this.sl['harvestFor(address,address)'](this.alice.address, this.lockA.address),
+      ).to.be.revertedWith('SENDER');
+    });
   });
   describe('tokenRemove() ─ Readd, verify unstake', function () {
     before(async function () {
