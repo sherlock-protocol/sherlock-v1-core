@@ -170,7 +170,8 @@ contract Payout is IPayout {
     uint256 excludeUsd = _doSherX(_payout, _exclude, curTotalUsdPool, totalSherX);
 
     // usd excluded, divided by the price per SherX token = amount of sherx to not burn.
-    uint256 deduction = excludeUsd.div(curTotalUsdPool.div(SherXERC20Storage.sx20().totalSupply)).div(10e17);
+    uint256 deduction =
+      excludeUsd.div(curTotalUsdPool.div(SherXERC20Storage.sx20().totalSupply)).div(10e17);
     // deduct that amount from the tokens being burned, to keep the same USD value
     uint256 burnAmount = totalSherX.sub(deduction);
 
