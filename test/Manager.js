@@ -1627,3 +1627,243 @@ describe('Manager - Active', function () {
     });
   });
 });
+
+describe('Manager - No Weights', function () {
+  before(async function () {
+    timeTraveler = new TimeTraveler(network.provider);
+
+    await prepare(this, ['ERC20Mock', 'ERC20Mock6d', 'ERC20Mock8d', 'NativeLock', 'ForeignLock']);
+
+    await solution(this, 'sl', this.gov);
+    await deploy(this, [
+      ['tokenA', this.ERC20Mock, ['TokenA', 'A', parseUnits('1000', 18)]],
+      ['tokenB', this.ERC20Mock6d, ['TokenB', 'B', parseUnits('1000', 6)]],
+      ['tokenC', this.ERC20Mock8d, ['TokenC', 'C', parseUnits('1000', 8)]],
+    ]);
+    await deploy(this, [
+      ['lockA', this.ForeignLock, ['Lock TokenA', 'lockA', this.sl.address, this.tokenA.address]],
+      ['lockB', this.ForeignLock, ['Lock TokenB', 'lockB', this.sl.address, this.tokenB.address]],
+      ['lockC', this.ForeignLock, ['Lock TokenC', 'lockC', this.sl.address, this.tokenC.address]],
+    ]);
+
+    // Add tokenA as valid protocol token
+    await this.sl
+      .c(this.gov)
+      .tokenInit(this.tokenA.address, this.gov.address, constants.AddressZero, true);
+
+    // Add protocolX as valid protocol
+    await this.sl
+      .c(this.gov)
+      .protocolAdd(this.protocolX, this.gov.address, this.gov.address, [this.tokenA.address]);
+
+    await this.tokenA.approve(this.sl.address, parseUnits('10000', this.tokenA.dec));
+    await this.sl.depositProtocolBalance(
+      this.protocolX,
+      parseUnits('100', this.tokenA.dec),
+      this.tokenA.address,
+    );
+
+    await timeTraveler.snapshot();
+  });
+  it('Initial state', async function () {
+    // SherX
+    expect(await this.sl['getSherXPerBlock()']()).to.eq(0);
+    expect(await this.sl.totalSupply()).to.eq(0);
+    expect(await this.sl.getInternalTotalSupply()).to.eq(0);
+    expect(await this.sl.getInternalTotalSupplySettled()).to.eq(0);
+
+    // USD
+    expect(await this.sl.getTotalUsdPerBlock()).to.eq(0);
+    expect(await this.sl.getTotalUsdLastSettled()).to.eq(0);
+    expect(await this.sl.getTotalUsdPoolStored()).to.eq(0);
+
+    // token A
+    expect(await this.sl.getStoredUsd(this.tokenA.address)).to.eq(0);
+
+    expect(await this.sl.balanceOf(this.carol.address)).to.eq(0);
+    expect(await this.sl.totalSupply()).to.eq(0);
+
+    const data = await this.sl['calcUnderlying(uint256)'](parseEther('1'));
+    expect(data.amounts[0]).to.eq(0);
+    expect(data.amounts.length).to.eq(1);
+    expect(await this.sl.getSherXUnderlying(this.tokenA.address)).to.eq(0);
+
+    // protocol
+    expect(await this.sl.getProtocolBalance(this.protocolX, this.tokenA.address)).to.eq(
+      parseEther('100'),
+    );
+
+    expect(await this.sl.getWatsonsSherxLastAccrued()).to.eq(0);
+  });
+  it('Set premium', async function () {
+    const b1 = await blockNumber(
+      this.sl
+        .c(this.gov)
+        ['setProtocolPremiumAndTokenPrice(bytes32,address,uint256,uint256)'](
+          this.protocolX,
+          this.tokenA.address,
+          parseEther('1'),
+          parseEther('1'),
+        ),
+    );
+
+    // SherX
+    expect(await this.sl['getSherXPerBlock()']()).to.eq(parseEther('1'));
+    expect(await this.sl.totalSupply()).to.eq(0);
+    expect(await this.sl.getInternalTotalSupply()).to.eq(0);
+    expect(await this.sl.getInternalTotalSupplySettled()).to.eq(b1);
+
+    // USD
+    expect(await this.sl.getTotalUsdPerBlock()).to.eq(parseEther('1'));
+    expect(await this.sl.getTotalUsdLastSettled()).to.eq(b1);
+    expect(await this.sl.getTotalUsdPoolStored()).to.eq(0);
+
+    // token A
+    expect(await this.sl.getStoredUsd(this.tokenA.address)).to.eq(parseEther('1'));
+
+    expect(await this.sl.balanceOf(this.carol.address)).to.eq(0);
+    expect(await this.sl.totalSupply()).to.eq(0);
+
+    const data = await this.sl['calcUnderlying(uint256)'](parseEther('1'));
+    expect(data.amounts[0]).to.eq(0);
+    expect(data.amounts.length).to.eq(1);
+    expect(await this.sl.getSherXUnderlying(this.tokenA.address)).to.eq(0);
+
+    // protocol
+    expect(await this.sl.getProtocolBalance(this.protocolX, this.tokenA.address)).to.eq(
+      parseEther('100'),
+    );
+
+    expect(await this.sl.getWatsonsSherxLastAccrued()).to.eq(b1);
+  });
+  it('Set premium again', async function () {
+    const b2 = await blockNumber(
+      this.sl
+        .c(this.gov)
+        ['setProtocolPremiumAndTokenPrice(bytes32,address,uint256,uint256)'](
+          this.protocolX,
+          this.tokenA.address,
+          parseEther('2'),
+          parseEther('2'),
+        ),
+    );
+
+    // SherX
+    expect(await this.sl['getSherXPerBlock()']()).to.eq(parseEther('1'));
+    expect(await this.sl.totalSupply()).to.eq(0);
+    expect(await this.sl.getInternalTotalSupply()).to.eq(0);
+    expect(await this.sl.getInternalTotalSupplySettled()).to.eq(b2);
+
+    // USD
+    expect(await this.sl.getTotalUsdPerBlock()).to.eq(parseEther('4'));
+    expect(await this.sl.getTotalUsdLastSettled()).to.eq(b2);
+    expect(await this.sl.getTotalUsdPoolStored()).to.eq(parseEther('2'));
+
+    // token A
+    expect(await this.sl.getStoredUsd(this.tokenA.address)).to.eq(parseEther('2'));
+
+    expect(await this.sl.balanceOf(this.carol.address)).to.eq(0);
+    expect(await this.sl.totalSupply()).to.eq(0);
+
+    const data = await this.sl['calcUnderlying(uint256)'](parseEther('1'));
+    expect(data.amounts[0]).to.eq(0);
+    expect(data.amounts.length).to.eq(1);
+    expect(await this.sl.getSherXUnderlying(this.tokenA.address)).to.eq(parseEther('1'));
+
+    // protocol
+    expect(await this.sl.getProtocolBalance(this.protocolX, this.tokenA.address)).to.eq(
+      parseEther('99'),
+    );
+
+    expect(await this.sl.getWatsonsSherxLastAccrued()).to.eq(b2);
+  });
+  it('Set watsons and premium', async function () {
+    await this.sl.c(this.gov).setWatsonsAddress(this.carol.address);
+    await this.sl.c(this.gov).setInitialWeight();
+
+    const b3 = await blockNumber(
+      this.sl
+        .c(this.gov)
+        ['setProtocolPremiumAndTokenPrice(bytes32,address,uint256,uint256)'](
+          this.protocolX,
+          this.tokenA.address,
+          parseEther('7'),
+          parseEther('1'),
+        ),
+    );
+
+    // SherX
+    expect(await this.sl['getSherXPerBlock()']()).to.eq(parseEther('3'));
+    expect(await this.sl.totalSupply()).to.eq(parseEther('3'));
+    expect(await this.sl.getInternalTotalSupply()).to.eq(parseEther('3'));
+    expect(await this.sl.getInternalTotalSupplySettled()).to.eq(b3);
+
+    // USD
+    expect(await this.sl.getTotalUsdPerBlock()).to.eq(parseEther('7'));
+    expect(await this.sl.getTotalUsdLastSettled()).to.eq(b3);
+    expect(await this.sl.getTotalUsdPoolStored()).to.eq(parseEther('7'));
+
+    // token A
+    expect(await this.sl.getStoredUsd(this.tokenA.address)).to.eq(parseEther('1'));
+
+    expect(await this.sl.balanceOf(this.carol.address)).to.eq(parseEther('3'));
+    expect(await this.sl.totalSupply()).to.eq(parseEther('3'));
+
+    // users
+    // Carol receives 3 sherX tokens.
+    // Representing 7 tokenA
+    // So receiving the tokens that were already accrued.
+    const data = await this.sl['calcUnderlying(uint256)'](parseEther('3'));
+    expect(data.amounts[0]).to.eq(parseEther('7'));
+    expect(data.amounts.length).to.eq(1);
+    expect(await this.sl.getSherXUnderlying(this.tokenA.address)).to.eq(parseEther('7'));
+
+    // protocol
+    expect(await this.sl.getProtocolBalance(this.protocolX, this.tokenA.address)).to.eq(
+      parseEther('93'),
+    );
+
+    expect(await this.sl.getWatsonsSherxLastAccrued()).to.eq(b3);
+  });
+  it('Set premium again', async function () {
+    const b4 = await blockNumber(
+      this.sl
+        .c(this.gov)
+        ['setProtocolPremiumAndTokenPrice(bytes32,address,uint256,uint256)'](
+          this.protocolX,
+          this.tokenA.address,
+          parseEther('7'),
+          parseEther('2'),
+        ),
+    );
+
+    // SherX
+    expect(await this.sl['getSherXPerBlock()']()).to.eq(parseEther('3'));
+    expect(await this.sl.totalSupply()).to.eq(parseEther('6'));
+    expect(await this.sl.getInternalTotalSupply()).to.eq(parseEther('6'));
+    expect(await this.sl.getInternalTotalSupplySettled()).to.eq(b4);
+
+    // USD
+    expect(await this.sl.getTotalUsdPerBlock()).to.eq(parseEther('14'));
+    expect(await this.sl.getTotalUsdLastSettled()).to.eq(b4);
+    expect(await this.sl.getTotalUsdPoolStored()).to.eq(parseEther('28'));
+
+    // token A
+    expect(await this.sl.getStoredUsd(this.tokenA.address)).to.eq(parseEther('2'));
+
+    expect(await this.sl.balanceOf(this.carol.address)).to.eq(parseEther('6'));
+    expect(await this.sl.totalSupply()).to.eq(parseEther('6'));
+
+    const data = await this.sl['calcUnderlying(uint256)'](parseEther('6'));
+    expect(data.amounts[0]).to.eq(parseEther('14'));
+    expect(data.amounts.length).to.eq(1);
+    expect(await this.sl.getSherXUnderlying(this.tokenA.address)).to.eq(parseEther('14'));
+
+    // protocol
+    expect(await this.sl.getProtocolBalance(this.protocolX, this.tokenA.address)).to.eq(
+      parseEther('86'),
+    );
+
+    expect(await this.sl.getWatsonsSherxLastAccrued()).to.eq(b4);
+  });
+});
