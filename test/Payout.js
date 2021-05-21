@@ -351,3 +351,81 @@ describe('Payout - SherX', function () {
     });
   });
 });
+
+describe('Payout - Non active', function () {
+  before(async function () {
+    timeTraveler = new TimeTraveler(network.provider);
+
+    await prepare(this, ['ERC20Mock', 'ERC20Mock6d', 'ERC20Mock8d', 'NativeLock', 'ForeignLock']);
+
+    await solution(this, 'sl', this.gov);
+    await deploy(this, [
+      ['tokenA', this.ERC20Mock, ['TokenA', 'A', parseUnits('1000', 18)]],
+      ['tokenB', this.ERC20Mock6d, ['TokenB', 'B', parseUnits('1000', 6)]],
+      ['tokenC', this.ERC20Mock8d, ['TokenC', 'C', parseUnits('1000', 8)]],
+    ]);
+    await deploy(this, [
+      ['lockA', this.ForeignLock, ['Lock TokenA', 'lockA', this.sl.address, this.tokenA.address]],
+      ['lockB', this.ForeignLock, ['Lock TokenB', 'lockB', this.sl.address, this.tokenB.address]],
+      ['lockC', this.ForeignLock, ['Lock TokenC', 'lockC', this.sl.address, this.tokenC.address]],
+    ]);
+
+    await this.tokenA.approve(this.sl.address, parseEther('10000'));
+    await this.lockA.approve(this.sl.address, parseEther('10000'));
+    // Add tokenA as valid token
+    await this.sl
+      .c(this.gov)
+      .tokenInit(this.tokenA.address, this.gov.address, this.lockA.address, false);
+
+    await this.sl.c(this.gov).setCooldownFee(parseEther('0.5'), this.tokenA.address);
+    await this.sl.c(this.gov).setUnstakeWindow(1);
+
+    // first money out
+    await this.sl.stake(parseEther('10'), this.alice.address, this.tokenA.address);
+    await this.sl.activateCooldown(parseEther('1'), this.tokenA.address);
+    await this.sl.unstake(0, this.bob.address, this.tokenA.address);
+
+    await this.sl.c(this.gov).tokenDisableStakers(this.tokenA.address, 0);
+
+    await timeTraveler.snapshot();
+  });
+  it('Initial state', async function () {
+    expect(await this.sl.getFirstMoneyOut(this.tokenA.address)).to.eq(parseEther('5'));
+    expect(await this.sl.getStakersPoolBalance(this.tokenA.address)).to.eq(parseEther('0'));
+    expect(await this.sl.getUnallocatedSherXTotal(this.tokenA.address)).to.eq(parseEther('0'));
+    expect(await this.tokenA.balanceOf(this.bob.address)).to.eq(parseEther('5'));
+    expect(await this.tokenA.balanceOf(this.carol.address)).to.eq(0);
+
+    const stakers = await this.sl.getTokensStaker();
+    expect(stakers.length).to.eq(0);
+
+    const protocols = await this.sl.getTokensProtocol();
+    expect(protocols.length).to.eq(0);
+  });
+  it('Do', async function () {
+    await blockNumber(
+      this.sl
+        .c(this.gov)
+        .payout(
+          this.carol.address,
+          [this.tokenA.address],
+          [parseEther('2')],
+          [0],
+          [0],
+          constants.AddressZero,
+        ),
+    );
+
+    expect(await this.sl.getFirstMoneyOut(this.tokenA.address)).to.eq(parseEther('3'));
+    expect(await this.sl.getStakersPoolBalance(this.tokenA.address)).to.eq(parseEther('0'));
+    expect(await this.sl.getUnallocatedSherXTotal(this.tokenA.address)).to.eq(parseEther('0'));
+    expect(await this.tokenA.balanceOf(this.bob.address)).to.eq(parseEther('5'));
+    expect(await this.tokenA.balanceOf(this.carol.address)).to.eq(parseEther('2'));
+
+    const stakers = await this.sl.getTokensStaker();
+    expect(stakers.length).to.eq(0);
+
+    const protocols = await this.sl.getTokensProtocol();
+    expect(protocols.length).to.eq(0);
+  });
+});
