@@ -221,6 +221,10 @@ describe('SherX', function () {
       expect(await this.sl.balanceOf(this.sl.address)).to.eq(0);
       expect(await this.lockX.balanceOf(this.alice.address)).to.eq(0);
 
+      expect(
+        await this.sl['getSherXPerBlock(address,address)'](this.alice.address, this.tokenA.address),
+      ).to.eq(0);
+
       expect(await this.sl['getSherXPerBlock()']()).to.eq(0);
     });
     it('Setup', async function () {
@@ -242,6 +246,10 @@ describe('SherX', function () {
       expect(
         await this.sl['getSherXPerBlock(address,address)'](this.alice.address, this.tokenA.address),
       ).to.eq(parseEther('1'));
+      // if 1 lock is added, roi = 0.5 sherx
+      expect(
+        await this.sl['getSherXPerBlock(uint256,address)'](parseEther('1'), this.tokenA.address),
+      ).to.eq(parseEther('0.5'));
       expect(await this.sl.getStakersPoolBalance(this.tokenA.address)).to.eq(parseEther('10'));
     });
     it('Do', async function () {
@@ -256,6 +264,10 @@ describe('SherX', function () {
       expect(
         await this.sl['getSherXPerBlock(address,address)'](this.alice.address, this.tokenA.address),
       ).to.eq(parseEther('1'));
+      // if 1 lock is added, roi = 0.5 sherx
+      expect(
+        await this.sl['getSherXPerBlock(uint256,address)'](parseEther('1'), this.tokenA.address),
+      ).to.eq(parseEther('0.5'));
 
       expect(await this.sl.getUnallocatedSherXTotal(this.tokenA.address)).to.eq(0);
       expect(await this.sl.getUnallocatedSherXFor(this.alice.address, this.tokenA.address)).to.eq(
@@ -279,6 +291,10 @@ describe('SherX', function () {
       expect(
         await this.sl['getSherXPerBlock(address,address)'](this.alice.address, this.tokenA.address),
       ).to.eq(parseEther('1'));
+      // if 1 lock is added, roi = 0.5 sherx
+      expect(
+        await this.sl['getSherXPerBlock(uint256,address)'](parseEther('1'), this.tokenA.address),
+      ).to.eq(parseEther('0.5'));
 
       expect(await this.sl.getUnallocatedSherXTotal(this.tokenA.address)).to.eq(parseEther('1'));
       expect(await this.sl.getUnallocatedSherXFor(this.alice.address, this.tokenA.address)).to.eq(
@@ -304,6 +320,10 @@ describe('SherX', function () {
       expect(
         await this.sl['getSherXPerBlock(address,address)'](this.alice.address, this.tokenA.address),
       ).to.eq(parseEther('1'));
+      // if 1 lock is added, roi = 0.5 sherx
+      expect(
+        await this.sl['getSherXPerBlock(uint256,address)'](parseEther('1'), this.tokenA.address),
+      ).to.eq(parseEther('0.5'));
 
       expect(await this.sl.getUnallocatedSherXTotal(this.tokenA.address)).to.eq(0);
       expect(await this.sl.getUnallocatedSherXFor(this.alice.address, this.tokenA.address)).to.eq(
@@ -518,7 +538,9 @@ describe('SherX', function () {
           ),
       );
       // harvest SherX tokens
-      await this.sl['harvestFor(address,address)'](this.alice.address, this.lockA.address);
+      this.bHarvest = await blockNumber(
+        this.sl['harvestFor(address,address)'](this.alice.address, this.lockA.address),
+      );
       // unstake SherX tokens
       await this.sl.c(this.gov).setUnstakeWindow(10);
       await this.lockX.approve(this.sl.address, parseEther('10000'));
@@ -550,6 +572,10 @@ describe('SherX', function () {
 
       expect(await this.sl.getInternalTotalSupply()).to.eq(0);
       expect(await this.sl.getInternalTotalSupplySettled()).to.eq(this.b0);
+
+      expect(await this.sl.getTotalSherXUnminted()).to.eq(
+        this.b2.sub(this.bHarvest).mul(parseEther('1')),
+      );
 
       // pool variables
       expect(await this.sl.getTotalUsdLastSettled()).to.eq(this.b0);
@@ -588,6 +614,11 @@ describe('SherX', function () {
 
       expect(await this.sl.getInternalTotalSupply()).to.eq(this.userDiff.mul(parseEther('1')));
       expect(await this.sl.getInternalTotalSupplySettled()).to.eq(this.b3);
+
+      // Not minted on redeem
+      expect(await this.sl.getTotalSherXUnminted()).to.eq(
+        this.b3.sub(this.bHarvest).mul(parseEther('1')),
+      );
 
       // pool variables
       expect(await this.sl.getTotalUsdLastSettled()).to.eq(this.b3);
