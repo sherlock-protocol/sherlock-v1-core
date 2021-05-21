@@ -23,7 +23,15 @@ contract PoolOpen is IPoolStake {
     uint256 _amount,
     address _receiver,
     IERC20 _token
-  ) external override returns (uint256 lock) {
+  ) external virtual override returns (uint256) {
+    return _stake(_amount, _receiver, _token);
+  }
+
+  function _stake(
+    uint256 _amount,
+    address _receiver,
+    IERC20 _token
+  ) internal returns (uint256 lock) {
     require(_amount > 0, 'AMOUNT');
     require(_receiver != address(0), 'RECEIVER');
     (IERC20 token, PoolStorage.Base storage ps) = baseData();
