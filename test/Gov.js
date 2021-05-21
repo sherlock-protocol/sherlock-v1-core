@@ -21,6 +21,7 @@ describe('Gov', function () {
       ['lockA', this.ForeignLock, ['Lock TokenA', 'lockA', this.sl.address, this.tokenA.address]],
       ['lockB', this.ForeignLock, ['Lock TokenB', 'lockB', this.sl.address, this.tokenB.address]],
       ['lockC', this.ForeignLock, ['Lock TokenC', 'lockC', this.sl.address, this.tokenC.address]],
+      ['lockX', this.NativeLock, ['Lock TokenX', 'lockX', this.sl.address]],
     ]);
 
     await timeTraveler.snapshot();
@@ -405,6 +406,116 @@ describe('Gov', function () {
       await expect(
         this.sl.c(this.gov).tokenDisableStakers(this.tokenA.address, 0),
       ).to.be.revertedWith('ACTIVE_WEIGHT');
+    });
+  });
+  describe('tokenDisableStakers() ─ Staker Withdraw', function () {
+    before(async function () {
+      await timeTraveler.revertSnapshot();
+
+      await this.sl.c(this.gov).setWatsonsAddress(this.alice.address);
+      await this.sl.c(this.gov).setInitialWeight();
+
+      await this.sl.c(this.gov).setUnstakeWindow(1);
+
+      await this.sl
+        .c(this.gov)
+        .tokenInit(this.tokenA.address, this.gov.address, this.lockA.address, true);
+
+      await this.tokenA.approve(this.sl.address, parseEther('10000'));
+      await this.lockA.approve(this.sl.address, parseEther('10000'));
+      await this.sl.stake(parseEther('10'), this.alice.address, this.tokenA.address);
+    });
+    it('Do', async function () {
+      await this.sl.c(this.gov).tokenDisableStakers(this.tokenA.address, 0);
+
+      await expect(
+        this.sl.stake(parseEther('10'), this.alice.address, this.tokenA.address),
+      ).to.be.revertedWith('NO_STAKES');
+    });
+    it('Cooldown', async function () {
+      await this.sl.activateCooldown(parseEther('1'), this.tokenA.address);
+    });
+    it('Unstake', async function () {
+      await this.sl.unstake(0, this.alice.address, this.tokenA.address);
+    });
+  });
+  describe('tokenDisableStakers() ─ Harvest', function () {
+    before(async function () {
+      await timeTraveler.revertSnapshot();
+
+      await this.sl
+        .c(this.gov)
+        .tokenInit(this.tokenA.address, this.gov.address, this.lockA.address, true);
+
+      await this.sl
+        .c(this.gov)
+        .tokenInit(this.sl.address, this.gov.address, this.lockX.address, true);
+
+      // Distribute SherX to tokenA stakers
+      await this.sl.c(this.gov).setWatsonsAddress(this.alice.address);
+      await this.sl.c(this.gov).setInitialWeight();
+      await this.sl.c(this.gov).setWeights([this.tokenA.address], [parseEther('1')], 0);
+
+      await this.tokenA.approve(this.sl.address, parseEther('10000'));
+      await this.sl.stake(parseEther('10'), this.alice.address, this.tokenA.address);
+
+      await this.sl
+        .c(this.gov)
+        .protocolAdd(this.protocolX, this.gov.address, this.gov.address, [this.tokenA.address]);
+
+      await this.sl.depositProtocolBalance(
+        this.protocolX,
+        parseUnits('100', this.tokenA.dec),
+        this.tokenA.address,
+      );
+
+      await this.sl
+        .c(this.gov)
+        ['setProtocolPremiumAndTokenPrice(bytes32,address,uint256,uint256)'](
+          this.protocolX,
+          this.tokenA.address,
+          parseEther('1'),
+          parseEther('1'),
+        );
+
+      await this.sl
+        .c(this.gov)
+        ['setProtocolPremiumAndTokenPrice(bytes32,address,uint256,uint256)'](
+          this.protocolX,
+          this.tokenA.address,
+          0,
+          parseEther('1'),
+        );
+
+      await this.sl.c(this.gov).setWeights([this.tokenA.address], [0], parseEther('1'));
+    });
+    it('Do', async function () {
+      await this.sl.c(this.gov).tokenDisableStakers(this.tokenA.address, 0);
+
+      expect(await this.sl.getUnallocatedSherXTotal(this.tokenA.address)).to.eq(parseEther('1'));
+      expect(await this.sl.getUnallocatedSherXFor(this.alice.address, this.tokenA.address)).to.eq(
+        parseEther('1'),
+      );
+
+      expect(await this.lockX.balanceOf(this.alice.address)).to.eq(0);
+    });
+    it('Harvest fail', async function () {
+      await this.sl['harvest()']();
+      expect(await this.sl.getUnallocatedSherXTotal(this.tokenA.address)).to.eq(parseEther('1'));
+      expect(await this.sl.getUnallocatedSherXFor(this.alice.address, this.tokenA.address)).to.eq(
+        parseEther('1'),
+      );
+
+      expect(await this.lockX.balanceOf(this.alice.address)).to.eq(0);
+    });
+    it('Harvest success', async function () {
+      await this.sl['harvest(address)'](this.lockA.address);
+      expect(await this.sl.getUnallocatedSherXTotal(this.tokenA.address)).to.eq(0);
+      expect(await this.sl.getUnallocatedSherXFor(this.alice.address, this.tokenA.address)).to.eq(
+        0,
+      );
+
+      expect(await this.lockX.balanceOf(this.alice.address)).to.eq(parseEther('1'));
     });
   });
   describe('tokenDisableProtocol()', function () {
