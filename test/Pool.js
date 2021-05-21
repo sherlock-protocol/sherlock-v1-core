@@ -557,6 +557,7 @@ describe('Pool', function () {
     it('Initial state', async function () {
       expect(await this.tokenA.balanceOf(this.alice.address)).to.eq(parseEther('990'));
       expect(await this.tokenA.balanceOf(this.sl.address)).to.eq(parseEther('10'));
+      expect(await this.sl.getTotalPremiumPerBlock(this.tokenA.address)).to.eq(parseEther('0'));
     });
     it('Do', async function () {
       await this.sl
@@ -566,12 +567,14 @@ describe('Pool', function () {
       expect(await this.tokenA.balanceOf(this.alice.address)).to.eq(parseEther('1000'));
       expect(await this.tokenA.balanceOf(this.sl.address)).to.eq(0);
       expect(await this.sl.getStakersPoolBalance(this.tokenA.address)).to.eq(0);
+      expect(await this.sl.getSherXUnderlying(this.tokenA.address)).to.eq(0);
 
       expect(await this.sl.getProtocolBalance(this.protocolX, this.tokenA.address)).to.eq(0);
       expect(await this.sl.getProtocolPremium(this.protocolX, this.tokenA.address)).to.eq(0);
       expect(await this.sl.isProtocol(this.protocolX, this.tokenA.address)).to.eq(false);
       const protocols = await this.sl.getProtocols(this.tokenA.address);
       expect(protocols.length).to.eq(0);
+      expect(await this.sl.getTotalPremiumPerBlock(this.tokenA.address)).to.eq(parseEther('0'));
     });
   });
   describe('cleanProtocol() ─ Accrued debt (no force)', function () {
@@ -591,6 +594,7 @@ describe('Pool', function () {
     it('Initial state', async function () {
       expect(await this.tokenA.balanceOf(this.alice.address)).to.eq(parseEther('990'));
       expect(await this.tokenA.balanceOf(this.sl.address)).to.eq(parseEther('10'));
+      expect(await this.sl.getTotalPremiumPerBlock(this.tokenA.address)).to.eq(parseEther('20'));
     });
     it('Do', async function () {
       await this.sl
@@ -600,12 +604,14 @@ describe('Pool', function () {
       expect(await this.tokenA.balanceOf(this.alice.address)).to.eq(parseEther('1000'));
       expect(await this.tokenA.balanceOf(this.sl.address)).to.eq(0);
       expect(await this.sl.getStakersPoolBalance(this.tokenA.address)).to.eq(0);
+      expect(await this.sl.getSherXUnderlying(this.tokenA.address)).to.eq(0);
 
       expect(await this.sl.getProtocolBalance(this.protocolX, this.tokenA.address)).to.eq(0);
       expect(await this.sl.getProtocolPremium(this.protocolX, this.tokenA.address)).to.eq(0);
       expect(await this.sl.isProtocol(this.protocolX, this.tokenA.address)).to.eq(false);
       const protocols = await this.sl.getProtocols(this.tokenA.address);
       expect(protocols.length).to.eq(0);
+      expect(await this.sl.getTotalPremiumPerBlock(this.tokenA.address)).to.eq(parseEther('0'));
     });
   });
   describe('cleanProtocol() ─ Accrued debt (force)', function () {
@@ -625,6 +631,7 @@ describe('Pool', function () {
     it('Initial state', async function () {
       expect(await this.tokenA.balanceOf(this.alice.address)).to.eq(parseEther('990'));
       expect(await this.tokenA.balanceOf(this.sl.address)).to.eq(parseEther('10'));
+      expect(await this.sl.getTotalPremiumPerBlock(this.tokenA.address)).to.eq(parseEther('20'));
     });
     it('Do', async function () {
       await this.sl
@@ -632,7 +639,8 @@ describe('Pool', function () {
         .cleanProtocol(this.protocolX, 0, true, this.alice.address, this.tokenA.address);
 
       expect(await this.tokenA.balanceOf(this.alice.address)).to.eq(parseEther('990'));
-      expect(await this.sl.getStakersPoolBalance(this.tokenA.address)).to.eq(parseEther('10'));
+      expect(await this.sl.getStakersPoolBalance(this.tokenA.address)).to.eq(0);
+      expect(await this.sl.getSherXUnderlying(this.tokenA.address)).to.eq(parseEther('10'));
       expect(await this.tokenA.balanceOf(this.sl.address)).to.eq(parseEther('10'));
 
       expect(await this.sl.getProtocolBalance(this.protocolX, this.tokenA.address)).to.eq(0);
@@ -640,6 +648,7 @@ describe('Pool', function () {
       expect(await this.sl.isProtocol(this.protocolX, this.tokenA.address)).to.eq(false);
       const protocols = await this.sl.getProtocols(this.tokenA.address);
       expect(protocols.length).to.eq(0);
+      expect(await this.sl.getTotalPremiumPerBlock(this.tokenA.address)).to.eq(parseEther('0'));
     });
   });
   describe('cleanProtocol() ─ Accruing debt', function () {

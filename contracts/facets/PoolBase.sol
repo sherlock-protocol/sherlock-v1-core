@@ -418,9 +418,9 @@ contract PoolBase is IPoolBase {
       require(accrued > ps.protocolBalance[_protocol], 'CAN_NOT_DELETE2');
     }
 
-    // send the remained of the protocol balance to the staker pool
+    // send the remainder of the protocol balance to the sherx underlying
     if (_forceDebt && accrued > 0) {
-      ps.stakeBalance = ps.stakeBalance.add(ps.protocolBalance[_protocol]);
+      ps.sherXUnderlying = ps.sherXUnderlying.add(ps.protocolBalance[_protocol]);
       delete ps.protocolBalance[_protocol];
     }
 
@@ -436,6 +436,9 @@ contract PoolBase is IPoolBase {
     ps.protocols.pop();
     ps.isProtocol[_protocol] = false;
     // could still be >0, if accrued more debt than needed.
-    delete ps.protocolPremium[_protocol];
+    if (ps.protocolPremium[_protocol] > 0) {
+      ps.totalPremiumPerBlock = ps.totalPremiumPerBlock.sub(ps.protocolPremium[_protocol]);
+      delete ps.protocolPremium[_protocol];
+    }
   }
 }
