@@ -7,6 +7,7 @@ pragma solidity ^0.7.4;
 /******************************************************************************/
 
 import '../interfaces/ILock.sol';
+import '../interfaces/IRemove.sol';
 
 interface IGov {
   //
@@ -85,5 +86,9 @@ interface IGov {
 
   function tokenDisableProtocol(IERC20 _token, uint256 _index) external;
 
-  function tokenRemove(IERC20 _token, address _to) external;
+  function tokenRemove(
+    IERC20 _token,
+    IRemove _native,
+    address _sherx
+  ) external;
 }

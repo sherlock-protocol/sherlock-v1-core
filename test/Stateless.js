@@ -369,32 +369,49 @@ describe('Stateless', function () {
     });
     describe('tokenRemove()', function () {
       it('Invalid sender', async function () {
-        await expect(this.sl.tokenRemove(this.tokenA.address, this.gov.address)).to.be.revertedWith(
-          'NOT_GOV_INS',
-        );
+        await expect(
+          this.sl.tokenRemove(this.tokenA.address, this.alice.address, this.gov.address),
+        ).to.be.revertedWith('NOT_GOV_INS');
       });
       it('Invalid token', async function () {
         await expect(
-          this.sl.c(this.gov).tokenRemove(this.tokenC.address, this.gov.address),
+          this.sl
+            .c(this.gov)
+            .tokenRemove(this.tokenC.address, this.alice.address, this.gov.address),
         ).to.be.revertedWith('EMPTY');
       });
       it('Invalid token (zero)', async function () {
         await expect(
-          this.sl.c(this.gov).tokenRemove(constants.AddressZero, this.gov.address),
+          this.sl
+            .c(this.gov)
+            .tokenRemove(constants.AddressZero, this.alice.address, this.gov.address),
         ).to.be.revertedWith('EMPTY');
       });
-      it('Invalid to', async function () {
+      it('Invalid native', async function () {
         await expect(
-          this.sl.c(this.gov).tokenRemove(this.tokenA.address, constants.AddressZero),
-        ).to.be.revertedWith('ZERO_TO');
+          this.sl
+            .c(this.gov)
+            .tokenRemove(this.tokenA.address, constants.AddressZero, this.alice.address),
+        ).to.be.revertedWith('ZERO_NATIVE');
+      });
+      it('Invalid sherx', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            .tokenRemove(this.tokenA.address, this.alice.address, constants.AddressZero),
+        ).to.be.revertedWith('ZERO_SHERX');
       });
       it('Not disabled', async function () {
         await expect(
-          this.sl.c(this.gov).tokenRemove(this.tokenA.address, this.gov.address),
+          this.sl
+            .c(this.gov)
+            .tokenRemove(this.tokenA.address, this.alice.address, this.gov.address),
         ).to.be.revertedWith('STAKES_SET');
       });
       it('Success', async function () {
-        await this.sl.c(this.gov).tokenRemove(this.tokenB.address, this.gov.address);
+        await this.sl
+          .c(this.gov)
+          .tokenRemove(this.tokenB.address, this.alice.address, this.gov.address);
       });
     });
   });

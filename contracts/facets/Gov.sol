@@ -262,64 +262,67 @@ contract Gov is IGov {
     PoolStorage.Base storage ps = PoolStorage.ps(_token);
     require(gs.tokensProtocol[_index] == _token, 'INDEX');
     require(ps.totalPremiumPerBlock == 0, 'ACTIVE_PREMIUM');
-    require(ps.sherXUnderlying == 0, 'ACTIVE_SHERX');
 
     delete ps.premiums;
     gs.tokensProtocol[_index] = gs.tokensProtocol[gs.tokensProtocol.length - 1];
     gs.tokensProtocol.pop();
   }
 
-  function tokenRemove(IERC20 _token, address _to) external override onlyGovInsurance {
-    require(_to != address(0), 'ZERO_TO');
+  function tokenRemove(
+    IERC20 _token,
+    IRemove _native,
+    address _sherx
+  ) external override onlyGovInsurance {
+    require(address(_native) != address(0), 'ZERO_NATIVE');
+    require(_sherx != address(0), 'ZERO_SHERX');
 
     GovStorage.Base storage gs = GovStorage.gs();
 
     PoolStorage.Base storage ps = PoolStorage.ps(_token);
-    // Moved from disable to remove, as disable can be skipped
-    // in case protocol only pay premium with this token
     require(ps.govPool != address(0), 'EMPTY');
-    // should all be removed, just as the balances
     require(!ps.stakes, 'STAKES_SET');
     require(!ps.premiums, 'PREMIUMS_SET');
+
     require(ps.protocols.length == 0, 'ACTIVE_PROTOCOLS');
 
-    // TODO, mapping storage is kept
-    // deleting + adding a token with non-default storage can cause unexpected behaviour.
-    // todo, dont user storage poiner? Or add nonce to storage pointer
-    // or make it possible to overwrite storage? (not prefered)
-    // 27/3, I think it is cool, as balance+premium+isProtocol will be reset (as all protocols need to be deleted)
-    // stakeWithdraw is kept, only results in withdraws potentially having index > 0
     delete ps.govPool;
-    delete ps.stakeBalance;
-    //delete ps.protocolBalance;
-    //delete ps.protocolPremium;
-    delete ps.totalPremiumPerBlock;
-    delete ps.totalPremiumLastPaid;
-    //delete ps.sWithdrawn
-    delete ps.sWeight;
-    delete ps.sherXWeight;
-    //delete ps.unstakeEntries;
     delete ps.lockToken;
-    //delete ps.isProtocol
-    delete ps.protocols;
     delete ps.activateCooldownFee;
-    // TODO how do we remove token from ETF? (e.g. sherXUnderlying)
-    // IDEA create interfaces and add extra token params
-    // interface does swap(token). it returns a uint256 value of the new swapped token value (+transfers tokens to sherlock)
-    // complexity is handled in swap contract
+    delete ps.sherXWeight;
+    delete ps.sherXLastAccrued;
+
+    // NOTE: storage variables need to be kept. To make sure readding the token works
+    // IF readding the token, verify off chain if the storage is sufficient.
+    // Create readding plan off chain if this isn't the case. (e.g. clean storage by doing calls)
+    //delete ps.sWithdrawn
+    //delete ps.sWeight;
+
+    delete ps.totalPremiumLastPaid;
+    delete ps.protocols;
+
     uint256 totalToken = ps.stakeBalance.add(ps.firstMoneyOut).add(ps.sherXUnderlying);
 
     if (totalToken > 0) {
-      _token.safeTransfer(_to, totalToken);
-    }
-    // todo accruelatest fees
-    uint256 totalFee = ps.unallocatedSherX;
-    if (totalFee > 0) {
-      IERC20(address(this)).safeTransfer(_to, totalFee);
+      _token.approve(address(_native), totalToken);
+
+      (IERC20 newToken, uint256 newStakeBalance, uint256 newFmo, uint256 newSherxUnderlying) =
+        _native.swap(_token, ps.stakeBalance, ps.firstMoneyOut, ps.sherXUnderlying);
+
+      PoolStorage.Base storage ps2 = PoolStorage.ps(newToken);
+      require(ps2.govPool != address(0), 'EMPTY_SWAP');
+
+      ps2.stakeBalance = ps2.stakeBalance.add(newStakeBalance);
+      ps2.firstMoneyOut = ps2.firstMoneyOut.add(newFmo);
+      ps2.sherXUnderlying = ps2.sherXUnderlying.add(newSherxUnderlying);
     }
     delete ps.sherXUnderlying;
-    delete ps.unallocatedSherX;
     delete ps.firstMoneyOut;
     delete ps.stakeBalance;
+
+    uint256 totalFee = ps.unallocatedSherX;
+    if (totalFee > 0) {
+      IERC20(address(this)).safeTransfer(_sherx, totalFee);
+    }
+    delete ps.unallocatedSherX;
   }
 }
