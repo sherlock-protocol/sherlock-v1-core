@@ -28,10 +28,10 @@ library GovStorage {
     uint256 watsonsSherxLastAccrued;
   }
 
-  function gs() internal pure returns (Base storage bs) {
+  function gs() internal pure returns (Base storage gsx) {
     bytes32 position = GOV_STORAGE_POSITION;
     assembly {
-      bs.slot := position
+      gsx.slot := position
     }
   }
 }

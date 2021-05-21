@@ -60,7 +60,6 @@ library LibSherX {
     returns (IERC20[] memory tokens, uint256[] memory amounts)
   {
     GovStorage.Base storage gs = GovStorage.gs();
-    SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
 
     tokens = new IERC20[](gs.tokensSherX.length);
     amounts = new uint256[](gs.tokensSherX.length);

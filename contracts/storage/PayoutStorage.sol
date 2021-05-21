@@ -17,10 +17,10 @@ library PayoutStorage {
     address govPayout;
   }
 
-  function ps() internal pure returns (Base storage ps) {
+  function ps() internal pure returns (Base storage psx) {
     bytes32 position = PAYOUT_STORAGE_POSITION;
     assembly {
-      ps.slot := position
+      psx.slot := position
     }
   }
 }

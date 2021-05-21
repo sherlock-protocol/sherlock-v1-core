@@ -19,10 +19,10 @@ library SherXERC20Storage {
     mapping(address => mapping(address => uint256)) allowances;
   }
 
-  function sx20() internal pure returns (Base storage sx20) {
+  function sx20() internal pure returns (Base storage sx20x) {
     bytes32 position = SHERX_ERC20_STORAGE_POSITION;
     assembly {
-      sx20.slot := position
+      sx20x.slot := position
     }
   }
 }

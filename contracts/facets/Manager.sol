@@ -30,7 +30,7 @@ contract Manager is IManager {
     _;
   }
 
-  function onlyValidToken(PoolStorage.Base storage ps, IERC20 _token) private {
+  function onlyValidToken(PoolStorage.Base storage ps, IERC20 _token) private view {
     require(address(_token) != address(this), 'SHERX');
     require(ps.premiums, 'WHITELIST');
   }
@@ -273,7 +273,7 @@ contract Manager is IManager {
     PoolStorage.Base storage ps = PoolStorage.ps(_token);
     onlyValidToken(ps, _token);
 
-    (uint256 oldPremium, uint256 newPremium) = _setProtocolPremium(ps, _protocol, _token, _premium);
+    (uint256 oldPremium, uint256 newPremium) = _setProtocolPremium(ps, _protocol, _premium);
 
     uint256 usd = sx.tokenUSD[_token];
     (usdPerBlock, usdPool) = _updateData(
@@ -291,7 +291,6 @@ contract Manager is IManager {
   function _setProtocolPremium(
     PoolStorage.Base storage ps,
     bytes32 _protocol,
-    IERC20 _token,
     uint256 _premium
   ) private returns (uint256 oldPremium, uint256 newPremium) {
     require(ps.isProtocol[_protocol], 'NON_PROTOCOL');
@@ -315,7 +314,7 @@ contract Manager is IManager {
     onlyValidToken(ps, _token);
 
     uint256 oldUsd = _setTokenPrice(_token, _newUsd);
-    (uint256 oldPremium, uint256 newPremium) = _setProtocolPremium(ps, _protocol, _token, _premium);
+    (uint256 oldPremium, uint256 newPremium) = _setProtocolPremium(ps, _protocol, _premium);
     (usdPerBlock, usdPool) = _updateData(
       ps,
       usdPerBlock,

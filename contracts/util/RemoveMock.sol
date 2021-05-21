@@ -23,7 +23,7 @@ contract RemoveMock is IRemove {
   uint256 constant fmo = 10e5 * 2;
   uint256 constant underlying = 10e5 * 3;
 
-  constructor(IERC20 _token) public {
+  constructor(IERC20 _token) {
     token = _token;
   }
 

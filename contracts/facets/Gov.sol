@@ -62,7 +62,6 @@ contract Gov is IGov {
 
   function getWatsonsUnmintedSherX() external view override returns (uint256) {
     GovStorage.Base storage gs = GovStorage.gs();
-    SherXStorage.Base storage sx = SherXStorage.sx();
 
     return block.number.sub(gs.watsonsSherxLastAccrued).mul(getWatsonsSherXPerBlock());
   }
@@ -275,8 +274,6 @@ contract Gov is IGov {
   ) external override onlyGovInsurance {
     require(address(_native) != address(0), 'ZERO_NATIVE');
     require(_sherx != address(0), 'ZERO_SHERX');
-
-    GovStorage.Base storage gs = GovStorage.gs();
 
     PoolStorage.Base storage ps = PoolStorage.ps(_token);
     require(ps.govPool != address(0), 'EMPTY');

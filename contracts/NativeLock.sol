@@ -17,7 +17,7 @@ contract NativeLock is ERC20, ILock, Ownable {
     string memory _name,
     string memory _symbol,
     IERC20 _sherlock
-  ) public ERC20(_name, _symbol) {
+  ) ERC20(_name, _symbol) {
     transferOwnership(address(_sherlock));
     underlying = _sherlock;
   }

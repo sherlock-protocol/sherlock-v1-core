@@ -25,10 +25,10 @@ library SherXStorage {
     uint256 internalTotalSupplySettled;
   }
 
-  function sx() internal pure returns (Base storage sx) {
+  function sx() internal pure returns (Base storage sxx) {
     bytes32 position = SHERX_STORAGE_POSITION;
     assembly {
-      sx.slot := position
+      sxx.slot := position
     }
   }
 }

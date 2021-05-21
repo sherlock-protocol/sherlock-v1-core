@@ -13,7 +13,7 @@ contract ERC20Mock is ERC20 {
     string memory _name,
     string memory _symbol,
     uint256 _amount
-  ) public ERC20(_name, _symbol) {
+  ) ERC20(_name, _symbol) {
     _mint(msg.sender, _amount);
   }
 }
@@ -23,7 +23,7 @@ contract ERC20Mock8d is ERC20 {
     string memory _name,
     string memory _symbol,
     uint256 _amount
-  ) public ERC20(_name, _symbol) {
+  ) ERC20(_name, _symbol) {
     _mint(msg.sender, _amount);
   }
 
@@ -37,7 +37,7 @@ contract ERC20Mock6d is ERC20 {
     string memory _name,
     string memory _symbol,
     uint256 _amount
-  ) public ERC20(_name, _symbol) {
+  ) ERC20(_name, _symbol) {
     _mint(msg.sender, _amount);
   }
 
