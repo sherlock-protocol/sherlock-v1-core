@@ -19,6 +19,7 @@ describe('Stateless', function () {
     await deploy(this, [
       ['lockA', this.ForeignLock, ['Lock TokenA', 'lockA', this.sl.address, this.tokenA.address]],
       ['lockB', this.ForeignLock, ['Lock TokenB', 'lockB', this.sl.address, this.tokenB.address]],
+      ['lockC', this.ForeignLock, ['Lock TokenC', 'lockC', this.sl.address, this.tokenC.address]],
       [
         'lockWGov',
         this.ForeignLock,
@@ -1051,7 +1052,11 @@ describe('Stateless', function () {
     });
   });
   describe('Payout ─ View Methods', function () {
-    describe('getGovPayout()', function () {});
+    describe('getGovPayout()', function () {
+      it('Do', async function () {
+        expect(await this.sl.getGovPayout()).to.eq(this.gov.address);
+      });
+    });
   });
   describe('Pool ─ State Changing', function () {
     describe('setCooldownFee()', function () {
@@ -1261,6 +1266,13 @@ describe('Stateless', function () {
             .c(this.gov)
             .cleanProtocol(this.protocolX, 0, false, this.bob.address, constants.AddressZero),
         ).to.be.revertedWith('INVALID_TOKEN');
+      });
+      it('Invalid index (zero)', async function () {
+        await expect(
+          this.sl
+            .c(this.gov)
+            .cleanProtocol(this.protocolY, 0, false, this.bob.address, this.tokenA.address),
+        ).to.be.revertedWith('INDEX');
       });
       it('Success', async function () {
         await this.sl
