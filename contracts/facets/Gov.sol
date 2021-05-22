@@ -124,13 +124,11 @@ contract Gov is IGov {
   }
 
   function setUnstakeWindow(uint256 _unstakeWindow) external override onlyGovMain {
-    GovStorage.Base storage gs = GovStorage.gs();
-    gs.unstakeWindow = _unstakeWindow;
+    GovStorage.gs().unstakeWindow = _unstakeWindow;
   }
 
   function setCooldown(uint256 _period) external override onlyGovMain {
-    GovStorage.Base storage gs = GovStorage.gs();
-    gs.unstakeCooldown = _period;
+    GovStorage.gs().unstakeCooldown = _period;
   }
 
   function protocolAdd(

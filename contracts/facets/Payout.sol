@@ -62,9 +62,11 @@ contract Payout is IPayout {
   }
 
   function transferGovPayout(address _govPayout) external override onlyGovMain {
+    PayoutStorage.Base storage ps = PayoutStorage.ps();
+
     require(_govPayout != address(0), 'ZERO_GOV');
-    require(PayoutStorage.ps().govPayout != _govPayout, 'SAME_GOV');
-    PayoutStorage.ps().govPayout = _govPayout;
+    require(ps.govPayout != _govPayout, 'SAME_GOV');
+    ps.govPayout = _govPayout;
   }
 
   function _doSherX(
