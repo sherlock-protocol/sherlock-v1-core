@@ -128,7 +128,7 @@ module.exports = {
     const diamond = await Diamond.deploy(diamondCut, [gov.address]);
     const sherlock = await ethers.getContractAt('ISherlock', diamond.address);
     sherlock.c = sherlock.connect;
-    await sherlock.c(gov).setInitialGovInsurance(gov.address);
+    await sherlock.c(gov).setInitialGovMain(gov.address);
     await sherlock.c(gov).setInitialGovPayout(gov.address);
     await sherlock.c(gov).initializeSherXERC20('Sherlock ETF', 'SHERX');
 

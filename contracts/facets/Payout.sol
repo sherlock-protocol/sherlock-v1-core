@@ -29,8 +29,8 @@ contract Payout is IPayout {
   // Modifiers
   //
 
-  modifier onlyGovInsurance() {
-    require(msg.sender == GovStorage.gs().govInsurance, 'NOT_GOV_INS');
+  modifier onlyGovMain() {
+    require(msg.sender == GovStorage.gs().govMain, 'NOT_GOV_MAIN');
     _;
   }
 
@@ -61,7 +61,7 @@ contract Payout is IPayout {
     ps.govPayout = _govPayout;
   }
 
-  function transferGovPayout(address _govPayout) external override onlyGovInsurance {
+  function transferGovPayout(address _govPayout) external override onlyGovMain {
     require(_govPayout != address(0), 'ZERO_GOV');
     require(PayoutStorage.ps().govPayout != _govPayout, 'SAME_GOV');
     PayoutStorage.ps().govPayout = _govPayout;

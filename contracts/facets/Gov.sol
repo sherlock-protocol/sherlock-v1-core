@@ -28,8 +28,8 @@ contract Gov is IGov {
   // Modifiers
   //
 
-  modifier onlyGovInsurance() {
-    require(msg.sender == GovStorage.gs().govInsurance, 'NOT_GOV_INS');
+  modifier onlyGovMain() {
+    require(msg.sender == GovStorage.gs().govMain, 'NOT_GOV_MAIN');
     _;
   }
 
@@ -37,8 +37,8 @@ contract Gov is IGov {
   // View methods
   //
 
-  function getGovInsurance() external view override returns (address) {
-    return GovStorage.gs().govInsurance;
+  function getGovMain() external view override returns (address) {
+    return GovStorage.gs().govMain;
   }
 
   function getWatsons() external view override returns (address) {
@@ -99,23 +99,23 @@ contract Gov is IGov {
   // State changing methods
   //
 
-  function setInitialGovInsurance(address _govInsurance) external override {
+  function setInitialGovMain(address _govMain) external override {
     GovStorage.Base storage gs = GovStorage.gs();
 
-    require(_govInsurance != address(0), 'ZERO_GOV');
+    require(_govMain != address(0), 'ZERO_GOV');
     require(msg.sender == LibDiamond.contractOwner(), 'NOT_DEV');
-    require(gs.govInsurance == address(0), 'ALREADY_SET');
+    require(gs.govMain == address(0), 'ALREADY_SET');
 
-    gs.govInsurance = _govInsurance;
+    gs.govMain = _govMain;
   }
 
-  function transferGovInsurance(address _govInsurance) external override onlyGovInsurance {
-    require(_govInsurance != address(0), 'ZERO_GOV');
-    require(GovStorage.gs().govInsurance != _govInsurance, 'SAME_GOV');
-    GovStorage.gs().govInsurance = _govInsurance;
+  function transferGovMain(address _govMain) external override onlyGovMain {
+    require(_govMain != address(0), 'ZERO_GOV');
+    require(GovStorage.gs().govMain != _govMain, 'SAME_GOV');
+    GovStorage.gs().govMain = _govMain;
   }
 
-  function setWatsonsAddress(address _watsons) external override onlyGovInsurance {
+  function setWatsonsAddress(address _watsons) external override onlyGovMain {
     GovStorage.Base storage gs = GovStorage.gs();
 
     require(_watsons != address(0), 'ZERO_WATS');
@@ -123,12 +123,12 @@ contract Gov is IGov {
     gs.watsonsAddress = _watsons;
   }
 
-  function setUnstakeWindow(uint256 _unstakeWindow) external override onlyGovInsurance {
+  function setUnstakeWindow(uint256 _unstakeWindow) external override onlyGovMain {
     GovStorage.Base storage gs = GovStorage.gs();
     gs.unstakeWindow = _unstakeWindow;
   }
 
-  function setCooldown(uint256 _period) external override onlyGovInsurance {
+  function setCooldown(uint256 _period) external override onlyGovMain {
     GovStorage.Base storage gs = GovStorage.gs();
     gs.unstakeCooldown = _period;
   }
@@ -138,7 +138,7 @@ contract Gov is IGov {
     address _eoaProtocolAgent,
     address _eoaManager,
     IERC20[] memory _tokens
-  ) external override onlyGovInsurance {
+  ) external override onlyGovMain {
     GovStorage.Base storage gs = GovStorage.gs();
     require(!gs.protocolIsCovered[_protocol], 'COVERED');
     gs.protocolIsCovered[_protocol] = true;
@@ -151,7 +151,7 @@ contract Gov is IGov {
     bytes32 _protocol,
     address _eoaProtocolAgent,
     address _eoaManager
-  ) public override onlyGovInsurance {
+  ) public override onlyGovMain {
     require(_protocol != bytes32(0), 'ZERO_PROTOCOL');
     require(_eoaProtocolAgent != address(0), 'ZERO_AGENT');
     require(_eoaManager != address(0), 'ZERO_MANAGER');
@@ -167,7 +167,7 @@ contract Gov is IGov {
   function protocolDepositAdd(bytes32 _protocol, IERC20[] memory _tokens)
     public
     override
-    onlyGovInsurance
+    onlyGovMain
   {
     require(_protocol != bytes32(0), 'ZERO_PROTOCOL');
     require(_tokens.length > 0, 'ZERO');
@@ -185,7 +185,7 @@ contract Gov is IGov {
     }
   }
 
-  function protocolRemove(bytes32 _protocol) external override onlyGovInsurance {
+  function protocolRemove(bytes32 _protocol) external override onlyGovMain {
     GovStorage.Base storage gs = GovStorage.gs();
     require(gs.protocolIsCovered[_protocol], 'NOT_COVERED');
 
@@ -207,7 +207,7 @@ contract Gov is IGov {
     address _govPool,
     ILock _lock,
     bool _protocolPremium
-  ) external override onlyGovInsurance {
+  ) external override onlyGovMain {
     GovStorage.Base storage gs = GovStorage.gs();
     PoolStorage.Base storage ps = PoolStorage.ps(_token);
     require(address(_token) != address(0), 'ZERO_TOKEN');
@@ -243,7 +243,7 @@ contract Gov is IGov {
     }
   }
 
-  function tokenDisableStakers(IERC20 _token, uint256 _index) external override onlyGovInsurance {
+  function tokenDisableStakers(IERC20 _token, uint256 _index) external override onlyGovMain {
     GovStorage.Base storage gs = GovStorage.gs();
     PoolStorage.Base storage ps = PoolStorage.ps(_token);
     require(gs.tokensStaker[_index] == _token, 'INDEX');
@@ -256,7 +256,7 @@ contract Gov is IGov {
     gs.tokensStaker.pop();
   }
 
-  function tokenDisableProtocol(IERC20 _token, uint256 _index) external override onlyGovInsurance {
+  function tokenDisableProtocol(IERC20 _token, uint256 _index) external override onlyGovMain {
     GovStorage.Base storage gs = GovStorage.gs();
     PoolStorage.Base storage ps = PoolStorage.ps(_token);
     require(gs.tokensSherX[_index] == _token, 'INDEX');
@@ -271,7 +271,7 @@ contract Gov is IGov {
     IERC20 _token,
     IRemove _native,
     address _sherx
-  ) external override onlyGovInsurance {
+  ) external override onlyGovMain {
     require(address(_native) != address(0), 'ZERO_NATIVE');
     require(_sherx != address(0), 'ZERO_SHERX');
 

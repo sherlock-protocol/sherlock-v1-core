@@ -25,8 +25,8 @@ contract Manager is IManager {
   // Modifiers
   //
 
-  modifier onlyGovInsurance() {
-    require(msg.sender == GovStorage.gs().govInsurance, 'NOT_GOV_INS');
+  modifier onlyGovMain() {
+    require(msg.sender == GovStorage.gs().govMain, 'NOT_GOV_MAIN');
     _;
   }
 
@@ -39,7 +39,7 @@ contract Manager is IManager {
   // State changing methods
   //
 
-  function setTokenPrice(IERC20 _token, uint256 _newUsd) external override onlyGovInsurance {
+  function setTokenPrice(IERC20 _token, uint256 _newUsd) external override onlyGovMain {
     LibPool.payOffDebtAll(_token);
     (uint256 usdPerBlock, uint256 usdPool) = _getData();
     (usdPerBlock, usdPool) = _setTokenPrice(_token, _newUsd, usdPerBlock, usdPool);
@@ -49,7 +49,7 @@ contract Manager is IManager {
   function setTokenPrice(IERC20[] memory _token, uint256[] memory _newUsd)
     external
     override
-    onlyGovInsurance
+    onlyGovMain
   {
     require(_token.length == _newUsd.length, 'LENGTH');
 
@@ -65,7 +65,7 @@ contract Manager is IManager {
     bytes32 _protocol,
     IERC20 _token,
     uint256 _premium
-  ) external override onlyGovInsurance {
+  ) external override onlyGovMain {
     LibPool.payOffDebtAll(_token);
     (uint256 usdPerBlock, uint256 usdPool) = _getData();
     (usdPerBlock, usdPool) = _setProtocolPremium(_protocol, _token, _premium, usdPerBlock, usdPool);
@@ -76,7 +76,7 @@ contract Manager is IManager {
     bytes32 _protocol,
     IERC20[] memory _token,
     uint256[] memory _premium
-  ) external override onlyGovInsurance {
+  ) external override onlyGovMain {
     require(_token.length == _premium.length, 'LENGTH');
 
     (uint256 usdPerBlock, uint256 usdPool) = _getData();
@@ -98,7 +98,7 @@ contract Manager is IManager {
     bytes32[] memory _protocol,
     IERC20[][] memory _token,
     uint256[][] memory _premium
-  ) external override onlyGovInsurance {
+  ) external override onlyGovMain {
     require(_protocol.length == _token.length, 'LENGTH_1');
     require(_protocol.length == _premium.length, 'LENGTH_2');
 
@@ -125,7 +125,7 @@ contract Manager is IManager {
     IERC20 _token,
     uint256 _premium,
     uint256 _newUsd
-  ) external override onlyGovInsurance {
+  ) external override onlyGovMain {
     LibPool.payOffDebtAll(_token);
     (uint256 usdPerBlock, uint256 usdPool) = _getData();
 
@@ -145,7 +145,7 @@ contract Manager is IManager {
     IERC20[] memory _token,
     uint256[] memory _premium,
     uint256[] memory _newUsd
-  ) external override onlyGovInsurance {
+  ) external override onlyGovMain {
     require(_token.length == _premium.length, 'LENGTH_1');
     require(_token.length == _newUsd.length, 'LENGTH_2');
 
@@ -170,7 +170,7 @@ contract Manager is IManager {
     IERC20 _token,
     uint256[] memory _premium,
     uint256 _newUsd
-  ) external override onlyGovInsurance {
+  ) external override onlyGovMain {
     require(_protocol.length == _premium.length, 'LENGTH');
     PoolStorage.Base storage ps = PoolStorage.ps(_token);
     onlyValidToken(ps, _token);
@@ -205,7 +205,7 @@ contract Manager is IManager {
     IERC20[][] memory _token,
     uint256[][] memory _premium,
     uint256[][] memory _newUsd
-  ) external override onlyGovInsurance {
+  ) external override onlyGovMain {
     (uint256 usdPerBlock, uint256 usdPool) = _getData();
     require(_protocol.length == _token.length, 'LENGTH_1');
     require(_protocol.length == _premium.length, 'LENGTH_2');

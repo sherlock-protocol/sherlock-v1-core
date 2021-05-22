@@ -273,7 +273,7 @@ contract PoolBase is IPoolBase {
   //
 
   function setCooldownFee(uint256 _fee, IERC20 _token) external override {
-    require(msg.sender == GovStorage.gs().govInsurance, 'NOT_GOV_INS');
+    require(msg.sender == GovStorage.gs().govMain, 'NOT_GOV_MAIN');
     require(_fee <= 10**18, 'MAX_VALUE');
 
     baseData().activateCooldownFee = _fee;
@@ -402,7 +402,7 @@ contract PoolBase is IPoolBase {
     address _receiver,
     IERC20 _token
   ) external override {
-    require(msg.sender == GovStorage.gs().govInsurance, 'NOT_GOV_INS');
+    require(msg.sender == GovStorage.gs().govMain, 'NOT_GOV_MAIN');
     require(_receiver != address(0), 'RECEIVER');
 
     PoolStorage.Base storage ps = baseData();

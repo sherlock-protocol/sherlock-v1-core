@@ -54,47 +54,45 @@ describe('Stateless', function () {
     await this.lockWSupply.connect(this.gov).transferOwnership(this.sl.address);
   });
   describe('Gov ─ State Changing', function () {
-    describe('setInitialGovInsurance()', function () {
+    describe('setInitialGovMain()', function () {
       it('Invalid sender', async function () {
-        await expect(this.sl.setInitialGovInsurance(this.gov.address)).to.be.revertedWith(
-          'NOT_DEV',
-        );
+        await expect(this.sl.setInitialGovMain(this.gov.address)).to.be.revertedWith('NOT_DEV');
       });
       it('Invalid gov', async function () {
         await expect(
-          this.sl.c(this.gov).setInitialGovInsurance(constants.AddressZero),
+          this.sl.c(this.gov).setInitialGovMain(constants.AddressZero),
         ).to.be.revertedWith('ZERO_GOV');
       });
       it('Success', async function () {
-        await expect(
-          this.sl.c(this.gov).setInitialGovInsurance(this.gov.address),
-        ).to.be.revertedWith('ALREADY_SET');
-      });
-    });
-    describe('transferGovInsurance()', function () {
-      it('Invalid sender', async function () {
-        await expect(this.sl.transferGovInsurance(this.gov.address)).to.be.revertedWith(
-          'NOT_GOV_INS',
+        await expect(this.sl.c(this.gov).setInitialGovMain(this.gov.address)).to.be.revertedWith(
+          'ALREADY_SET',
         );
       });
+    });
+    describe('transferGovMain()', function () {
+      it('Invalid sender', async function () {
+        await expect(this.sl.transferGovMain(this.gov.address)).to.be.revertedWith('NOT_GOV_MAIN');
+      });
       it('Invalid gov', async function () {
-        await expect(
-          this.sl.c(this.gov).transferGovInsurance(constants.AddressZero),
-        ).to.be.revertedWith('ZERO_GOV');
+        await expect(this.sl.c(this.gov).transferGovMain(constants.AddressZero)).to.be.revertedWith(
+          'ZERO_GOV',
+        );
       });
       it('Invalid gov (same)', async function () {
-        await expect(this.sl.c(this.gov).transferGovInsurance(this.gov.address)).to.be.revertedWith(
+        await expect(this.sl.c(this.gov).transferGovMain(this.gov.address)).to.be.revertedWith(
           'SAME_GOV',
         );
       });
       it('Success', async function () {
-        await this.sl.c(this.gov).transferGovInsurance(this.alice.address);
-        await this.sl.transferGovInsurance(this.gov.address);
+        await this.sl.c(this.gov).transferGovMain(this.alice.address);
+        await this.sl.transferGovMain(this.gov.address);
       });
     });
     describe('setWatsonsAddress()', function () {
       it('Invalid sender', async function () {
-        await expect(this.sl.setWatsonsAddress(this.gov.address)).to.be.revertedWith('NOT_GOV_INS');
+        await expect(this.sl.setWatsonsAddress(this.gov.address)).to.be.revertedWith(
+          'NOT_GOV_MAIN',
+        );
       });
       it('Invalid watsons', async function () {
         await expect(
@@ -104,7 +102,7 @@ describe('Stateless', function () {
     });
     describe('setUnstakeWindow()', function () {
       it('Invalid sender', async function () {
-        await expect(this.sl.setUnstakeWindow(1)).to.be.revertedWith('NOT_GOV_INS');
+        await expect(this.sl.setUnstakeWindow(1)).to.be.revertedWith('NOT_GOV_MAIN');
       });
       it('Success', async function () {
         await this.sl.c(this.gov).setUnstakeWindow(1);
@@ -112,7 +110,7 @@ describe('Stateless', function () {
     });
     describe('setCooldown()', function () {
       it('Invalid sender', async function () {
-        await expect(this.sl.setCooldown(1)).to.be.revertedWith('NOT_GOV_INS');
+        await expect(this.sl.setCooldown(1)).to.be.revertedWith('NOT_GOV_MAIN');
       });
       it('Success', async function () {
         await this.sl.c(this.gov).setCooldown(1);
@@ -122,7 +120,7 @@ describe('Stateless', function () {
       it('Invalid sender', async function () {
         await expect(
           this.sl.protocolAdd(this.nonProtocol1, this.gov.address, this.gov.address, []),
-        ).to.be.revertedWith('NOT_GOV_INS');
+        ).to.be.revertedWith('NOT_GOV_MAIN');
       });
       it('Invalid protocol', async function () {
         await expect(
@@ -171,7 +169,7 @@ describe('Stateless', function () {
       it('Invalid sender', async function () {
         await expect(
           this.sl.protocolUpdate(this.protocolX, this.gov.address, this.gov.address),
-        ).to.be.revertedWith('NOT_GOV_INS');
+        ).to.be.revertedWith('NOT_GOV_MAIN');
       });
       it('Invalid protocol', async function () {
         await expect(
@@ -209,7 +207,7 @@ describe('Stateless', function () {
       it('Invalid sender', async function () {
         await expect(
           this.sl.protocolDepositAdd(this.protocolX, [this.tokenA.address]),
-        ).to.be.revertedWith('NOT_GOV_INS');
+        ).to.be.revertedWith('NOT_GOV_MAIN');
       });
       it('Invalid protocol', async function () {
         await expect(
@@ -239,7 +237,7 @@ describe('Stateless', function () {
     });
     describe('protocolRemove()', function () {
       it('Invalid sender', async function () {
-        await expect(this.sl.protocolRemove(this.protocolX)).to.be.revertedWith('NOT_GOV_INS');
+        await expect(this.sl.protocolRemove(this.protocolX)).to.be.revertedWith('NOT_GOV_MAIN');
       });
       it('Invalid protocol', async function () {
         await expect(this.sl.c(this.gov).protocolRemove(this.nonProtocol2)).to.be.revertedWith(
@@ -264,7 +262,7 @@ describe('Stateless', function () {
       it('Invalid sender', async function () {
         await expect(
           this.sl.tokenInit(this.tokenB.address, this.gov.address, this.lockB.address, true),
-        ).to.be.revertedWith('NOT_GOV_INS');
+        ).to.be.revertedWith('NOT_GOV_MAIN');
       });
       it('Invalid lock', async function () {
         await expect(
@@ -331,7 +329,7 @@ describe('Stateless', function () {
     describe('tokenDisableStakers()', function () {
       it('Invalid sender', async function () {
         await expect(this.sl.tokenDisableStakers(this.tokenA.address, 0)).to.be.revertedWith(
-          'NOT_GOV_INS',
+          'NOT_GOV_MAIN',
         );
       });
       it('Invalid index', async function () {
@@ -351,7 +349,7 @@ describe('Stateless', function () {
     describe('tokenDisableProtocol()', function () {
       it('Invalid sender', async function () {
         await expect(this.sl.tokenDisableProtocol(this.tokenA.address, 0)).to.be.revertedWith(
-          'NOT_GOV_INS',
+          'NOT_GOV_MAIN',
         );
       });
       it('Invalid index', async function () {
@@ -372,7 +370,7 @@ describe('Stateless', function () {
       it('Invalid sender', async function () {
         await expect(
           this.sl.tokenRemove(this.tokenA.address, this.alice.address, this.gov.address),
-        ).to.be.revertedWith('NOT_GOV_INS');
+        ).to.be.revertedWith('NOT_GOV_MAIN');
       });
       it('Invalid token', async function () {
         await expect(
@@ -417,7 +415,7 @@ describe('Stateless', function () {
     });
   });
   describe('Gov ─ View Methods', function () {
-    describe('getGovInsurance()', function () {});
+    describe('getGovMain()', function () {});
     describe('getWatsons()', function () {});
     describe('getWatsonsSherXWeight()', function () {});
     describe('getWatsonsSherXPerBlock()', function () {});
@@ -459,7 +457,7 @@ describe('Stateless', function () {
       it('Invalid sender', async function () {
         await expect(
           this.sl['setTokenPrice(address,uint256)'](this.tokenA.address, parseEther('1')),
-        ).to.be.revertedWith('NOT_GOV_INS');
+        ).to.be.revertedWith('NOT_GOV_MAIN');
       });
       it('Invalid token (sherx)', async function () {
         await expect(
@@ -478,7 +476,7 @@ describe('Stateless', function () {
       it('Invalid sender', async function () {
         await expect(
           this.sl['setTokenPrice(address[],uint256[])']([this.tokenA.address], [parseEther('1')]),
-        ).to.be.revertedWith('NOT_GOV_INS');
+        ).to.be.revertedWith('NOT_GOV_MAIN');
       });
       it('Invalid length', async function () {
         await expect(
@@ -513,7 +511,7 @@ describe('Stateless', function () {
             this.tokenA.address,
             parseEther('1'),
           ),
-        ).to.be.revertedWith('NOT_GOV_INS');
+        ).to.be.revertedWith('NOT_GOV_MAIN');
       });
       it('Invalid protocol', async function () {
         await expect(
@@ -557,7 +555,7 @@ describe('Stateless', function () {
             [this.tokenA.address],
             [parseEther('1')],
           ),
-        ).to.be.revertedWith('NOT_GOV_INS');
+        ).to.be.revertedWith('NOT_GOV_MAIN');
       });
       it('Invalid length', async function () {
         await expect(
@@ -612,7 +610,7 @@ describe('Stateless', function () {
             [[this.tokenA.address]],
             [[parseEther('1')]],
           ),
-        ).to.be.revertedWith('NOT_GOV_INS');
+        ).to.be.revertedWith('NOT_GOV_MAIN');
       });
       it('Invalid length 1', async function () {
         await expect(
@@ -690,7 +688,7 @@ describe('Stateless', function () {
             parseEther('1'),
             parseEther('2'),
           ),
-        ).to.be.revertedWith('NOT_GOV_INS');
+        ).to.be.revertedWith('NOT_GOV_MAIN');
       });
       it('Invalid protocol', async function () {
         await expect(
@@ -738,7 +736,7 @@ describe('Stateless', function () {
             [parseEther('1')],
             [parseEther('10')],
           ),
-        ).to.be.revertedWith('NOT_GOV_INS');
+        ).to.be.revertedWith('NOT_GOV_MAIN');
       });
       it('Invalid length 1', async function () {
         await expect(
@@ -810,7 +808,7 @@ describe('Stateless', function () {
             [parseEther('1')],
             parseEther('10'),
           ),
-        ).to.be.revertedWith('NOT_GOV_INS');
+        ).to.be.revertedWith('NOT_GOV_MAIN');
       });
       it('Invalid length', async function () {
         await expect(
@@ -870,7 +868,7 @@ describe('Stateless', function () {
             [[parseEther('1')]],
             [[parseEther('10')]],
           ),
-        ).to.be.revertedWith('NOT_GOV_INS');
+        ).to.be.revertedWith('NOT_GOV_MAIN');
       });
       it('Invalid length 1', async function () {
         await expect(
@@ -989,7 +987,9 @@ describe('Stateless', function () {
     });
     describe('transferGovPayout()', function () {
       it('Invalid sender', async function () {
-        await expect(this.sl.transferGovPayout(this.gov.address)).to.be.revertedWith('NOT_GOV_INS');
+        await expect(this.sl.transferGovPayout(this.gov.address)).to.be.revertedWith(
+          'NOT_GOV_MAIN',
+        );
       });
       it('Invalid gov', async function () {
         await expect(
@@ -1063,7 +1063,7 @@ describe('Stateless', function () {
       it('Invalid sender', async function () {
         await expect(
           this.sl.setCooldownFee(parseEther('1'), this.tokenA.address),
-        ).to.be.revertedWith('NOT_GOV_INS');
+        ).to.be.revertedWith('NOT_GOV_MAIN');
       });
       it('Invalid fee', async function () {
         await expect(
@@ -1244,7 +1244,7 @@ describe('Stateless', function () {
       it('Invalid sender', async function () {
         await expect(
           this.sl.cleanProtocol(this.protocolX, 0, false, this.bob.address, this.tokenA.address),
-        ).to.be.revertedWith('NOT_GOV_INS');
+        ).to.be.revertedWith('NOT_GOV_MAIN');
       });
       it('Invalid receiver', async function () {
         await expect(
@@ -1325,7 +1325,7 @@ describe('Stateless', function () {
     });
     describe('setInitialWeight()', function () {
       it('Invalid sender', async function () {
-        await expect(this.sl.setInitialWeight()).to.be.revertedWith('NOT_GOV_INS');
+        await expect(this.sl.setInitialWeight()).to.be.revertedWith('NOT_GOV_MAIN');
       });
       it('Success', async function () {
         await expect(this.sl.c(this.gov).setInitialWeight()).to.be.revertedWith('WATS_UNSET');
@@ -1334,7 +1334,7 @@ describe('Stateless', function () {
     describe('setWeights()', function () {
       it('Invalid sender', async function () {
         await expect(this.sl.setWeights([this.tokenB.address], [1], 0)).to.be.revertedWith(
-          'NOT_GOV_INS',
+          'NOT_GOV_MAIN',
         );
       });
       it('Invalid token', async function () {

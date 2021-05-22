@@ -18,7 +18,7 @@ interface IGov {
   // View methods
   //
 
-  function getGovInsurance() external view returns (address);
+  function getGovMain() external view returns (address);
 
   function getWatsons() external view returns (address);
 
@@ -48,9 +48,9 @@ interface IGov {
   // State changing methods
   //
 
-  function setInitialGovInsurance(address _govInsurance) external;
+  function setInitialGovMain(address _govMain) external;
 
-  function transferGovInsurance(address _govInsurance) external;
+  function transferGovMain(address _govMain) external;
 
   function setWatsonsAddress(address _watsons) external;
 

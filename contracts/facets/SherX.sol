@@ -30,8 +30,8 @@ contract SherX is ISherX {
   // Modifiers
   //
 
-  modifier onlyGovInsurance() {
-    require(msg.sender == GovStorage.gs().govInsurance, 'NOT_GOV_INS');
+  modifier onlyGovMain() {
+    require(msg.sender == GovStorage.gs().govMain, 'NOT_GOV_MAIN');
     _;
   }
 
@@ -183,7 +183,7 @@ contract SherX is ISherX {
     doYield(ILock(msg.sender), from, to, amount);
   }
 
-  function setInitialWeight() external override onlyGovInsurance {
+  function setInitialWeight() external override onlyGovMain {
     GovStorage.Base storage gs = GovStorage.gs();
     require(gs.watsonsAddress != address(0), 'WATS_UNSET');
     require(gs.watsonsSherxWeight == 0, 'ALREADY_INIT');
@@ -199,7 +199,7 @@ contract SherX is ISherX {
     IERC20[] memory _tokens,
     uint256[] memory _weights,
     uint256 _watsons
-  ) external override onlyGovInsurance {
+  ) external override onlyGovMain {
     require(_tokens.length == _weights.length, 'LENGTH');
     // NOTE: can potentially be made more gas efficient
     // Do not loop over all staker tokens

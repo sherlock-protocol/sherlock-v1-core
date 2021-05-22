@@ -35,29 +35,29 @@ describe('Gov', function () {
 
     await timeTraveler.snapshot();
   });
-  describe('setInitialGovInsurance()', function () {
+  describe('setInitialGovMain()', function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
     });
     it('Initial state', async function () {
-      expect(await this.sl.getGovInsurance()).to.eq(this.gov.address);
+      expect(await this.sl.getGovMain()).to.eq(this.gov.address);
     });
     it('Do', async function () {
-      await expect(this.sl.c(this.gov).setInitialGovInsurance(this.gov.address)).to.be.revertedWith(
+      await expect(this.sl.c(this.gov).setInitialGovMain(this.gov.address)).to.be.revertedWith(
         'ALREADY_SET',
       );
     });
   });
-  describe('transferGovInsurance()', function () {
+  describe('transferGovMain()', function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
     });
     it('Initial state', async function () {
-      expect(await this.sl.getGovInsurance()).to.eq(this.gov.address);
+      expect(await this.sl.getGovMain()).to.eq(this.gov.address);
     });
     it('Do', async function () {
-      await this.sl.c(this.gov).transferGovInsurance(this.alice.address);
-      expect(await this.sl.getGovInsurance()).to.eq(this.alice.address);
+      await this.sl.c(this.gov).transferGovMain(this.alice.address);
+      expect(await this.sl.getGovMain()).to.eq(this.alice.address);
     });
   });
   describe('setWatsonsAddress()', function () {
