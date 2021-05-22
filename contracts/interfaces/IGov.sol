@@ -217,14 +217,20 @@ interface IGov {
   function tokenDisableProtocol(IERC20 _token, uint256 _index) external;
 
   /**
-    @notice Remove a token from storage
-    @param _token Address of the token
+    @notice Unload tokens from Sherlock
     @param _native Contract being used to swap existing _token in Sherlock
     @param _sherx Account used to send the unallocated SherX for the _token
+    @param _token Address of the token
   */
-  function tokenRemove(
+  function tokenUnload(
     IERC20 _token,
     IRemove _native,
     address _sherx
   ) external;
+
+  /**
+    @notice Remove a token from storage
+    @param _token Address of the token
+  */
+  function tokenRemove(IERC20 _token) external;
 }

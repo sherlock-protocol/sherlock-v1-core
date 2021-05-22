@@ -261,41 +261,32 @@ contract Gov is IGov {
     PoolStorage.Base storage ps = PoolStorage.ps(_token);
     require(gs.tokensSherX[_index] == _token, 'INDEX');
     require(ps.totalPremiumPerBlock == 0, 'ACTIVE_PREMIUM');
+    // Can not remove with active underlying, SherX holders will see drop in underlying value
+    require(ps.sherXUnderlying == 0, 'ACTIVE_SHERX');
 
     delete ps.premiums;
     gs.tokensSherX[_index] = gs.tokensSherX[gs.tokensSherX.length - 1];
     gs.tokensSherX.pop();
   }
 
-  function tokenRemove(
+  // Unloading all tokens, likely before calling tokenRemove
+  function tokenUnload(
     IERC20 _token,
     IRemove _native,
     address _sherx
   ) external override onlyGovMain {
     require(address(_native) != address(0), 'ZERO_NATIVE');
     require(_sherx != address(0), 'ZERO_SHERX');
-
     PoolStorage.Base storage ps = PoolStorage.ps(_token);
     require(ps.govPool != address(0), 'EMPTY');
+
+    // Protocol are technically still able to deposit, ps.premiums is still true
+    // This makes sure the sherx underlying doesn't grow anymore
+    // this function is called before the disable protocol
+    // disable stakes --> unload tokens --> disable protocol (sherx) --> remove
+
     require(!ps.stakes, 'STAKES_SET');
-    require(!ps.premiums, 'PREMIUMS_SET');
-
-    require(ps.protocols.length == 0, 'ACTIVE_PROTOCOLS');
-
-    delete ps.govPool;
-    delete ps.lockToken;
-    delete ps.activateCooldownFee;
-    delete ps.sherXWeight;
-    delete ps.sherXLastAccrued;
-
-    // NOTE: storage variables need to be kept. To make sure readding the token works
-    // IF readding the token, verify off chain if the storage is sufficient.
-    // Create re-adding plan off chain if this isn't the case. (e.g. clean storage by doing calls)
-    //delete ps.sWithdrawn
-    //delete ps.sWeight;
-
-    delete ps.totalPremiumLastPaid;
-    delete ps.protocols;
+    require(ps.totalPremiumPerBlock == 0, 'ACTIVE_PREMIUM');
 
     uint256 totalToken = ps.stakeBalance.add(ps.firstMoneyOut).add(ps.sherXUnderlying);
 
@@ -319,7 +310,32 @@ contract Gov is IGov {
     uint256 totalFee = ps.unallocatedSherX;
     if (totalFee > 0) {
       IERC20(address(this)).safeTransfer(_sherx, totalFee);
+      delete ps.unallocatedSherX;
     }
-    delete ps.unallocatedSherX;
+  }
+
+  function tokenRemove(IERC20 _token) external override onlyGovMain {
+    PoolStorage.Base storage ps = PoolStorage.ps(_token);
+    require(ps.govPool != address(0), 'EMPTY');
+    require(!ps.stakes, 'STAKES_SET');
+    require(!ps.premiums, 'PREMIUMS_SET');
+    require(ps.protocols.length == 0, 'ACTIVE_PROTOCOLS');
+    require(ps.stakeBalance == 0, 'BALANCE_SET');
+    require(ps.firstMoneyOut == 0, 'FMO_SET');
+    require(ps.unallocatedSherX == 0, 'SHERX_SET');
+
+    delete ps.govPool;
+    delete ps.lockToken;
+    delete ps.activateCooldownFee;
+    delete ps.sherXWeight;
+    delete ps.sherXLastAccrued;
+
+    // NOTE: storage variables need to be kept. To make sure readding the token works
+    // IF readding the token, verify off chain if the storage is sufficient.
+    // Create re-adding plan off chain if this isn't the case. (e.g. clean storage by doing calls)
+    //delete ps.sWithdrawn
+    //delete ps.sWeight;
+
+    delete ps.totalPremiumLastPaid;
   }
 }

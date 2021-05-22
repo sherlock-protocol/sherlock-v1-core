@@ -571,57 +571,75 @@ describe('Gov', function () {
       ).to.be.revertedWith('ACTIVE_PREMIUM');
     });
   });
-  describe('tokenRemove()', function () {
+  describe('tokenDisableProtocol() ─ Active SherX', function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
+      await this.tokenA.approve(this.sl.address, parseEther('1000'));
       await this.sl
         .c(this.gov)
-        .tokenInit(this.tokenA.address, this.gov.address, constants.AddressZero, false);
-    });
-    it('Do', async function () {
-      await this.sl
-        .c(this.gov)
-        .tokenRemove(this.tokenA.address, this.alice.address, this.alice.address);
-
-      await expect(this.sl.isPremium(this.tokenA.address)).to.be.revertedWith('INVALID_TOKEN');
-    });
-  });
-  describe('tokenRemove() ─ Premiums set', function () {
-    before(async function () {
-      await timeTraveler.revertSnapshot();
-      await this.sl
-        .c(this.gov)
-        .tokenInit(this.tokenA.address, this.gov.address, constants.AddressZero, true);
-    });
-    it('Do', async function () {
-      await expect(
-        this.sl
-          .c(this.gov)
-          .tokenRemove(this.tokenA.address, this.alice.address, this.alice.address),
-      ).to.be.revertedWith('PREMIUMS_SET');
-    });
-  });
-  describe('tokenRemove() ─ Active protocol', function () {
-    before(async function () {
-      await timeTraveler.revertSnapshot();
-
-      await this.sl
-        .c(this.gov)
-        .tokenInit(this.tokenA.address, this.gov.address, constants.AddressZero, true);
+        .tokenInit(this.tokenA.address, this.gov.address, this.lockA.address, true);
       await this.sl
         .c(this.gov)
         .protocolAdd(this.protocolX, this.gov.address, this.gov.address, [this.tokenA.address]);
-      await this.sl.c(this.gov).tokenDisableProtocol(this.tokenA.address, 0);
+      await this.sl.depositProtocolBalance(
+        this.protocolX,
+        parseUnits('100', this.tokenA.dec),
+        this.tokenA.address,
+      );
+      await this.sl
+        .c(this.gov)
+        ['setProtocolPremiumAndTokenPrice(bytes32,address,uint256,uint256)'](
+          this.protocolX,
+          this.tokenA.address,
+          parseEther('1'),
+          parseEther('1'),
+        );
+      await this.sl.c(this.gov).setWatsonsAddress(this.alice.address);
+      await this.sl.c(this.gov).setInitialWeight();
+      await this.sl
+        .c(this.gov)
+        ['setProtocolPremiumAndTokenPrice(bytes32,address,uint256,uint256)'](
+          this.protocolX,
+          this.tokenA.address,
+          0,
+          0,
+        );
+    });
+    it('Do', async function () {
+      await expect(
+        this.sl.c(this.gov).tokenDisableProtocol(this.tokenA.address, 0),
+      ).to.be.revertedWith('ACTIVE_SHERX');
+    });
+  });
+  describe('tokenUnload() ─ Active premium', function () {
+    before(async function () {
+      await timeTraveler.revertSnapshot();
+      await this.sl
+        .c(this.gov)
+        .tokenInit(this.tokenA.address, this.gov.address, constants.AddressZero, true);
+
+      await this.sl
+        .c(this.gov)
+        .protocolAdd(this.protocolX, this.gov.address, this.gov.address, [this.tokenA.address]);
+
+      await this.sl
+        .c(this.gov)
+        ['setProtocolPremiumAndTokenPrice(bytes32,address,uint256,uint256)'](
+          this.protocolX,
+          this.tokenA.address,
+          parseEther('1'),
+          parseEther('1'),
+        );
     });
     it('Do', async function () {
       await expect(
         this.sl
           .c(this.gov)
-          .tokenRemove(this.tokenA.address, this.alice.address, this.alice.address),
-      ).to.be.revertedWith('ACTIVE_PROTOCOLS');
+          .tokenUnload(this.tokenA.address, this.removeMock.address, this.carol.address),
+      ).to.be.revertedWith('ACTIVE_PREMIUM');
     });
   });
-  describe('tokenRemove() ─ Active balances (+activate cooldown)', function () {
+  describe('tokenUnload() ─ Active balances (+activate cooldown)', function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
       await this.sl
@@ -680,7 +698,6 @@ describe('Gov', function () {
         .c(this.gov)
         .cleanProtocol(this.protocolX, 0, true, this.alice.address, this.tokenA.address);
       await this.sl.c(this.gov).tokenDisableStakers(this.tokenA.address, 0);
-      await this.sl.c(this.gov).tokenDisableProtocol(this.tokenA.address, 0);
     });
     it('Initial state', async function () {
       expect(await this.sl.balanceOf(this.carol.address)).to.eq(0);
@@ -689,7 +706,7 @@ describe('Gov', function () {
       await expect(
         this.sl
           .c(this.gov)
-          .tokenRemove(this.tokenA.address, this.removeMock.address, this.carol.address),
+          .tokenUnload(this.tokenA.address, this.removeMock.address, this.carol.address),
       ).to.be.revertedWith('EMPTY_SWAP');
     });
     it('Add token', async function () {
@@ -697,25 +714,177 @@ describe('Gov', function () {
         .c(this.gov)
         .tokenInit(this.tokenB.address, this.gov.address, this.lockB.address, true);
 
-      expect(await this.sl.getStakersPoolBalance(this.tokenB.address)).to.eq(parseUnits('0', 6));
-      expect(await this.sl.getFirstMoneyOut(this.tokenB.address)).to.eq(parseUnits('0', 6));
-      expect(await this.sl.getSherXUnderlying(this.tokenB.address)).to.eq(parseUnits('0', 6));
+      expect(await this.sl.getStakersPoolBalance(this.tokenA.address)).to.eq(parseUnits('8.5', 18));
+      expect(await this.sl.getFirstMoneyOut(this.tokenA.address)).to.eq(parseUnits('1.5', 18));
+      expect(await this.sl.getSherXUnderlying(this.tokenA.address)).to.eq(parseUnits('4', 18));
+      expect(await this.sl.getStakersPoolBalance(this.tokenB.address)).to.eq(0);
+      expect(await this.sl.getFirstMoneyOut(this.tokenB.address)).to.eq(0);
+      expect(await this.sl.getSherXUnderlying(this.tokenB.address)).to.eq(0);
     });
     it('Do', async function () {
       await this.sl
         .c(this.gov)
-        .tokenRemove(this.tokenA.address, this.removeMock.address, this.carol.address);
+        .tokenUnload(this.tokenA.address, this.removeMock.address, this.carol.address);
 
       expect(await this.sl.balanceOf(this.carol.address)).to.eq(parseEther('1'));
 
+      expect(await this.sl.getStakersPoolBalance(this.tokenA.address)).to.eq(0);
+      expect(await this.sl.getFirstMoneyOut(this.tokenA.address)).to.eq(0);
+      expect(await this.sl.getSherXUnderlying(this.tokenA.address)).to.eq(0);
       expect(await this.sl.getStakersPoolBalance(this.tokenB.address)).to.eq(parseUnits('1', 6));
       expect(await this.sl.getFirstMoneyOut(this.tokenB.address)).to.eq(parseUnits('2', 6));
       expect(await this.sl.getSherXUnderlying(this.tokenB.address)).to.eq(parseUnits('3', 6));
+    });
+    it('Remove', async function () {
+      await this.sl.c(this.gov).tokenDisableProtocol(this.tokenA.address, 0);
+      await this.sl.c(this.gov).tokenRemove(this.tokenA.address);
     });
     it('Harvest fail', async function () {
       await expect(
         this.sl['harvestFor(address,address)'](this.alice.address, this.lockA.address),
       ).to.be.revertedWith('SENDER');
+    });
+  });
+  describe('tokenRemove()', function () {
+    before(async function () {
+      await timeTraveler.revertSnapshot();
+      await this.sl
+        .c(this.gov)
+        .tokenInit(this.tokenA.address, this.gov.address, constants.AddressZero, false);
+    });
+    it('Do', async function () {
+      await this.sl.c(this.gov).tokenRemove(this.tokenA.address);
+
+      await expect(this.sl.isPremium(this.tokenA.address)).to.be.revertedWith('INVALID_TOKEN');
+    });
+  });
+  describe('tokenRemove() ─ Premiums set', function () {
+    before(async function () {
+      await timeTraveler.revertSnapshot();
+      await this.sl
+        .c(this.gov)
+        .tokenInit(this.tokenA.address, this.gov.address, constants.AddressZero, true);
+    });
+    it('Do', async function () {
+      await expect(this.sl.c(this.gov).tokenRemove(this.tokenA.address)).to.be.revertedWith(
+        'PREMIUMS_SET',
+      );
+    });
+  });
+  describe('tokenRemove() ─ Active protocol', function () {
+    before(async function () {
+      await timeTraveler.revertSnapshot();
+
+      await this.sl
+        .c(this.gov)
+        .tokenInit(this.tokenA.address, this.gov.address, constants.AddressZero, true);
+      await this.sl
+        .c(this.gov)
+        .protocolAdd(this.protocolX, this.gov.address, this.gov.address, [this.tokenA.address]);
+      await this.sl.c(this.gov).tokenDisableProtocol(this.tokenA.address, 0);
+    });
+    it('Do', async function () {
+      await expect(this.sl.c(this.gov).tokenRemove(this.tokenA.address)).to.be.revertedWith(
+        'ACTIVE_PROTOCOLS',
+      );
+    });
+  });
+  describe('tokenRemove() ─ Balance & FMO', function () {
+    before(async function () {
+      await timeTraveler.revertSnapshot();
+      await this.sl
+        .c(this.gov)
+        .tokenInit(this.tokenA.address, this.gov.address, this.lockA.address, false);
+
+      await this.tokenA.approve(this.sl.address, parseEther('10000'));
+      await this.lockA.approve(this.sl.address, parseEther('10000'));
+      await this.sl.stake(parseEther('10'), this.alice.address, this.tokenA.address);
+
+      await this.sl.c(this.gov).tokenDisableStakers(this.tokenA.address, 0);
+    });
+    it('Balance', async function () {
+      await expect(this.sl.c(this.gov).tokenRemove(this.tokenA.address)).to.be.revertedWith(
+        'BALANCE_SET',
+      );
+    });
+    it('First money out', async function () {
+      await this.sl.c(this.gov).setCooldownFee(parseEther('1'), this.tokenA.address);
+      await this.sl.activateCooldown(parseEther('1'), this.tokenA.address);
+
+      await expect(this.sl.c(this.gov).tokenRemove(this.tokenA.address)).to.be.revertedWith(
+        'FMO_SET',
+      );
+    });
+  });
+  describe('tokenRemove() ─ SherX', function () {
+    before(async function () {
+      await timeTraveler.revertSnapshot();
+      await this.sl
+        .c(this.gov)
+        .tokenInit(this.tokenA.address, this.gov.address, this.lockA.address, false);
+
+      await this.sl
+        .c(this.gov)
+        .tokenInit(this.tokenB.address, this.gov.address, constants.AddressZero, true);
+
+      await this.sl
+        .c(this.gov)
+        .tokenInit(this.sl.address, this.gov.address, this.lockX.address, true);
+
+      // Distribute SherX to tokenA stakers
+      await this.sl.c(this.gov).setWatsonsAddress(this.alice.address);
+      await this.sl.c(this.gov).setInitialWeight();
+      await this.sl.c(this.gov).setWeights([this.tokenA.address], [parseEther('1')], 0);
+
+      await this.tokenA.approve(this.sl.address, parseEther('10000'));
+      await this.tokenB.approve(this.sl.address, parseEther('10000'));
+      await this.lockA.approve(this.sl.address, parseEther('10000'));
+      await this.sl.stake(parseEther('10'), this.alice.address, this.tokenA.address);
+
+      await this.sl
+        .c(this.gov)
+        .protocolAdd(this.protocolX, this.gov.address, this.gov.address, [this.tokenB.address]);
+
+      await this.sl.depositProtocolBalance(
+        this.protocolX,
+        parseUnits('100', this.tokenB.dec),
+        this.tokenB.address,
+      );
+
+      await this.sl
+        .c(this.gov)
+        ['setProtocolPremiumAndTokenPrice(bytes32,address,uint256,uint256)'](
+          this.protocolX,
+          this.tokenB.address,
+          parseUnits('1', this.tokenB.dec),
+          parseUnits('1', this.tokenB.usdDec),
+        );
+
+      await this.sl.c(this.gov).setUnstakeWindow(1);
+      await this.sl.activateCooldown(parseEther('1'), this.tokenA.address);
+      await this.sl.unstake(0, this.alice.address, this.tokenA.address);
+
+      await this.sl.c(this.gov).setWeights([this.tokenA.address], [0], parseEther('1'));
+
+      await this.sl
+        .c(this.gov)
+        ['setProtocolPremiumAndTokenPrice(bytes32,address,uint256,uint256)'](
+          this.protocolX,
+          this.tokenB.address,
+          parseUnits('0', this.tokenB.dec),
+          parseUnits('1', this.tokenB.usdDec),
+        );
+
+      // await this.sl
+      //   .c(this.gov)
+      //   .cleanProtocol(this.protocolX, 0, true, this.alice.address, this.tokenA.address);
+      await this.sl.c(this.gov).tokenDisableStakers(this.tokenA.address, 0);
+      // await this.sl.c(this.gov).tokenDisableProtocol(this.tokenA.address, 0);
+    });
+    it('Do', async function () {
+      await expect(this.sl.c(this.gov).tokenRemove(this.tokenA.address)).to.be.revertedWith(
+        'SHERX_SET',
+      );
     });
   });
   describe('tokenRemove() ─ Readd, verify unstake', function () {
@@ -744,9 +913,7 @@ describe('Gov', function () {
     it('Do', async function () {
       await this.sl.c(this.gov).tokenDisableStakers(this.tokenA.address, 0);
 
-      await this.sl
-        .c(this.gov)
-        .tokenRemove(this.tokenA.address, this.carol.address, this.carol.address);
+      await this.sl.c(this.gov).tokenRemove(this.tokenA.address);
     });
     it('Readd', async function () {
       await this.sl
