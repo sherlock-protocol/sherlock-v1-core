@@ -8,6 +8,8 @@ pragma solidity ^0.7.4;
 
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
+import '../interfaces/ILock.sol';
+
 interface ISherX {
   //
   // Events
@@ -82,15 +84,15 @@ interface ISherX {
 
   function harvest() external;
 
-  function harvest(IERC20 _token) external;
+  function harvest(ILock _token) external;
 
-  function harvest(IERC20[] calldata _tokens) external;
+  function harvest(ILock[] calldata _tokens) external;
 
   function harvestFor(address _user) external;
 
-  function harvestFor(address _user, IERC20 _token) external;
+  function harvestFor(address _user, ILock _token) external;
 
-  function harvestFor(address _user, IERC20[] calldata _tokens) external;
+  function harvestFor(address _user, ILock[] calldata _tokens) external;
 
   function redeem(uint256 _amount, address _receiver) external;
 

@@ -13,8 +13,6 @@ import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 
 import '../interfaces/ISherX.sol';
-import '../interfaces/ILock.sol';
-import '../interfaces/ILock.sol';
 
 import '../libraries/LibPool.sol';
 import '../libraries/LibSherX.sol';
@@ -234,11 +232,11 @@ contract SherX is ISherX {
     harvestFor(msg.sender);
   }
 
-  function harvest(IERC20 _token) external override {
+  function harvest(ILock _token) external override {
     harvestFor(msg.sender, _token);
   }
 
-  function harvest(IERC20[] calldata _tokens) external override {
+  function harvest(ILock[] calldata _tokens) external override {
     for (uint256 i; i < _tokens.length; i++) {
       harvestFor(msg.sender, _tokens[i]);
     }
@@ -252,17 +250,17 @@ contract SherX is ISherX {
     }
   }
 
-  function harvestFor(address _user, IERC20 _token) public override {
+  function harvestFor(address _user, ILock _token) public override {
     // could potentially call harvest function for token that are not in the pool
     // if balance > 0, tx will revert
     uint256 stakeBalance = _token.balanceOf(_user);
     if (stakeBalance > 0) {
-      doYield(ILock(address(_token)), _user, _user, 0);
+      doYield(_token, _user, _user, 0);
     }
     emit Harvest(_user, _token);
   }
 
-  function harvestFor(address _user, IERC20[] calldata _tokens) external override {
+  function harvestFor(address _user, ILock[] calldata _tokens) external override {
     for (uint256 i; i < _tokens.length; i++) {
       harvestFor(_user, _tokens[i]);
     }
@@ -314,7 +312,7 @@ contract SherX is ISherX {
     address to,
     uint256 amount
   ) private {
-    IERC20 underlying = ILock(token).underlying();
+    IERC20 underlying = token.underlying();
     PoolStorage.Base storage ps = PoolStorage.ps(underlying);
     require(ps.lockToken == token, 'SENDER');
 
