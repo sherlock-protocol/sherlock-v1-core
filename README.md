@@ -55,7 +55,7 @@ Protocol are added using the `protocolAdd()` function. An array of tokens is pro
 
 Governance can set/update rate of accruing debt using the `Manager.sol` facet. The debt can be redeemed at any give block. If the protocols has insufficient balance deposited the protocol defaults and some functions stop working. Although this event is unfortunate, Governance can see it coming mos of the times and act beforehand.
 
-> :warning: Some functionality will be disabled if protocol has insufficient balance. Governance should call `cleanProtocol()` asap.
+> :warning: Some functionality will be disabled if protocol has insufficient balance. Can be mitigated using the `cleanProtocol()` call.
 
 ### Cleaning
 
