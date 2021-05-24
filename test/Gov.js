@@ -720,6 +720,9 @@ describe('Gov', function () {
       expect(await this.sl.getStakersPoolBalance(this.tokenB.address)).to.eq(0);
       expect(await this.sl.getFirstMoneyOut(this.tokenB.address)).to.eq(0);
       expect(await this.sl.getSherXUnderlying(this.tokenB.address)).to.eq(0);
+
+      expect(await this.tokenA.balanceOf(this.carol.address)).to.eq(0);
+      expect(await this.sl.balanceOf(this.carol.address)).to.eq(0);
     });
     it('Do', async function () {
       await this.sl
@@ -731,9 +734,12 @@ describe('Gov', function () {
       expect(await this.sl.getStakersPoolBalance(this.tokenA.address)).to.eq(0);
       expect(await this.sl.getFirstMoneyOut(this.tokenA.address)).to.eq(0);
       expect(await this.sl.getSherXUnderlying(this.tokenA.address)).to.eq(0);
-      expect(await this.sl.getStakersPoolBalance(this.tokenB.address)).to.eq(parseUnits('1', 6));
+      expect(await this.sl.getStakersPoolBalance(this.tokenB.address)).to.eq(0);
       expect(await this.sl.getFirstMoneyOut(this.tokenB.address)).to.eq(parseUnits('2', 6));
       expect(await this.sl.getSherXUnderlying(this.tokenB.address)).to.eq(parseUnits('3', 6));
+
+      expect(await this.tokenA.balanceOf(this.carol.address)).to.eq(parseUnits('8.5', 18));
+      expect(await this.sl.balanceOf(this.carol.address)).to.eq(parseUnits('1', 18));
     });
     it('Remove', async function () {
       await this.sl.c(this.gov).tokenDisableProtocol(this.tokenA.address, 0);

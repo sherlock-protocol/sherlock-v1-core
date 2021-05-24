@@ -19,16 +19,11 @@ contract RemoveMock is IRemove {
 
   IERC20 public token;
 
-  uint256 constant stakeBalance = 10e5;
   uint256 constant fmo = 10e5 * 2;
   uint256 constant underlying = 10e5 * 3;
 
   constructor(IERC20 _token) {
     token = _token;
-  }
-
-  function swapStakeBalance(uint256 _stakeBalance) private returns (uint256) {
-    return stakeBalance;
   }
 
   function swapFMO(uint256 _fmo) private returns (uint256) {
@@ -41,7 +36,6 @@ contract RemoveMock is IRemove {
 
   function swap(
     IERC20 _token,
-    uint256 _stakeBalance,
     uint256 _fmo,
     uint256 _sherXUnderlying
   )
@@ -49,19 +43,17 @@ contract RemoveMock is IRemove {
     override
     returns (
       IERC20 newToken,
-      uint256 newStakeBalance,
       uint256 newFmo,
       uint256 newSherxUnderlying
     )
   {
-    uint256 total = _stakeBalance.add(_fmo).add(_sherXUnderlying);
+    uint256 total = _fmo.add(_sherXUnderlying);
     _token.safeTransferFrom(msg.sender, address(this), total);
 
     newToken = token;
-    newStakeBalance = swapStakeBalance(_stakeBalance);
     newFmo = swapFMO(_fmo);
     newSherxUnderlying = swapUnderlying(_sherXUnderlying);
 
-    token.safeTransfer(msg.sender, newStakeBalance.add(newFmo).add(newSherxUnderlying));
+    token.safeTransfer(msg.sender, newFmo.add(newSherxUnderlying));
   }
 }

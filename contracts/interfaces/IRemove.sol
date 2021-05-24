@@ -10,15 +10,13 @@ import '../interfaces/ILock.sol';
 
 interface IRemove {
   function swap(
-    IERC20,
-    uint256,
-    uint256,
-    uint256
+    IERC20 _token,
+    uint256 _fmo,
+    uint256 _sherXUnderlying
   )
     external
     returns (
       IERC20 newToken,
-      uint256 newStakeBalance,
       uint256 newFmo,
       uint256 newSherxUnderlying
     );

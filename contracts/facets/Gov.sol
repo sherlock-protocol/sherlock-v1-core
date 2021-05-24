@@ -271,10 +271,10 @@ contract Gov is IGov {
   function tokenUnload(
     IERC20 _token,
     IRemove _native,
-    address _sherx
+    address _remaining
   ) external override onlyGovMain {
     require(address(_native) != address(0), 'ZERO_NATIVE');
-    require(_sherx != address(0), 'ZERO_SHERX');
+    require(_remaining != address(0), 'ZERO_REMAIN');
     PoolStorage.Base storage ps = PoolStorage.ps(_token);
     require(ps.govPool != address(0), 'EMPTY');
 
@@ -286,29 +286,33 @@ contract Gov is IGov {
     require(!ps.stakes, 'STAKES_SET');
     require(ps.totalPremiumPerBlock == 0, 'ACTIVE_PREMIUM');
 
-    uint256 totalToken = ps.stakeBalance.add(ps.firstMoneyOut).add(ps.sherXUnderlying);
+    uint256 totalToken = ps.firstMoneyOut.add(ps.sherXUnderlying);
 
     if (totalToken > 0) {
       _token.approve(address(_native), totalToken);
 
-      (IERC20 newToken, uint256 newStakeBalance, uint256 newFmo, uint256 newSherxUnderlying) =
-        _native.swap(_token, ps.stakeBalance, ps.firstMoneyOut, ps.sherXUnderlying);
+      (IERC20 newToken, uint256 newFmo, uint256 newSherxUnderlying) =
+        _native.swap(_token, ps.firstMoneyOut, ps.sherXUnderlying);
 
       PoolStorage.Base storage ps2 = PoolStorage.ps(newToken);
       require(ps2.govPool != address(0), 'EMPTY_SWAP');
 
-      ps2.stakeBalance = ps2.stakeBalance.add(newStakeBalance);
       ps2.firstMoneyOut = ps2.firstMoneyOut.add(newFmo);
       ps2.sherXUnderlying = ps2.sherXUnderlying.add(newSherxUnderlying);
     }
     delete ps.sherXUnderlying;
     delete ps.firstMoneyOut;
-    delete ps.stakeBalance;
 
     uint256 totalFee = ps.unallocatedSherX;
     if (totalFee > 0) {
-      IERC20(address(this)).safeTransfer(_sherx, totalFee);
+      IERC20(address(this)).safeTransfer(_remaining, totalFee);
       delete ps.unallocatedSherX;
+    }
+
+    uint256 balance = ps.stakeBalance;
+    if (balance > 0) {
+      _token.safeTransfer(_remaining, balance);
+      delete ps.stakeBalance;
     }
   }
 

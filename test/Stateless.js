@@ -391,7 +391,7 @@ describe('Stateless', function () {
           this.sl
             .c(this.gov)
             .tokenUnload(this.tokenA.address, this.alice.address, constants.AddressZero),
-        ).to.be.revertedWith('ZERO_SHERX');
+        ).to.be.revertedWith('ZERO_REMAIN');
       });
       it('Stakes set', async function () {
         await expect(
