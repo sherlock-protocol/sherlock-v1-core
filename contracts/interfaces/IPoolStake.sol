@@ -10,14 +10,13 @@ pragma abicoder v2;
 import '../storage/PoolStorage.sol';
 
 interface IPoolStake {
-  //
-  // Events
-  //
-
-  //
-  // View methods
-  //
-
+  /**
+    @notice Stake `_amount` of `_token`, send lockToken to `_receiver`
+    @param _amount Amount to stake
+    @param _receiver Account receiving the lockTokens
+    @param _token Token used
+    @return Amount of lockTokens representing deposited `_amount`
+  */
   function stake(
     uint256 _amount,
     address _receiver,

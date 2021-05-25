@@ -9,6 +9,15 @@ pragma solidity ^0.7.4;
 import '../interfaces/ILock.sol';
 
 interface IRemove {
+  /**
+    @notice Swap `_token` amounts
+    @param _token Token to swap
+    @param _fmo Amount of first money out pool swapped
+    @param _sherXUnderlying Amount of underlying being swapped
+    @return newToken Token being swapped to
+    @return newFmo Share of `_fmo` in newToken
+    @return newSherxUnderlying Share of `_sherXUnderlying` in newToken
+  */
   function swap(
     IERC20 _token,
     uint256 _fmo,

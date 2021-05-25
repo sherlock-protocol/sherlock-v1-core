@@ -92,18 +92,21 @@ interface IGov {
 
   /**
     @notice Verify if a protocol is included in Sherlock
+    @param _protocol Protocol identifier
     @return Boolean indicating if protocol is included
   */
   function getProtocolIsCovered(bytes32 _protocol) external view returns (bool);
 
   /**
     @notice Returns address responsible on behalf of Sherlock for the protocol
+    @param _protocol Protocol identifier
     @return Address of account
   */
   function getProtocolManager(bytes32 _protocol) external view returns (address);
 
   /**
     @notice Returns address responsible on behalf of the protocol
+    @param _protocol Protocol identifier
     @return Address of account
     @dev Account is able to withdraw protocol balance
   */
