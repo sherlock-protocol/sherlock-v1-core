@@ -6,19 +6,13 @@ pragma solidity ^0.7.4;
 * Sherlock Protocol: https://sherlock.xyz
 /******************************************************************************/
 
-import 'hardhat/console.sol';
-
-import '@openzeppelin/contracts/math/SafeMath.sol';
-import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
-import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
-
 import '../interfaces/ISherX.sol';
+
+import '../storage/SherXERC20Storage.sol';
 
 import '../libraries/LibPool.sol';
 import '../libraries/LibSherX.sol';
 import '../libraries/LibSherXERC20.sol';
-
-import '../storage/SherXERC20Storage.sol';
 
 contract SherX is ISherX {
   using SafeMath for uint256;

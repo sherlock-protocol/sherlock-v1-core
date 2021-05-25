@@ -9,9 +9,6 @@ pragma abicoder v2;
 
 import 'diamond-2/contracts/libraries/LibDiamond.sol';
 
-import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
-import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
-
 import '../interfaces/IPoolStake.sol';
 
 import '../libraries/LibPool.sol';

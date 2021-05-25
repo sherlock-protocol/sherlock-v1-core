@@ -6,10 +6,6 @@ pragma solidity ^0.7.0;
 * Sherlock Protocol: https://sherlock.xyz
 /******************************************************************************/
 
-import 'hardhat/console.sol';
-
-import '../interfaces/ILock.sol';
-
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
 library SherXStorage {

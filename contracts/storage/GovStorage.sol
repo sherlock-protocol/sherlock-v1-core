@@ -8,8 +8,6 @@ pragma solidity ^0.7.0;
 
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
-import 'hardhat/console.sol';
-
 library GovStorage {
   bytes32 constant GOV_STORAGE_POSITION = keccak256('diamond.sherlock.gov');
 

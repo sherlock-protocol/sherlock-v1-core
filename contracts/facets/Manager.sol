@@ -7,10 +7,6 @@ pragma abicoder v2;
 * Sherlock Protocol: https://sherlock.xyz
 /******************************************************************************/
 
-import 'hardhat/console.sol';
-
-import '@openzeppelin/contracts/math/SafeMath.sol';
-
 import '../interfaces/IManager.sol';
 
 import '../libraries/LibSherX.sol';

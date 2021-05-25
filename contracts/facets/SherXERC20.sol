@@ -9,14 +9,11 @@ pragma solidity ^0.7.1;
 /******************************************************************************/
 
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
-import '@openzeppelin/contracts/math/SafeMath.sol';
 import 'diamond-2/contracts/libraries/LibDiamond.sol';
 
 import '../interfaces/ISherXERC20.sol';
 
 import '../libraries/LibSherXERC20.sol';
-
-import '../storage/SherXERC20Storage.sol';
 
 contract SherXERC20 is IERC20, ISherXERC20 {
   using SafeMath for uint256;

@@ -6,20 +6,14 @@ pragma solidity ^0.7.4;
 * Sherlock Protocol: https://sherlock.xyz
 /******************************************************************************/
 
-import 'hardhat/console.sol';
-
-import '@openzeppelin/contracts/math/SafeMath.sol';
-import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
-
 import 'diamond-2/contracts/libraries/LibDiamond.sol';
 
 import '../interfaces/IPayout.sol';
 
+import '../storage/PayoutStorage.sol';
+
 import '../libraries/LibSherX.sol';
 import '../libraries/LibSherXERC20.sol';
-
-import '../storage/PayoutStorage.sol';
-import '../storage/GovStorage.sol';
 
 contract Payout is IPayout {
   using SafeMath for uint256;

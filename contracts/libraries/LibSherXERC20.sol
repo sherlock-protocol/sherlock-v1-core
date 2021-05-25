@@ -8,9 +8,9 @@ pragma solidity ^0.7.4;
 * Inspired by: https://github.com/pie-dao/PieVaults/blob/master/contracts/facets/ERC20/LibERC20.sol
 /******************************************************************************/
 
-import '../storage/SherXERC20Storage.sol';
-import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/math/SafeMath.sol';
+
+import '../storage/SherXERC20Storage.sol';
 
 library LibSherXERC20 {
   using SafeMath for uint256;

@@ -8,6 +8,7 @@ pragma abicoder v2;
 /******************************************************************************/
 
 import 'diamond-2/contracts/libraries/LibDiamond.sol';
+
 import '../interfaces/IGovDev.sol';
 
 contract GovDev is IGovDev {

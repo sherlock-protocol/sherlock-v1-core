@@ -9,8 +9,6 @@ pragma abicoder v2;
 
 import 'diamond-2/contracts/libraries/LibDiamond.sol';
 
-import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
-
 import './PoolOpen.sol';
 
 contract PoolDevOnly is PoolOpen {

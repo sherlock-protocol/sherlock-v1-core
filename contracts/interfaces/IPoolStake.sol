@@ -7,7 +7,7 @@ pragma abicoder v2;
 * Sherlock Protocol: https://sherlock.xyz
 /******************************************************************************/
 
-import '../storage/PoolStorage.sol';
+import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
 interface IPoolStake {
   /**
