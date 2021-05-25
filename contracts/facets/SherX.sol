@@ -272,9 +272,10 @@ contract SherX is ISherX {
 
     SherXStorage.Base storage sx = SherXStorage.sx();
     LibSherX.accrueUSDPool();
-    // Note: LibSherX.accrueSherX() is removed as the calcUnderlying already takes it into consideration (without changing state)
 
+    // Note: LibSherX.accrueSherX() is removed as the calcUnderlying already takes it into consideration (without changing state)
     (IERC20[] memory tokens, uint256[] memory amounts) = LibSherX.calcUnderlying(_amount);
+    LibSherXERC20.burn(msg.sender, _amount);
 
     uint256 subUsdPool = 0;
     for (uint256 i; i < tokens.length; i++) {
@@ -290,7 +291,6 @@ contract SherX is ISherX {
       tokens[i].safeTransfer(_receiver, amounts[i]);
     }
     sx.totalUsdPool = sx.totalUsdPool.sub(subUsdPool);
-    LibSherXERC20.burn(msg.sender, _amount);
     LibSherX.settleInternalSupply(_amount);
   }
 

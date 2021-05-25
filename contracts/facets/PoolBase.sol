@@ -343,8 +343,8 @@ contract PoolBase is IPoolBase {
     require(withdraw.blockInitiated != 0, 'WITHDRAW_NOT_ACTIVE');
 
     require(withdraw.blockInitiated.add(gs.unstakeCooldown) >= block.number, 'COOLDOWN_EXPIRED');
-    ps.lockToken.safeTransfer(msg.sender, withdraw.lock);
     delete ps.unstakeEntries[msg.sender][_id];
+    ps.lockToken.safeTransfer(msg.sender, withdraw.lock);
   }
 
   function unstakeWindowExpiry(
@@ -362,8 +362,8 @@ contract PoolBase is IPoolBase {
       withdraw.blockInitiated.add(gs.unstakeCooldown).add(gs.unstakeWindow) < block.number,
       'UNSTAKE_WINDOW_NOT_EXPIRED'
     );
-    ps.lockToken.safeTransfer(_account, withdraw.lock);
     delete ps.unstakeEntries[_account][_id];
+    ps.lockToken.safeTransfer(_account, withdraw.lock);
   }
 
   function unstake(
@@ -385,8 +385,8 @@ contract PoolBase is IPoolBase {
     amount = withdraw.lock.mul(ps.stakeBalance).div(ps.lockToken.totalSupply());
 
     ps.stakeBalance = ps.stakeBalance.sub(amount);
-    ps.lockToken.burn(address(this), withdraw.lock);
     delete ps.unstakeEntries[msg.sender][_id];
+    ps.lockToken.burn(address(this), withdraw.lock);
     _token.safeTransfer(_receiver, amount);
   }
 
