@@ -130,7 +130,7 @@ module.exports = {
     sherlock.c = sherlock.connect;
     await sherlock.c(gov).setInitialGovMain(gov.address);
     await sherlock.c(gov).setInitialGovPayout(gov.address);
-    await sherlock.c(gov).initializeSherXERC20('Sherlock ETF', 'SHERX');
+    await sherlock.c(gov).initializeSherXERC20('SHERX Token', 'SHERX');
 
     thisObject[thisName] = sherlock;
   },

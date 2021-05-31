@@ -14,7 +14,7 @@ describe('SherXERC20', function () {
     await timeTraveler.snapshot();
   });
   it('Initial state', async function () {
-    expect(await this.sl.name()).to.eq('Sherlock ETF');
+    expect(await this.sl.name()).to.eq('SHERX Token');
     expect(await this.sl.symbol()).to.eq('SHERX');
     expect(await this.sl.decimals()).to.eq(18);
     expect(await this.sl.allowance(this.alice.address, this.bob.address)).to.eq(0);
@@ -114,7 +114,7 @@ describe('SherXERC20 - Active', function () {
     await timeTraveler.snapshot();
   });
   it('Initial state', async function () {
-    expect(await this.sl.name()).to.eq('Sherlock ETF');
+    expect(await this.sl.name()).to.eq('SHERX Token');
     expect(await this.sl.symbol()).to.eq('SHERX');
     expect(await this.sl.decimals()).to.eq(18);
     expect(await this.sl.allowance(this.alice.address, this.bob.address)).to.eq(0);
