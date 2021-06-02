@@ -8,3 +8,6 @@ artifacts
 coverage.json
 
 .env
+
+docs/doc/
+docs/*.md
