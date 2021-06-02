@@ -10,13 +10,11 @@ pragma abicoder v2;
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
 interface IPoolStake {
-  /**
-    @notice Stake `_amount` of `_token`, send lockToken to `_receiver`
-    @param _amount Amount to stake
-    @param _receiver Account receiving the lockTokens
-    @param _token Token used
-    @return Amount of lockTokens representing deposited `_amount`
-  */
+  /// @notice Stake `_amount` of `_token`, send lockToken to `_receiver`
+  /// @param _amount Amount to stake
+  /// @param _receiver Account receiving the lockTokens
+  /// @param _token Token used
+  /// @return Amount of lockTokens representing deposited `_amount`
   function stake(
     uint256 _amount,
     address _receiver,
