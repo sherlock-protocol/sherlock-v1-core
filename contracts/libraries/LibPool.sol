@@ -18,6 +18,16 @@ library LibPool {
   using SafeERC20 for IERC20;
   using SafeERC20 for ILock;
 
+  function stakeBalance(PoolStorage.Base storage ps) public view returns (uint256) {
+    uint256 balance = ps.stakeBalance;
+
+    if (address(ps.strategy) != address(0)) {
+      balance.add(ps.strategy.balanceOf());
+    }
+
+    return balance.sub(ps.firstMoneyOut);
+  }
+
   function accruedDebt(bytes32 _protocol, IERC20 _token) public view returns (uint256) {
     PoolStorage.Base storage ps = PoolStorage.ps(_token);
     return _accruedDebt(ps, _protocol, block.number.sub(ps.totalPremiumLastPaid));
@@ -65,7 +75,7 @@ library LibPool {
       lock = 10**18;
     } else {
       // mint lock based on funds in pool
-      lock = _amount.mul(totalLock).div(ps.stakeBalance);
+      lock = _amount.mul(totalLock).div(stakeBalance(ps));
     }
     ps.stakeBalance = ps.stakeBalance.add(_amount);
     ps.lockToken.mint(_receiver, lock);

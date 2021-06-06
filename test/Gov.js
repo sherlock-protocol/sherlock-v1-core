@@ -804,7 +804,7 @@ describe('Gov', function () {
       );
     });
   });
-  describe('tokenRemove() ─ Balance & FMO', function () {
+  describe.only('tokenRemove() ─ Balance & FMO', function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
       await this.sl
@@ -820,14 +820,6 @@ describe('Gov', function () {
     it('Balance', async function () {
       await expect(this.sl.c(this.gov).tokenRemove(this.tokenA.address)).to.be.revertedWith(
         'BALANCE_SET',
-      );
-    });
-    it('First money out', async function () {
-      await this.sl.c(this.gov).setCooldownFee(Uint32Max, this.tokenA.address);
-      await this.sl.activateCooldown(parseEther('1'), this.tokenA.address);
-
-      await expect(this.sl.c(this.gov).tokenRemove(this.tokenA.address)).to.be.revertedWith(
-        'FMO_SET',
       );
     });
   });

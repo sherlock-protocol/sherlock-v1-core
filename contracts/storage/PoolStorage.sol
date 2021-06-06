@@ -7,6 +7,7 @@ pragma solidity ^0.7.0;
 /******************************************************************************/
 
 import '../interfaces/ILock.sol';
+import '../interfaces/IStrategy.sol';
 
 // TokenStorage
 library PoolStorage {
@@ -42,6 +43,8 @@ library PoolStorage {
     uint256 sherXUnderlying;
     mapping(bytes32 => bool) isProtocol;
     bytes32[] protocols;
+    // strategy
+    IStrategy strategy;
   }
 
   struct UnstakeEntry {

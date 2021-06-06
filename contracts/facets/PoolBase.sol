@@ -144,7 +144,7 @@ contract PoolBase is IPoolBase {
   }
 
   function getStakersPoolBalance(IERC20 _token) public view override returns (uint256) {
-    return baseData().stakeBalance;
+    return LibPool.stakeBalance(baseData());
   }
 
   function getStakerPoolBalance(address _staker, IERC20 _token)
@@ -221,11 +221,12 @@ contract PoolBase is IPoolBase {
 
   function LockToToken(uint256 _amount, IERC20 _token) public view override returns (uint256) {
     PoolStorage.Base storage ps = baseData();
+    uint256 balance = LibPool.stakeBalance(ps);
     uint256 totalLock = ps.lockToken.totalSupply();
-    if (totalLock == 0 || ps.stakeBalance == 0) {
+    if (totalLock == 0 || balance == 0) {
       revert('NO_DATA');
     }
-    return ps.stakeBalance.mul(_amount).div(totalLock);
+    return balance.mul(_amount).div(totalLock);
   }
 
   function TokenToLockXRate(IERC20 _token) external view override returns (uint256) {
@@ -234,11 +235,12 @@ contract PoolBase is IPoolBase {
 
   function TokenToLock(uint256 _amount, IERC20 _token) public view override returns (uint256) {
     PoolStorage.Base storage ps = baseData();
+    uint256 balance = LibPool.stakeBalance(ps);
     uint256 totalLock = ps.lockToken.totalSupply();
-    if (totalLock == 0 || ps.stakeBalance == 0) {
+    if (totalLock == 0 || balance == 0) {
       return 10**18;
     }
-    return totalLock.mul(_amount).div(ps.stakeBalance);
+    return totalLock.mul(_amount).div(balance);
   }
 
   //
@@ -316,8 +318,7 @@ contract PoolBase is IPoolBase {
     if (fee > 0) {
       // stake of user gets burned
       // representative amount token get added to first money out pool
-      uint256 tokenAmount = fee.mul(ps.stakeBalance).div(ps.lockToken.totalSupply());
-      ps.stakeBalance = ps.stakeBalance.sub(tokenAmount);
+      uint256 tokenAmount = fee.mul(LibPool.stakeBalance(ps)).div(ps.lockToken.totalSupply());
       ps.firstMoneyOut = ps.firstMoneyOut.add(tokenAmount);
 
       ps.lockToken.burn(address(this), fee);
@@ -380,7 +381,7 @@ contract PoolBase is IPoolBase {
       withdraw.blockInitiated + gs.unstakeCooldown + gs.unstakeWindow >= uint40(block.number),
       'UNSTAKE_WINDOW_EXPIRED'
     );
-    amount = withdraw.lock.mul(ps.stakeBalance).div(ps.lockToken.totalSupply());
+    amount = withdraw.lock.mul(LibPool.stakeBalance(ps)).div(ps.lockToken.totalSupply());
 
     ps.stakeBalance = ps.stakeBalance.sub(amount);
     delete ps.unstakeEntries[msg.sender][_id];

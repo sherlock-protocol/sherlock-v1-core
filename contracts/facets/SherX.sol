@@ -334,6 +334,7 @@ contract SherX is ISherX {
         PoolStorage.Base storage psSherX = PoolStorage.ps(IERC20(address(this)));
         if (from == address(this)) {
           // add SherX harvested by the pool itself to first money out pool.
+          psSherX.stakeBalance = psSherX.stakeBalance.add(withdrawable_amount);
           psSherX.firstMoneyOut = psSherX.firstMoneyOut.add(withdrawable_amount);
         } else {
           LibPool.stake(psSherX, withdrawable_amount, from);
