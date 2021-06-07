@@ -6,24 +6,37 @@ pragma solidity ^0.7.4;
 * Sherlock Protocol: https://sherlock.xyz
 /******************************************************************************/
 
+import '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 import '@openzeppelin/contracts/math/SafeMath.sol';
+import '@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol';
 
 import '../interfaces/aaveV2/ILendingPool.sol';
 import '../interfaces/aaveV2/ILendingPoolAddressesProvider.sol';
 import '../interfaces/aaveV2/IAaveIncentivesController.sol';
+import '../interfaces/aaveV2/IStakeAave.sol';
+import '../interfaces/aaveV2/IAToken.sol';
+
+import '../interfaces/chainlink/IAggregatorV3Interface.sol';
 
 import '../interfaces/IStrategy.sol';
 
-contract AaveV2 is IStrategy {
+contract AaveV2 is IStrategy, Ownable {
   using SafeMath for uint256;
-  using SafeERC20 for IERC20;
 
-  IERC20 public override want;
-  IERC20 public aWant;
-  address internal sherlock;
-  ILendingPoolAddressesProvider internal lpAddressProvider;
-  IAaveIncentivesController internal aaveIncentivesController;
+  IUniswapV2Router02 router = IUniswapV2Router02(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
+  IStakeAave stakeAave = IStakeAave(0x4da27a545c0c5B758a6BA100e3a049001de870f5);
+  IERC20 aave = IERC20(0xFFC97d72E13E01096502Cb8Eb52dEe56f74DAD7B);
+  ILendingPoolAddressesProvider lpAddressProvider =
+    ILendingPoolAddressesProvider(0xB53C1a33016B2DC2fF3653530bfF1848a515c8c5);
+  IAaveIncentivesController aaveIncentivesController;
+  IAggregatorV3Interface chainlink;
+
+  ERC20 public override want;
+  IAToken aWant;
+
+  uint256 divider;
+  address sherlock;
 
   modifier onlySherlock() {
     require(msg.sender == sherlock, 'sherlock');
@@ -31,21 +44,66 @@ contract AaveV2 is IStrategy {
   }
 
   constructor(
-    IERC20 _want,
-    IERC20 _aWant,
+    IAToken _aWant,
     address _sherlock,
-    ILendingPoolAddressesProvider _lendingPoolAddressProvider,
-    IAaveIncentivesController _aaveIncentivesController
+    IAggregatorV3Interface _chainlink
   ) {
-    want = _want;
     aWant = _aWant;
+    want = ERC20(_aWant.UNDERLYING_ASSET_ADDRESS());
+    aaveIncentivesController = _aWant.getIncentivesController();
+
     sherlock = _sherlock;
-    lpAddressProvider = _lendingPoolAddressProvider;
-    aaveIncentivesController = _aaveIncentivesController;
+    chainlink = _chainlink;
+
+    divider = 10**(uint256(18).add(chainlink.decimals()).sub(want.decimals()));
+  }
+
+  /**
+    View methods
+  */
+
+  function stkAaveBalance() public view returns (uint256) {
+    (uint256 index, , ) = aaveIncentivesController.getAssetData(address(aWant));
+    if (index == 0) {
+      return 0;
+    }
+
+    address[] memory tokens = new address[](1);
+    tokens[0] = address(aWant);
+    return
+      aaveIncentivesController.getRewardsBalance(tokens, address(this)).add(
+        stakeAave.getTotalRewardsBalance(address(this))
+      );
+  }
+
+  function stkAaveBalanceInWant() public view returns (uint256) {
+    return stkAaveBalance().mul(uint256(chainlink.latestAnswer())).div(divider);
+  }
+
+  function aBalance() internal view returns (uint256) {
+    return aWant.balanceOf(address(this));
+  }
+
+  function balanceOf() external view override returns (uint256) {
+    return aBalance().add(stkAaveBalanceInWant());
   }
 
   function getLp() internal view returns (ILendingPool) {
     return ILendingPool(lpAddressProvider.getLendingPool());
+  }
+
+  /**
+    Sherlock strategy methods
+  */
+
+  function deposit() public override {
+    ILendingPool lp = getLp();
+    uint256 amount = want.balanceOf(address(this));
+    require(amount > 0, 'ZERO_AMOUNT');
+
+    // TODO, do max approval once? e.g. in constructor
+    want.approve(address(lp), amount);
+    lp.deposit(address(want), amount, address(this), 0);
   }
 
   function withdrawAll() external override onlySherlock returns (uint256) {
@@ -61,32 +119,26 @@ contract AaveV2 is IStrategy {
     lp.withdraw(address(want), _amount, msg.sender);
   }
 
-  function deposit() external override {
-    ILendingPool lp = getLp();
-    uint256 amount = want.balanceOf(address(this));
-    require(amount > 0, 'ZERO_AMOUNT');
+  /**
+    Stake AAVE methods
+  */
 
-    // TODO, do max approval once? e.g. in constructor
-    want.approve(address(lp), amount);
-    lp.deposit(address(want), amount, address(this), 0);
+  function stkAaveCooldown() external onlyOwner {
+    stakeAave.cooldown();
   }
 
-  function aBalance() internal view returns (uint256) {
-    return aWant.balanceOf(address(this));
-  }
+  function swapToTokenViaETH(uint256 _toMinAmount) external onlyOwner {
+    stakeAave.redeem(address(this), uint256(-1));
 
-  function stkAaveBalance() internal view returns (uint256) {
-    (uint256 index, , ) = aaveIncentivesController.getAssetData(address(aWant));
-    if (index == 0) {
-      return 0;
-    }
+    uint256 aaveAmount = aave.balanceOf(address(this));
+    want.approve(address(router), aaveAmount);
+    // swap aave to eth to {token} and send to strategymanager
+    address[] memory path = new address[](3);
+    path[0] = address(stakeAave);
+    path[1] = router.WETH();
+    path[2] = address(want);
+    router.swapExactTokensForTokens(aaveAmount, _toMinAmount, path, address(this), block.timestamp);
 
-    address[] memory tokens = new address[](1);
-    tokens[0] = address(aWant);
-    return aaveIncentivesController.getRewardsBalance(tokens, address(this));
-  }
-
-  function balanceOf() external view override returns (uint256) {
-    return aBalance();
+    deposit();
   }
 }

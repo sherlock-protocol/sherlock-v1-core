@@ -13,12 +13,12 @@ import '../interfaces/IStrategy.sol';
 
 contract StrategyMock is IStrategy {
   using SafeMath for uint256;
-  using SafeERC20 for IERC20;
+  using SafeERC20 for ERC20;
 
-  IERC20 public override want;
+  ERC20 public override want;
   address internal sherlock;
 
-  constructor(IERC20 _want, address _sherlock) {
+  constructor(ERC20 _want, address _sherlock) {
     want = _want;
     sherlock = _sherlock;
   }
