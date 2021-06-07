@@ -13,7 +13,9 @@ import '../interfaces/IPoolStake.sol';
 
 import '../libraries/LibPool.sol';
 
-contract PoolOpen is IPoolStake {
+import './Pool.sol';
+
+contract PoolOpen is Pool, IPoolStake {
   using SafeERC20 for IERC20;
 
   function stake(
@@ -31,28 +33,10 @@ contract PoolOpen is IPoolStake {
   ) internal returns (uint256 lock) {
     require(_amount > 0, 'AMOUNT');
     require(_receiver != address(0), 'RECEIVER');
-    (IERC20 token, PoolStorage.Base storage ps) = baseData();
+    PoolStorage.Base storage ps = baseData();
     require(ps.stakes, 'NO_STAKES');
-    token.safeTransferFrom(msg.sender, address(this), _amount);
+    _token.safeTransferFrom(msg.sender, address(this), _amount);
 
     lock = LibPool.stake(ps, _amount, _receiver);
-  }
-
-  function baseData() internal view returns (IERC20 token, PoolStorage.Base storage ps) {
-    token = bps();
-    ps = PoolStorage.ps(token);
-    require(ps.govPool != address(0), 'INVALID_TOKEN');
-  }
-
-  function bps() internal pure returns (IERC20 rt) {
-    // These fields are not accessible from assembly
-    bytes memory array = msg.data;
-    uint256 index = msg.data.length;
-
-    // solhint-disable-next-line no-inline-assembly
-    assembly {
-      // Load the 32 bytes word from memory with the address on the lower 20 bytes, and mask those.
-      rt := and(mload(add(array, index)), 0xffffffffffffffffffffffffffffffffffffffff)
-    }
   }
 }
