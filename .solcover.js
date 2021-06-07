@@ -5,4 +5,5 @@ module.exports = {
   },
   istanbulFolder: './.coverage',
   istanbulReporter: ['html', 'text'],
+  skipFiles: ['strategies/AaveV2.sol'],
 };

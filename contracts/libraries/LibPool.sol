@@ -22,7 +22,7 @@ library LibPool {
     uint256 balance = ps.stakeBalance;
 
     if (address(ps.strategy) != address(0)) {
-      balance.add(ps.strategy.balanceOf());
+      balance = balance.add(ps.strategy.balanceOf());
     }
 
     return balance.sub(ps.firstMoneyOut);

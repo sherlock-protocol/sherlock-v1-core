@@ -18,21 +18,17 @@ contract StrategyMock is IStrategy {
   IERC20 public override want;
   address internal sherlock;
 
-  modifier onlySherlock() {
-    require(msg.sender == sherlock, 'sherlock');
-    _;
-  }
-
   constructor(IERC20 _want, address _sherlock) {
     want = _want;
     sherlock = _sherlock;
   }
 
-  function withdrawAll() external override onlySherlock returns (uint256) {
-    want.safeTransfer(msg.sender, balanceOf());
+  function withdrawAll() external override returns (uint256 balance) {
+    balance = balanceOf();
+    want.safeTransfer(msg.sender, balance);
   }
 
-  function withdraw(uint256 _amount) external override onlySherlock {
+  function withdraw(uint256 _amount) external override {
     want.safeTransfer(msg.sender, _amount);
   }
 
