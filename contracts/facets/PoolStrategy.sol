@@ -31,6 +31,10 @@ contract PoolStrategy is Pool, IPoolStrategy {
     require(address(ps.strategy) != address(0), 'STRATEGY');
   }
 
+  function _enforceGovPool(PoolStorage.Base storage ps) internal {
+    require(ps.govPool == msg.sender, 'GOV');
+  }
+
   //
   // State changing methods
   //
@@ -38,6 +42,7 @@ contract PoolStrategy is Pool, IPoolStrategy {
   function strategyUpdate(IStrategy _strategy, IERC20 _token) external override {
     PoolStorage.Base storage ps = baseData();
     require(_strategy.want() == _token, 'WANT');
+    _enforceGovPool(ps);
 
     ps.strategy = _strategy;
   }
@@ -45,6 +50,7 @@ contract PoolStrategy is Pool, IPoolStrategy {
   function strategyDeposit(uint256 _amount, IERC20 _token) external override {
     require(_amount > 0, 'AMOUNT');
     PoolStorage.Base storage ps = baseData();
+    _enforceGovPool(ps);
     _enforceStrategy(ps);
 
     ps.stakeBalance = ps.stakeBalance.sub(_amount);
@@ -56,6 +62,7 @@ contract PoolStrategy is Pool, IPoolStrategy {
   function strategyWithdraw(uint256 _amount, IERC20 _token) external override {
     require(_amount > 0, 'AMOUNT');
     PoolStorage.Base storage ps = baseData();
+    _enforceGovPool(ps);
     _enforceStrategy(ps);
 
     ps.strategy.withdraw(_amount);
@@ -64,6 +71,7 @@ contract PoolStrategy is Pool, IPoolStrategy {
 
   function strategyWithdrawAll(IERC20 _token) external override {
     PoolStorage.Base storage ps = baseData();
+    _enforceGovPool(ps);
     _enforceStrategy(ps);
 
     uint256 amount = ps.strategy.withdrawAll();

@@ -107,6 +107,7 @@ module.exports = {
         },
       }),
       await ethers.getContractFactory('SherXERC20'),
+      await ethers.getContractFactory('PoolStrategy'),
     ];
     if (production) {
       facets.push(

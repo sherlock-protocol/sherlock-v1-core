@@ -6,7 +6,7 @@ const { prepare, deploy, solution, Uint32Max } = require('./utilities');
 
 describe('Stateless', function () {
   before(async function () {
-    await prepare(this, ['ERC20Mock', 'NativeLock', 'ForeignLock']);
+    await prepare(this, ['ERC20Mock', 'NativeLock', 'ForeignLock', 'StrategyMock']);
     await solution(this, 'sl', this.gov);
 
     await deploy(this, [
@@ -31,6 +31,8 @@ describe('Stateless', function () {
         this.ForeignLock,
         ['Lock TokenDis', 'lockDis', this.sl.address, this.tokenDisable.address],
       ],
+      ['strategyMockA', this.StrategyMock, [this.tokenA.address, this.sl.address]],
+      ['strategyMockB', this.StrategyMock, [this.tokenB.address, this.sl.address]],
     ]);
     // Add tokenA as valid token
     await this.sl
@@ -1504,5 +1506,82 @@ describe('Stateless', function () {
     describe('name()', function () {});
     describe('symbol()', function () {});
     describe('decimals()', function () {});
+  });
+  describe('PoolStrategy ─ State Changing', function () {
+    describe('strategyUpdate()', function () {
+      it('Invalid sender', async function () {
+        await expect(
+          this.sl.strategyUpdate(this.strategyMockA.address, this.tokenA.address),
+        ).to.be.revertedWith('GOV');
+      });
+      it('Invalid token', async function () {
+        await expect(
+          this.sl.strategyUpdate(this.strategyMockA.address, this.tokenB.address),
+        ).to.be.revertedWith('INVALID_TOKEN');
+      });
+      it('Invalid strategy', async function () {
+        await expect(
+          this.sl.strategyUpdate(this.strategyMockB.address, this.tokenA.address),
+        ).to.be.revertedWith('WANT');
+      });
+    });
+    describe('strategyDeposit()', function () {
+      it('Invalid sender', async function () {
+        await expect(
+          this.sl.strategyDeposit(parseEther('1'), this.tokenA.address),
+        ).to.be.revertedWith('GOV');
+      });
+      it('Invalid token', async function () {
+        await expect(
+          this.sl.strategyDeposit(parseEther('1'), this.tokenB.address),
+        ).to.be.revertedWith('INVALID_TOKEN');
+      });
+      it('Invalid amount', async function () {
+        await expect(this.sl.strategyDeposit(0, this.tokenA.address)).to.be.revertedWith('AMOUNT');
+      });
+      it('No strategy', async function () {
+        await expect(
+          this.sl.c(this.gov).strategyDeposit(parseEther('1'), this.tokenA.address),
+        ).to.be.revertedWith('STRATEGY');
+      });
+    });
+    describe('strategyWithdraw()', function () {
+      it('Invalid sender', async function () {
+        await expect(
+          this.sl.strategyWithdraw(parseEther('1'), this.tokenA.address),
+        ).to.be.revertedWith('GOV');
+      });
+      it('Invalid token', async function () {
+        await expect(
+          this.sl.strategyWithdraw(parseEther('1'), this.tokenB.address),
+        ).to.be.revertedWith('INVALID_TOKEN');
+      });
+      it('Invalid amount', async function () {
+        await expect(this.sl.strategyWithdraw(0, this.tokenA.address)).to.be.revertedWith('AMOUNT');
+      });
+      it('No strategy', async function () {
+        await expect(
+          this.sl.c(this.gov).strategyWithdraw(parseEther('1'), this.tokenA.address),
+        ).to.be.revertedWith('STRATEGY');
+      });
+    });
+    describe('strategyWithdrawAll()', function () {
+      it('Invalid sender', async function () {
+        await expect(this.sl.strategyWithdrawAll(this.tokenA.address)).to.be.revertedWith('GOV');
+      });
+      it('Invalid token', async function () {
+        await expect(this.sl.strategyWithdrawAll(this.tokenB.address)).to.be.revertedWith(
+          'INVALID_TOKEN',
+        );
+      });
+      it('No strategy', async function () {
+        await expect(
+          this.sl.c(this.gov).strategyWithdrawAll(this.tokenA.address),
+        ).to.be.revertedWith('STRATEGY');
+      });
+    });
+  });
+  describe('PoolStrategy ─ View Methods', function () {
+    describe('getStrategy()', function () {});
   });
 });
