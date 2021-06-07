@@ -6,7 +6,6 @@ pragma solidity ^0.7.4;
 * Sherlock Protocol: https://sherlock.xyz
 /******************************************************************************/
 
-import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 import '@openzeppelin/contracts/math/SafeMath.sol';
 
@@ -20,8 +19,8 @@ contract AaveV2 is IStrategy {
   using SafeMath for uint256;
   using SafeERC20 for IERC20;
 
-  address public override want;
-  address public aWant;
+  IERC20 public override want;
+  IERC20 public aWant;
   address internal sherlock;
   ILendingPoolAddressesProvider internal lpAddressProvider;
   IAaveIncentivesController internal aaveIncentivesController;
@@ -32,8 +31,8 @@ contract AaveV2 is IStrategy {
   }
 
   constructor(
-    address _want,
-    address _aWant,
+    IERC20 _want,
+    IERC20 _aWant,
     address _sherlock,
     ILendingPoolAddressesProvider _lendingPoolAddressProvider,
     IAaveIncentivesController _aaveIncentivesController
@@ -54,36 +53,36 @@ contract AaveV2 is IStrategy {
     if (aBalance() == 0) {
       return 0;
     }
-    return lp.withdraw(want, uint256(-1), msg.sender);
+    return lp.withdraw(address(want), uint256(-1), msg.sender);
   }
 
   function withdraw(uint256 _amount) external override onlySherlock {
     ILendingPool lp = getLp();
-    lp.withdraw(want, _amount, msg.sender);
+    lp.withdraw(address(want), _amount, msg.sender);
   }
 
   function deposit() external override {
     ILendingPool lp = getLp();
-    uint256 amount = IERC20(want).balanceOf(address(this));
+    uint256 amount = want.balanceOf(address(this));
     require(amount > 0, 'ZERO_AMOUNT');
 
     // TODO, do max approval once? e.g. in constructor
-    IERC20(want).approve(address(lp), amount);
-    lp.deposit(want, amount, address(this), 0);
+    want.approve(address(lp), amount);
+    lp.deposit(address(want), amount, address(this), 0);
   }
 
   function aBalance() internal view returns (uint256) {
-    return IERC20(aWant).balanceOf(address(this));
+    return aWant.balanceOf(address(this));
   }
 
   function stkAaveBalance() internal view returns (uint256) {
-    (uint256 index, , ) = aaveIncentivesController.getAssetData(aWant);
+    (uint256 index, , ) = aaveIncentivesController.getAssetData(address(aWant));
     if (index == 0) {
       return 0;
     }
 
     address[] memory tokens = new address[](1);
-    tokens[0] = aWant;
+    tokens[0] = address(aWant);
     return aaveIncentivesController.getRewardsBalance(tokens, address(this));
   }
 

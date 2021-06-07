@@ -6,8 +6,10 @@ pragma solidity ^0.7.4;
 * Sherlock Protocol: https://sherlock.xyz
 /******************************************************************************/
 
+import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+
 interface IStrategy {
-  function want() external view returns (address);
+  function want() external view returns (IERC20);
 
   function withdrawAll() external returns (uint256);
 

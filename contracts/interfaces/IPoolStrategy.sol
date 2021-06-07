@@ -25,4 +25,6 @@ interface IPoolStrategy {
   function strategyDeposit(uint256 _amount, IERC20 _token) external;
 
   function strategyWithdraw(uint256 _amount, IERC20 _token) external;
+
+  function strategyWithdrawAll(IERC20 _token) external;
 }
