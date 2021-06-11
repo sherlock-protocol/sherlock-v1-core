@@ -26,13 +26,13 @@ interface IPoolBase {
 
   /// @notice Returns the fee used on `_token` cooldown activation
   /// @param _token Token used
-  /// @return Cooldown fee scaled by 10**18
+  /// @return Cooldown fee scaled by uint32(-1)
   function getCooldownFee(IERC20 _token) external view returns (uint32);
 
   /// @notice Returns SherX weight for `_token`
   /// @param _token Token used
-  /// @return SherX weight scaled by 10**18
-  function getSherXWeight(IERC20 _token) external view returns (uint256);
+  /// @return SherX weight scaled by uint16(-1)
+  function getSherXWeight(IERC20 _token) external view returns (uint16);
 
   /// @notice Returns account responsible for `_token`
   /// @param _token Token used

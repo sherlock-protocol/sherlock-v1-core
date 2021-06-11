@@ -26,7 +26,7 @@ contract PoolBase is IPoolBase {
     return baseData().activateCooldownFee;
   }
 
-  function getSherXWeight(IERC20 _token) external view override returns (uint256) {
+  function getSherXWeight(IERC20 _token) external view override returns (uint16) {
     return baseData().sherXWeight;
   }
 
