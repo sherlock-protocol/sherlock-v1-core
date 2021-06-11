@@ -33,12 +33,12 @@ interface IGov {
 
   /// @notice Returns the weight for the Watsons compensation
   /// @return Watsons compensation weight
-  /// @dev Value is scaled by 10**18
-  function getWatsonsSherXWeight() external view returns (uint256);
+  /// @dev Value is scaled by uint16(-1)
+  function getWatsonsSherXWeight() external view returns (uint16);
 
   /// @notice Returns the last block number the SherX was accrued to the Watsons
   /// @return Block number
-  function getWatsonsSherxLastAccrued() external view returns (uint256);
+  function getWatsonsSherxLastAccrued() external view returns (uint40);
 
   /// @notice Returns the last block number the SherX was accrued to the Watsons
   /// @return Block number
@@ -52,12 +52,12 @@ interface IGov {
   /// @notice Returns the window of opportunity in blocks to unstake funds
   /// @notice Cooldown period has to be expired first to start the unstake window
   /// @return Amount of blocks
-  function getUnstakeWindow() external view returns (uint256);
+  function getUnstakeWindow() external view returns (uint40);
 
   /// @notice Returns the cooldown period in blocks
   /// @notice After the cooldown period funds can be unstaked
   /// @return Amount of blocks
-  function getCooldown() external view returns (uint256);
+  function getCooldown() external view returns (uint40);
 
   /// @notice Returns an array of tokens accounts are allowed to stake in
   /// @return Array of ERC20 tokens
@@ -103,11 +103,11 @@ interface IGov {
 
   /// @notice Set unstake window
   /// @param _unstakeWindow Unstake window in amount of blocks
-  function setUnstakeWindow(uint256 _unstakeWindow) external;
+  function setUnstakeWindow(uint40 _unstakeWindow) external;
 
   /// @notice Set cooldown period
   /// @param _period Cooldown period in amount of blocks
-  function setCooldown(uint256 _period) external;
+  function setCooldown(uint40 _period) external;
 
   /// @notice Add a new protocol to Sherlock
   /// @param _protocol Protocol identifier

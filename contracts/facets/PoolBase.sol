@@ -22,7 +22,7 @@ contract PoolBase is IPoolBase {
   // View methods
   //
 
-  function getCooldownFee(IERC20 _token) external view override returns (uint256) {
+  function getCooldownFee(IERC20 _token) external view override returns (uint32) {
     return baseData().activateCooldownFee;
   }
 
@@ -103,7 +103,7 @@ contract PoolBase is IPoolBase {
     return baseData().totalPremiumPerBlock;
   }
 
-  function getPremiumLastPaid(IERC20 _token) external view override returns (uint256) {
+  function getPremiumLastPaid(IERC20 _token) external view override returns (uint40) {
     return baseData().totalPremiumLastPaid;
   }
 
@@ -133,9 +133,8 @@ contract PoolBase is IPoolBase {
         continue;
       }
       if (
-        ps.unstakeEntries[_staker][i].blockInitiated.add(gs.unstakeCooldown).add(
-          gs.unstakeWindow
-        ) <= block.number
+        ps.unstakeEntries[_staker][i].blockInitiated + gs.unstakeCooldown + gs.unstakeWindow <=
+        uint40(block.number)
       ) {
         continue;
       }
@@ -188,7 +187,7 @@ contract PoolBase is IPoolBase {
   }
 
   function getTotalSherXPerBlock(IERC20 _token) public view override returns (uint256) {
-    return SherXStorage.sx().sherXPerBlock.mul(baseData().sherXWeight).div(10**18);
+    return SherXStorage.sx().sherXPerBlock.mul(baseData().sherXWeight).div(uint16(-1));
   }
 
   function getSherXPerBlock(IERC20 _token) external view override returns (uint256) {
@@ -267,9 +266,8 @@ contract PoolBase is IPoolBase {
   // State changing methods
   //
 
-  function setCooldownFee(uint256 _fee, IERC20 _token) external override {
+  function setCooldownFee(uint32 _fee, IERC20 _token) external override {
     require(msg.sender == GovStorage.gs().govMain, 'NOT_GOV_MAIN');
-    require(_fee <= 10**18, 'MAX_VALUE');
 
     baseData().activateCooldownFee = _fee;
   }
@@ -314,7 +312,7 @@ contract PoolBase is IPoolBase {
     PoolStorage.Base storage ps = baseData();
 
     ps.lockToken.safeTransferFrom(msg.sender, address(this), _amount);
-    uint256 fee = _amount.mul(ps.activateCooldownFee).div(10**18);
+    uint256 fee = _amount.mul(ps.activateCooldownFee).div(uint32(-1));
     if (fee > 0) {
       // stake of user gets burned
       // representative amount token get added to first money out pool
@@ -325,7 +323,9 @@ contract PoolBase is IPoolBase {
       ps.lockToken.burn(address(this), fee);
     }
 
-    ps.unstakeEntries[msg.sender].push(PoolStorage.UnstakeEntry(block.number, _amount.sub(fee)));
+    ps.unstakeEntries[msg.sender].push(
+      PoolStorage.UnstakeEntry(uint40(block.number), _amount.sub(fee))
+    );
 
     return ps.unstakeEntries[msg.sender].length - 1;
   }
@@ -337,7 +337,10 @@ contract PoolBase is IPoolBase {
     PoolStorage.UnstakeEntry memory withdraw = ps.unstakeEntries[msg.sender][_id];
     require(withdraw.blockInitiated != 0, 'WITHDRAW_NOT_ACTIVE');
 
-    require(withdraw.blockInitiated.add(gs.unstakeCooldown) >= block.number, 'COOLDOWN_EXPIRED');
+    require(
+      withdraw.blockInitiated + gs.unstakeCooldown >= uint40(block.number),
+      'COOLDOWN_EXPIRED'
+    );
     delete ps.unstakeEntries[msg.sender][_id];
     ps.lockToken.safeTransfer(msg.sender, withdraw.lock);
   }
@@ -354,7 +357,7 @@ contract PoolBase is IPoolBase {
     require(withdraw.blockInitiated != 0, 'WITHDRAW_NOT_ACTIVE');
 
     require(
-      withdraw.blockInitiated.add(gs.unstakeCooldown).add(gs.unstakeWindow) < block.number,
+      withdraw.blockInitiated + gs.unstakeCooldown + gs.unstakeWindow < uint40(block.number),
       'UNSTAKE_WINDOW_NOT_EXPIRED'
     );
     delete ps.unstakeEntries[_account][_id];
@@ -372,9 +375,9 @@ contract PoolBase is IPoolBase {
     PoolStorage.UnstakeEntry memory withdraw = ps.unstakeEntries[msg.sender][_id];
     require(withdraw.blockInitiated != 0, 'WITHDRAW_NOT_ACTIVE');
     // period is including
-    require(withdraw.blockInitiated.add(gs.unstakeCooldown) < block.number, 'COOLDOWN_ACTIVE');
+    require(withdraw.blockInitiated + gs.unstakeCooldown < uint40(block.number), 'COOLDOWN_ACTIVE');
     require(
-      withdraw.blockInitiated.add(gs.unstakeCooldown).add(gs.unstakeWindow) >= block.number,
+      withdraw.blockInitiated + gs.unstakeCooldown + gs.unstakeWindow >= uint40(block.number),
       'UNSTAKE_WINDOW_EXPIRED'
     );
     amount = withdraw.lock.mul(ps.stakeBalance).div(ps.lockToken.totalSupply());

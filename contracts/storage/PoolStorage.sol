@@ -19,14 +19,14 @@ library PoolStorage {
     //
     bool stakes;
     ILock lockToken;
-    uint256 activateCooldownFee;
+    uint32 activateCooldownFee;
     uint256 stakeBalance;
     mapping(address => UnstakeEntry[]) unstakeEntries;
     uint256 firstMoneyOut;
     uint256 unallocatedSherX;
     // How much sherX is distributed to stakers of this token
-    uint256 sherXWeight;
-    uint256 sherXLastAccrued;
+    uint16 sherXWeight;
+    uint40 sherXLastAccrued;
     // Non-native variables
     mapping(address => uint256) sWithdrawn;
     uint256 sWeight;
@@ -37,7 +37,7 @@ library PoolStorage {
     mapping(bytes32 => uint256) protocolBalance;
     mapping(bytes32 => uint256) protocolPremium;
     uint256 totalPremiumPerBlock;
-    uint256 totalPremiumLastPaid;
+    uint40 totalPremiumLastPaid;
     // How much token (this) is available for sherX holders
     uint256 sherXUnderlying;
     mapping(bytes32 => bool) isProtocol;
@@ -45,7 +45,7 @@ library PoolStorage {
   }
 
   struct UnstakeEntry {
-    uint256 blockInitiated;
+    uint40 blockInitiated;
     uint256 lock;
   }
 

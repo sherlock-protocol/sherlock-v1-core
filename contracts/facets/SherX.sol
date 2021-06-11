@@ -57,7 +57,9 @@ contract SherX is ISherX {
     SherXStorage.Base storage sx = SherXStorage.sx();
 
     return
-      block.number.sub(ps.sherXLastAccrued).mul(sx.sherXPerBlock).mul(ps.sherXWeight).div(10**18);
+      block.number.sub(ps.sherXLastAccrued).mul(sx.sherXPerBlock).mul(ps.sherXWeight).div(
+        uint16(-1)
+      );
   }
 
   function getTotalSherXUnminted() external view override returns (uint256) {
@@ -184,7 +186,7 @@ contract SherX is ISherX {
       require(ps.sherXWeight == 0, 'ALREADY_INIT_2');
     }
 
-    gs.watsonsSherxWeight = 10**18;
+    gs.watsonsSherxWeight = uint16(-1);
   }
 
   function setWeights(
@@ -210,13 +212,13 @@ contract SherX is ISherX {
 
       weightAdd = weightAdd.add(_weights[i]);
       weightSub = weightSub.add(ps.sherXWeight);
-      ps.sherXWeight = _weights[i];
+      ps.sherXWeight = uint16(_weights[i]);
     }
     if (_watsons != uint256(-1)) {
       weightAdd = weightAdd.add(_watsons);
       weightSub = weightSub.add(gs.watsonsSherxWeight);
 
-      gs.watsonsSherxWeight = _watsons;
+      gs.watsonsSherxWeight = uint16(_watsons);
     }
 
     require(weightAdd == weightSub, 'SUM');

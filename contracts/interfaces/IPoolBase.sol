@@ -27,7 +27,7 @@ interface IPoolBase {
   /// @notice Returns the fee used on `_token` cooldown activation
   /// @param _token Token used
   /// @return Cooldown fee scaled by 10**18
-  function getCooldownFee(IERC20 _token) external view returns (uint256);
+  function getCooldownFee(IERC20 _token) external view returns (uint32);
 
   /// @notice Returns SherX weight for `_token`
   /// @param _token Token used
@@ -112,7 +112,7 @@ interface IPoolBase {
   /// @notice Returns block debt was last accrued.
   /// @param _token Token used
   /// @return Block number
-  function getPremiumLastPaid(IERC20 _token) external view returns (uint256);
+  function getPremiumLastPaid(IERC20 _token) external view returns (uint40);
 
   /// @notice Return total amount of `_token` used as underlying for SHERX
   /// @param _token Token used
@@ -219,7 +219,7 @@ interface IPoolBase {
   /// @notice Set `_fee` used for activating cooldowns on `_token`
   /// @param _fee Fee scaled by 10**18
   /// @param _token Token used
-  function setCooldownFee(uint256 _fee, IERC20 _token) external;
+  function setCooldownFee(uint32 _fee, IERC20 _token) external;
 
   /// @notice Deposit `_amount` of `_token` on behalf of `_protocol`
   /// @param _protocol Protocol identifier

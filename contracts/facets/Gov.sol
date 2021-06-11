@@ -43,11 +43,11 @@ contract Gov is IGov {
     return GovStorage.gs().watsonsAddress;
   }
 
-  function getWatsonsSherXWeight() external view override returns (uint256) {
+  function getWatsonsSherXWeight() external view override returns (uint16) {
     return GovStorage.gs().watsonsSherxWeight;
   }
 
-  function getWatsonsSherxLastAccrued() external view override returns (uint256) {
+  function getWatsonsSherxLastAccrued() external view override returns (uint40) {
     return GovStorage.gs().watsonsSherxLastAccrued;
   }
 
@@ -55,7 +55,7 @@ contract Gov is IGov {
     GovStorage.Base storage gs = GovStorage.gs();
     SherXStorage.Base storage sx = SherXStorage.sx();
 
-    return sx.sherXPerBlock.mul(gs.watsonsSherxWeight).div(10**18);
+    return sx.sherXPerBlock.mul(gs.watsonsSherxWeight).div(uint16(-1));
   }
 
   function getWatsonsUnmintedSherX() external view override returns (uint256) {
@@ -64,11 +64,11 @@ contract Gov is IGov {
     return block.number.sub(gs.watsonsSherxLastAccrued).mul(getWatsonsSherXPerBlock());
   }
 
-  function getUnstakeWindow() external view override returns (uint256) {
+  function getUnstakeWindow() external view override returns (uint40) {
     return GovStorage.gs().unstakeWindow;
   }
 
-  function getCooldown() external view override returns (uint256) {
+  function getCooldown() external view override returns (uint40) {
     return GovStorage.gs().unstakeCooldown;
   }
 
@@ -121,11 +121,13 @@ contract Gov is IGov {
     gs.watsonsAddress = _watsons;
   }
 
-  function setUnstakeWindow(uint256 _unstakeWindow) external override onlyGovMain {
+  function setUnstakeWindow(uint40 _unstakeWindow) external override onlyGovMain {
+    require(_unstakeWindow < 25000000, 'MAX'); // ~ approximate 10 years of blocks
     GovStorage.gs().unstakeWindow = _unstakeWindow;
   }
 
-  function setCooldown(uint256 _period) external override onlyGovMain {
+  function setCooldown(uint40 _period) external override onlyGovMain {
+    require(_period < 25000000, 'MAX'); // ~ approximate 10 years of blocks
     GovStorage.gs().unstakeCooldown = _period;
   }
 

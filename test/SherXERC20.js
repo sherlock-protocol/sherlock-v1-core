@@ -1,7 +1,7 @@
 const { expect } = require('chai');
 const { parseEther, parseUnits } = require('ethers/lib/utils');
 
-const { prepare, deploy, solution, blockNumber } = require('./utilities');
+const { prepare, deploy, solution, blockNumber, Uint16Max, Uint32Max } = require('./utilities');
 const { constants } = require('ethers');
 const { TimeTraveler } = require('./utilities/snapshot');
 const { parse } = require('dotenv');
@@ -80,7 +80,7 @@ describe('SherXERC20 - Active', function () {
     // Distribute SherX to tokenA stakers
     await this.sl.c(this.gov).setWatsonsAddress(this.alice.address);
     await this.sl.c(this.gov).setInitialWeight();
-    await this.sl.c(this.gov).setWeights([this.tokenA.address], [parseEther('1')], 0);
+    await this.sl.c(this.gov).setWeights([this.tokenA.address], [Uint16Max], 0);
 
     // Stake token A
     await this.sl.stake(parseEther('10'), this.alice.address, this.tokenA.address);
