@@ -1,7 +1,7 @@
 const { expect } = require('chai');
 const { parseEther, parseUnits } = require('ethers/lib/utils');
 
-const { prepare, deploy, solution, blockNumber } = require('./utilities');
+const { prepare, deploy, solution, blockNumber, Uint16Max, Uint32Max } = require('./utilities');
 const { constants } = require('ethers');
 const { TimeTraveler } = require('./utilities/snapshot');
 
@@ -27,7 +27,7 @@ describe('Payout', function () {
       .c(this.gov)
       .tokenInit(this.tokenA.address, this.gov.address, this.lockA.address, true);
 
-    await this.sl.c(this.gov).setCooldownFee(parseEther('1'), this.tokenA.address);
+    await this.sl.c(this.gov).setCooldownFee(Uint32Max, this.tokenA.address);
     await this.sl.c(this.gov).setCooldown(1);
     await this.sl.c(this.gov).setUnstakeWindow(1);
     await this.tokenA.approve(this.sl.address, parseEther('10000'));
@@ -40,7 +40,7 @@ describe('Payout', function () {
     // unallocated
     await this.sl.c(this.gov).setWatsonsAddress(this.alice.address);
     await this.sl.c(this.gov).setInitialWeight();
-    await this.sl.c(this.gov).setWeights([this.tokenA.address], [parseEther('1')], 0);
+    await this.sl.c(this.gov).setWeights([this.tokenA.address], [Uint16Max], 0);
 
     await this.sl
       .c(this.gov)
@@ -234,7 +234,7 @@ describe('Payout - SherX', function () {
     // unallocated
     await this.sl.c(this.gov).setWatsonsAddress(this.alice.address);
     await this.sl.c(this.gov).setInitialWeight();
-    await this.sl.c(this.gov).setWeights([this.tokenA.address], [parseEther('1')], 0);
+    await this.sl.c(this.gov).setWeights([this.tokenA.address], [Uint16Max], 0);
 
     await this.sl.stake(parseEther('10'), this.alice.address, this.tokenA.address);
     await this.sl.activateCooldown(parseEther('1'), this.tokenA.address);
@@ -370,7 +370,6 @@ describe('Payout - SherX', function () {
     });
   });
 });
-
 describe('Payout - Non active', function () {
   before(async function () {
     timeTraveler = new TimeTraveler(network.provider);
@@ -396,7 +395,7 @@ describe('Payout - Non active', function () {
       .c(this.gov)
       .tokenInit(this.tokenA.address, this.gov.address, this.lockA.address, false);
 
-    await this.sl.c(this.gov).setCooldownFee(parseEther('0.5'), this.tokenA.address);
+    await this.sl.c(this.gov).setCooldownFee(Uint32Max.div(2), this.tokenA.address);
     await this.sl.c(this.gov).setUnstakeWindow(1);
 
     // first money out
@@ -409,10 +408,16 @@ describe('Payout - Non active', function () {
     await timeTraveler.snapshot();
   });
   it('Initial state', async function () {
-    expect(await this.sl.getFirstMoneyOut(this.tokenA.address)).to.eq(parseEther('5'));
+    expect(await this.sl.getFirstMoneyOut(this.tokenA.address)).to.be.closeTo(
+      parseEther('5'),
+      parseUnits('1', 10),
+    );
     expect(await this.sl.getStakersPoolBalance(this.tokenA.address)).to.eq(parseEther('0'));
     expect(await this.sl.getUnallocatedSherXTotal(this.tokenA.address)).to.eq(parseEther('0'));
-    expect(await this.tokenA.balanceOf(this.bob.address)).to.eq(parseEther('5'));
+    expect(await this.tokenA.balanceOf(this.bob.address)).to.be.closeTo(
+      parseEther('5'),
+      parseUnits('1', 10),
+    );
     expect(await this.tokenA.balanceOf(this.carol.address)).to.eq(0);
 
     const stakers = await this.sl.getTokensStaker();
@@ -435,11 +440,20 @@ describe('Payout - Non active', function () {
         ),
     );
 
-    expect(await this.sl.getFirstMoneyOut(this.tokenA.address)).to.eq(parseEther('3'));
+    expect(await this.sl.getFirstMoneyOut(this.tokenA.address)).to.be.closeTo(
+      parseEther('3'),
+      parseUnits('1', 10),
+    );
     expect(await this.sl.getStakersPoolBalance(this.tokenA.address)).to.eq(parseEther('0'));
     expect(await this.sl.getUnallocatedSherXTotal(this.tokenA.address)).to.eq(parseEther('0'));
-    expect(await this.tokenA.balanceOf(this.bob.address)).to.eq(parseEther('5'));
-    expect(await this.tokenA.balanceOf(this.carol.address)).to.eq(parseEther('2'));
+    expect(await this.tokenA.balanceOf(this.bob.address)).to.be.closeTo(
+      parseEther('5'),
+      parseUnits('1', 10),
+    );
+    expect(await this.tokenA.balanceOf(this.carol.address)).to.be.closeTo(
+      parseEther('2'),
+      parseUnits('1', 10),
+    );
 
     const stakers = await this.sl.getTokensStaker();
     expect(stakers.length).to.eq(0);

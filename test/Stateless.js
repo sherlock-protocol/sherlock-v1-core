@@ -2,7 +2,7 @@ const { expect } = require('chai');
 const { constants } = require('ethers');
 const { parseEther, parseUnits } = require('ethers/lib/utils');
 
-const { prepare, deploy, solution } = require('./utilities');
+const { prepare, deploy, solution, Uint32Max } = require('./utilities');
 
 describe('Stateless', function () {
   before(async function () {
@@ -104,6 +104,9 @@ describe('Stateless', function () {
       it('Invalid sender', async function () {
         await expect(this.sl.setUnstakeWindow(1)).to.be.revertedWith('NOT_GOV_MAIN');
       });
+      it('Invalid window', async function () {
+        await expect(this.sl.c(this.gov).setUnstakeWindow(25000001)).to.be.revertedWith('MAX');
+      });
       it('Success', async function () {
         await this.sl.c(this.gov).setUnstakeWindow(1);
       });
@@ -111,6 +114,9 @@ describe('Stateless', function () {
     describe('setCooldown()', function () {
       it('Invalid sender', async function () {
         await expect(this.sl.setCooldown(1)).to.be.revertedWith('NOT_GOV_MAIN');
+      });
+      it('Invalid cooldown', async function () {
+        await expect(this.sl.c(this.gov).setCooldown(25000001)).to.be.revertedWith('MAX');
       });
       it('Success', async function () {
         await this.sl.c(this.gov).setCooldown(1);
@@ -1077,22 +1083,21 @@ describe('Stateless', function () {
   describe('Pool ─ State Changing', function () {
     describe('setCooldownFee()', function () {
       it('Invalid sender', async function () {
-        await expect(
-          this.sl.setCooldownFee(parseEther('1'), this.tokenA.address),
-        ).to.be.revertedWith('NOT_GOV_MAIN');
+        await expect(this.sl.setCooldownFee(Uint32Max, this.tokenA.address)).to.be.revertedWith(
+          'NOT_GOV_MAIN',
+        );
       });
       it('Invalid fee', async function () {
-        await expect(
-          this.sl.c(this.gov).setCooldownFee(parseEther('1').add(1), this.tokenA.address),
-        ).to.be.revertedWith('MAX_VALUE');
+        await expect(this.sl.c(this.gov).setCooldownFee(Uint32Max.add(1), this.tokenA.address)).to
+          .be.reverted;
       });
       it('Invalid token', async function () {
         await expect(
-          this.sl.c(this.gov).setCooldownFee(parseEther('1'), this.tokenB.address),
+          this.sl.c(this.gov).setCooldownFee(Uint32Max, this.tokenB.address),
         ).to.be.revertedWith('INVALID_TOKEN');
       });
       it('Success', async function () {
-        await this.sl.c(this.gov).setCooldownFee(parseEther('1'), this.tokenA.address);
+        await this.sl.c(this.gov).setCooldownFee(Uint32Max, this.tokenA.address);
       });
     });
     describe('depositProtocolBalance()', function () {

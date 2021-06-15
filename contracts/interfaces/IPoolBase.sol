@@ -26,13 +26,13 @@ interface IPoolBase {
 
   /// @notice Returns the fee used on `_token` cooldown activation
   /// @param _token Token used
-  /// @return Cooldown fee scaled by 10**18
-  function getCooldownFee(IERC20 _token) external view returns (uint256);
+  /// @return Cooldown fee scaled by uint32(-1)
+  function getCooldownFee(IERC20 _token) external view returns (uint32);
 
   /// @notice Returns SherX weight for `_token`
   /// @param _token Token used
-  /// @return SherX weight scaled by 10**18
-  function getSherXWeight(IERC20 _token) external view returns (uint256);
+  /// @return SherX weight scaled by uint16(-1)
+  function getSherXWeight(IERC20 _token) external view returns (uint16);
 
   /// @notice Returns account responsible for `_token`
   /// @param _token Token used
@@ -112,7 +112,7 @@ interface IPoolBase {
   /// @notice Returns block debt was last accrued.
   /// @param _token Token used
   /// @return Block number
-  function getPremiumLastPaid(IERC20 _token) external view returns (uint256);
+  function getPremiumLastPaid(IERC20 _token) external view returns (uint40);
 
   /// @notice Return total amount of `_token` used as underlying for SHERX
   /// @param _token Token used
@@ -188,7 +188,7 @@ interface IPoolBase {
   /// @notice Returns block SHERX was last accrued to `_token`
   /// @param _token Token used
   /// @return Block last accrued
-  function getSherXLastAccrued(IERC20 _token) external view returns (uint256);
+  function getSherXLastAccrued(IERC20 _token) external view returns (uint40);
 
   /// @notice Current exchange rate from lockToken to `_token`
   /// @param _token Token used
@@ -217,9 +217,9 @@ interface IPoolBase {
   //
 
   /// @notice Set `_fee` used for activating cooldowns on `_token`
-  /// @param _fee Fee scaled by 10**18
+  /// @param _fee Fee scaled by uint32(-1)
   /// @param _token Token used
-  function setCooldownFee(uint256 _fee, IERC20 _token) external;
+  function setCooldownFee(uint32 _fee, IERC20 _token) external;
 
   /// @notice Deposit `_amount` of `_token` on behalf of `_protocol`
   /// @param _protocol Protocol identifier

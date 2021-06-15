@@ -32,7 +32,7 @@ library LibPool {
     PoolStorage.Base storage ps = PoolStorage.ps(_token);
     SherXStorage.Base storage sx = SherXStorage.sx();
     sherX = block.number.sub(ps.sherXLastAccrued).mul(sx.sherXPerBlock).mul(ps.sherXWeight).div(
-      10**18
+      uint16(-1)
     );
   }
 
@@ -85,7 +85,7 @@ library LibPool {
     uint256 totalAccruedDebt = _getTotalAccruedDebt(ps, blocks);
     // move funds to the sherX etf
     ps.sherXUnderlying = ps.sherXUnderlying.add(totalAccruedDebt);
-    ps.totalPremiumLastPaid = block.number;
+    ps.totalPremiumLastPaid = uint40(block.number);
   }
 
   function _payOffDebt(

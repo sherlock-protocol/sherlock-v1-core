@@ -1,7 +1,7 @@
 const { expect } = require('chai');
 const { parseEther, parseUnits } = require('ethers/lib/utils');
 
-const { prepare, deploy, solution, blockNumber } = require('./utilities');
+const { prepare, deploy, solution, blockNumber, Uint16Max, Uint32Max } = require('./utilities');
 const { constants } = require('ethers');
 const { TimeTraveler } = require('./utilities/snapshot');
 
@@ -409,7 +409,7 @@ describe('Gov', function () {
         .protocolAdd(this.protocolX, this.gov.address, this.gov.address, [this.tokenA.address]);
       await this.sl.c(this.gov).setWatsonsAddress(this.alice.address);
       await this.sl.c(this.gov).setInitialWeight();
-      await this.sl.c(this.gov).setWeights([this.tokenA.address], [parseEther('1')], 0);
+      await this.sl.c(this.gov).setWeights([this.tokenA.address], [Uint16Max], 0);
     });
     it('Do', async function () {
       await expect(
@@ -463,7 +463,7 @@ describe('Gov', function () {
       // Distribute SherX to tokenA stakers
       await this.sl.c(this.gov).setWatsonsAddress(this.alice.address);
       await this.sl.c(this.gov).setInitialWeight();
-      await this.sl.c(this.gov).setWeights([this.tokenA.address], [parseEther('1')], 0);
+      await this.sl.c(this.gov).setWeights([this.tokenA.address], [Uint16Max], 0);
 
       await this.tokenA.approve(this.sl.address, parseEther('10000'));
       await this.sl.stake(parseEther('10'), this.alice.address, this.tokenA.address);
@@ -496,7 +496,7 @@ describe('Gov', function () {
           parseEther('1'),
         );
 
-      await this.sl.c(this.gov).setWeights([this.tokenA.address], [0], parseEther('1'));
+      await this.sl.c(this.gov).setWeights([this.tokenA.address], [0], Uint16Max);
     });
     it('Do', async function () {
       await this.sl.c(this.gov).tokenDisableStakers(this.tokenA.address, 0);
@@ -655,7 +655,7 @@ describe('Gov', function () {
       // Distribute SherX to tokenA stakers
       await this.sl.c(this.gov).setWatsonsAddress(this.alice.address);
       await this.sl.c(this.gov).setInitialWeight();
-      await this.sl.c(this.gov).setWeights([this.tokenA.address], [parseEther('1')], 0);
+      await this.sl.c(this.gov).setWeights([this.tokenA.address], [Uint16Max], 0);
 
       await this.tokenA.approve(this.sl.address, parseEther('10000'));
       await this.lockA.approve(this.sl.address, parseEther('10000'));
@@ -680,10 +680,10 @@ describe('Gov', function () {
           parseEther('1'),
         );
 
-      await this.sl.c(this.gov).setCooldownFee(parseEther('0.5'), this.tokenA.address);
+      await this.sl.c(this.gov).setCooldownFee(Uint32Max.div(2), this.tokenA.address);
       await this.sl.activateCooldown(parseEther('0.3'), this.tokenA.address);
 
-      await this.sl.c(this.gov).setWeights([this.tokenA.address], [0], parseEther('1'));
+      await this.sl.c(this.gov).setWeights([this.tokenA.address], [0], Uint16Max);
 
       await this.sl
         .c(this.gov)
@@ -714,8 +714,14 @@ describe('Gov', function () {
         .c(this.gov)
         .tokenInit(this.tokenB.address, this.gov.address, this.lockB.address, true);
 
-      expect(await this.sl.getStakersPoolBalance(this.tokenA.address)).to.eq(parseUnits('8.5', 18));
-      expect(await this.sl.getFirstMoneyOut(this.tokenA.address)).to.eq(parseUnits('1.5', 18));
+      expect(await this.sl.getStakersPoolBalance(this.tokenA.address)).to.be.closeTo(
+        parseUnits('8.5', 18),
+        parseUnits('1', 9),
+      );
+      expect(await this.sl.getFirstMoneyOut(this.tokenA.address)).to.be.closeTo(
+        parseUnits('1.5', 18),
+        parseUnits('1', 9),
+      );
       expect(await this.sl.getSherXUnderlying(this.tokenA.address)).to.eq(parseUnits('4', 18));
       expect(await this.sl.getStakersPoolBalance(this.tokenB.address)).to.eq(0);
       expect(await this.sl.getFirstMoneyOut(this.tokenB.address)).to.eq(0);
@@ -738,7 +744,10 @@ describe('Gov', function () {
       expect(await this.sl.getFirstMoneyOut(this.tokenB.address)).to.eq(parseUnits('2', 6));
       expect(await this.sl.getSherXUnderlying(this.tokenB.address)).to.eq(parseUnits('3', 6));
 
-      expect(await this.tokenA.balanceOf(this.carol.address)).to.eq(parseUnits('8.5', 18));
+      expect(await this.tokenA.balanceOf(this.carol.address)).to.be.closeTo(
+        parseUnits('8.5', 18),
+        parseUnits('1', 9),
+      );
       expect(await this.sl.balanceOf(this.carol.address)).to.eq(parseUnits('1', 18));
     });
     it('Remove', async function () {
@@ -814,7 +823,7 @@ describe('Gov', function () {
       );
     });
     it('First money out', async function () {
-      await this.sl.c(this.gov).setCooldownFee(parseEther('1'), this.tokenA.address);
+      await this.sl.c(this.gov).setCooldownFee(Uint32Max, this.tokenA.address);
       await this.sl.activateCooldown(parseEther('1'), this.tokenA.address);
 
       await expect(this.sl.c(this.gov).tokenRemove(this.tokenA.address)).to.be.revertedWith(
@@ -840,7 +849,7 @@ describe('Gov', function () {
       // Distribute SherX to tokenA stakers
       await this.sl.c(this.gov).setWatsonsAddress(this.alice.address);
       await this.sl.c(this.gov).setInitialWeight();
-      await this.sl.c(this.gov).setWeights([this.tokenA.address], [parseEther('1')], 0);
+      await this.sl.c(this.gov).setWeights([this.tokenA.address], [Uint16Max], 0);
 
       await this.tokenA.approve(this.sl.address, parseEther('10000'));
       await this.tokenB.approve(this.sl.address, parseEther('10000'));
@@ -870,7 +879,7 @@ describe('Gov', function () {
       await this.sl.activateCooldown(parseEther('1'), this.tokenA.address);
       await this.sl.unstake(0, this.alice.address, this.tokenA.address);
 
-      await this.sl.c(this.gov).setWeights([this.tokenA.address], [0], parseEther('1'));
+      await this.sl.c(this.gov).setWeights([this.tokenA.address], [0], Uint16Max);
 
       await this.sl
         .c(this.gov)

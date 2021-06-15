@@ -1,7 +1,16 @@
 const { expect } = require('chai');
 const { parseEther, parseUnits } = require('ethers/lib/utils');
 
-const { prepare, deploy, solution, blockNumber, events } = require('./utilities');
+const {
+  prepare,
+  deploy,
+  solution,
+  blockNumber,
+  events,
+  Uint16Max,
+  Uint16Fragment,
+  Uint32Max,
+} = require('./utilities');
 const { constants } = require('ethers');
 const { TimeTraveler } = require('./utilities/snapshot');
 
@@ -51,7 +60,7 @@ describe('SherX', function () {
     it('Do', async function () {
       expect(await this.sl.getWatsonsSherXWeight()).to.eq(0);
       await this.sl.c(this.gov).setInitialWeight();
-      expect(await this.sl.getWatsonsSherXWeight()).to.eq(parseEther('1'));
+      expect(await this.sl.getWatsonsSherXWeight()).to.eq(Uint16Max);
     });
     it('Do twice', async function () {
       await expect(this.sl.c(this.gov).setInitialWeight()).to.be.revertedWith('ALREADY_INIT');
@@ -60,7 +69,7 @@ describe('SherX', function () {
       await this.sl
         .c(this.gov)
         .tokenInit(this.tokenA.address, constants.AddressZero, this.lockA.address, false);
-      await this.sl.c(this.gov).setWeights([this.tokenA.address], [parseEther('1')], 0);
+      await this.sl.c(this.gov).setWeights([this.tokenA.address], [Uint16Max], 0);
 
       await expect(this.sl.c(this.gov).setInitialWeight()).to.be.revertedWith('ALREADY_INIT_2');
     });
@@ -81,22 +90,22 @@ describe('SherX', function () {
     it('Initial state', async function () {
       expect(await this.sl.getSherXWeight(this.tokenA.address)).to.eq(0);
       expect(await this.sl.getSherXWeight(this.tokenB.address)).to.eq(0);
-      expect(await this.sl.getWatsonsSherXWeight()).to.eq(parseEther('1'));
+      expect(await this.sl.getWatsonsSherXWeight()).to.eq(Uint16Max);
     });
     it('Do', async function () {
-      await this.sl.c(this.gov).setWeights([this.tokenA.address], [parseEther('1')], 0);
+      await this.sl.c(this.gov).setWeights([this.tokenA.address], [Uint16Max], 0);
 
-      expect(await this.sl.getSherXWeight(this.tokenA.address)).to.eq(parseEther('1'));
+      expect(await this.sl.getSherXWeight(this.tokenA.address)).to.eq(Uint16Max);
       expect(await this.sl.getWatsonsSherXWeight()).to.eq(0);
     });
     it('Do disabled', async function () {
       await expect(
-        this.sl.c(this.gov).setWeights([this.tokenB.address], [parseEther('1')], 0),
+        this.sl.c(this.gov).setWeights([this.tokenB.address], [Uint16Max], 0),
       ).to.be.revertedWith('DISABLED');
     });
     it('Do wrong', async function () {
       await expect(
-        this.sl.c(this.gov).setWeights([this.tokenC.address], [parseEther('1')], 0),
+        this.sl.c(this.gov).setWeights([this.tokenC.address], [Uint16Max], 0),
       ).to.be.revertedWith('DISABLED');
     });
     it('Do tokenB, exceed sum', async function () {
@@ -109,7 +118,7 @@ describe('SherX', function () {
           .c(this.gov)
           .setWeights(
             [this.tokenA.address, this.tokenB.address],
-            [parseEther('0.5'), parseEther('0.51')],
+            [Uint16Max.div(2), Uint16Max.div(2).add(2)],
             0,
           ),
       ).to.be.revertedWith('SUM');
@@ -120,14 +129,25 @@ describe('SherX', function () {
           .c(this.gov)
           .setWeights(
             [this.tokenA.address, this.tokenB.address],
-            [parseEther('0.5'), parseEther('0.49')],
+            [Uint16Max.div(2), Uint16Max.div(2).sub(1)],
             0,
           ),
       ).to.be.revertedWith('SUM');
     });
     it('Do tokenB, single', async function () {
       await expect(
-        this.sl.c(this.gov).setWeights([this.tokenB.address], [parseEther('1')], 0),
+        this.sl.c(this.gov).setWeights([this.tokenB.address], [Uint16Max], 0),
+      ).to.be.revertedWith('SUM');
+    });
+    it('Do overflow', async function () {
+      await expect(
+        this.sl
+          .c(this.gov)
+          .setWeights(
+            [this.tokenA.address, this.tokenB.address],
+            [0, Uint16Max.add(Uint16Max).add(1)],
+            0,
+          ),
       ).to.be.revertedWith('SUM');
     });
     it('Do 30/70', async function () {
@@ -135,12 +155,12 @@ describe('SherX', function () {
         .c(this.gov)
         .setWeights(
           [this.tokenA.address, this.tokenB.address],
-          [parseEther('0.3'), parseEther('0.7')],
+          [Uint16Fragment(0.3), Uint16Fragment(0.7).add(1)],
           0,
         );
 
-      expect(await this.sl.getSherXWeight(this.tokenA.address)).to.eq(parseEther('0.3'));
-      expect(await this.sl.getSherXWeight(this.tokenB.address)).to.eq(parseEther('0.7'));
+      expect(await this.sl.getSherXWeight(this.tokenA.address)).to.eq(Uint16Fragment(0.3));
+      expect(await this.sl.getSherXWeight(this.tokenB.address)).to.eq(Uint16Fragment(0.7).add(1));
       expect(await this.sl.getWatsonsSherXWeight()).to.eq(0);
     });
     it('Do watsons, exceed sum', async function () {
@@ -149,8 +169,8 @@ describe('SherX', function () {
           .c(this.gov)
           .setWeights(
             [this.tokenA.address, this.tokenB.address],
-            [parseEther('0.1'), parseEther('0.2')],
-            parseEther('0.71'),
+            [Uint16Fragment(0.1), Uint16Fragment(0.2)],
+            Uint16Fragment(0.7).add(2),
           ),
       ).to.be.revertedWith('SUM');
     });
@@ -160,8 +180,8 @@ describe('SherX', function () {
           .c(this.gov)
           .setWeights(
             [this.tokenA.address, this.tokenB.address],
-            [parseEther('0.1'), parseEther('0.2')],
-            parseEther('0.69'),
+            [Uint16Fragment(0.1), Uint16Fragment(0.2)],
+            Uint16Fragment(0.7).add(0),
           ),
       ).to.be.revertedWith('SUM');
     });
@@ -170,26 +190,26 @@ describe('SherX', function () {
         .c(this.gov)
         .setWeights(
           [this.tokenA.address, this.tokenB.address],
-          [parseEther('0.1'), parseEther('0.2')],
-          parseEther('0.7'),
+          [Uint16Fragment(0.1), Uint16Fragment(0.2)],
+          Uint16Fragment(0.7).add(1),
         );
 
-      expect(await this.sl.getSherXWeight(this.tokenA.address)).to.eq(parseEther('0.1'));
-      expect(await this.sl.getSherXWeight(this.tokenB.address)).to.eq(parseEther('0.2'));
-      expect(await this.sl.getWatsonsSherXWeight()).to.eq(parseEther('0.7'));
+      expect(await this.sl.getSherXWeight(this.tokenA.address)).to.eq(Uint16Fragment(0.1));
+      expect(await this.sl.getSherXWeight(this.tokenB.address)).to.eq(Uint16Fragment(0.2));
+      expect(await this.sl.getWatsonsSherXWeight()).to.eq(Uint16Fragment(0.7).add(1));
     });
     it('Do watsons, 20/10/70', async function () {
       await this.sl
         .c(this.gov)
         .setWeights(
           [this.tokenA.address, this.tokenB.address],
-          [parseEther('0.1'), parseEther('0.2')],
+          [Uint16Fragment(0.2), Uint16Fragment(0.1)],
           constants.MaxUint256,
         );
 
-      expect(await this.sl.getSherXWeight(this.tokenA.address)).to.eq(parseEther('0.1'));
-      expect(await this.sl.getSherXWeight(this.tokenB.address)).to.eq(parseEther('0.2'));
-      expect(await this.sl.getWatsonsSherXWeight()).to.eq(parseEther('0.7'));
+      expect(await this.sl.getSherXWeight(this.tokenA.address)).to.eq(Uint16Fragment(0.2));
+      expect(await this.sl.getSherXWeight(this.tokenB.address)).to.eq(Uint16Fragment(0.1));
+      expect(await this.sl.getWatsonsSherXWeight()).to.eq(Uint16Fragment(0.7).add(1));
     });
   });
   describe('harvestFor(address,address)', function () {
@@ -201,7 +221,7 @@ describe('SherX', function () {
       await this.sl.c(this.gov).setWatsonsAddress(this.alice.address);
       await this.sl.c(this.gov).setInitialWeight();
       this.bStart = await blockNumber(
-        this.sl.c(this.gov).setWeights([this.tokenA.address], [parseEther('1')], 0),
+        this.sl.c(this.gov).setWeights([this.tokenA.address], [Uint16Max], 0),
       );
     });
     it('Initial state', async function () {
@@ -396,7 +416,7 @@ describe('SherX', function () {
         .tokenInit(this.tokenA.address, constants.AddressZero, this.lockA.address, false);
       await this.sl.c(this.gov).setWatsonsAddress(this.alice.address);
       await this.sl.c(this.gov).setInitialWeight();
-      await this.sl.c(this.gov).setWeights([this.tokenA.address], [parseEther('1')], 0);
+      await this.sl.c(this.gov).setWeights([this.tokenA.address], [Uint16Max], 0);
       // stake token A
       await this.sl.stake(parseEther('10'), this.alice.address, this.tokenA.address);
       // send SherX tokens to token A holder
@@ -523,7 +543,7 @@ describe('SherX', function () {
         .tokenInit(this.tokenA.address, constants.AddressZero, this.lockA.address, false);
       await this.sl.c(this.gov).setWatsonsAddress(this.alice.address);
       await this.sl.c(this.gov).setInitialWeight();
-      await this.sl.c(this.gov).setWeights([this.tokenA.address], [parseEther('1')], 0);
+      await this.sl.c(this.gov).setWeights([this.tokenA.address], [Uint16Max], 0);
       // stake token A
       await this.sl.stake(parseEther('10'), this.alice.address, this.tokenA.address);
       // send SherX tokens to token A holder
@@ -660,7 +680,7 @@ describe('SherX', function () {
         .tokenInit(this.tokenC.address, this.gov.address, this.lockC.address, false);
       await this.sl.c(this.gov).setWatsonsAddress(this.alice.address);
       await this.sl.c(this.gov).setInitialWeight();
-      await this.sl.c(this.gov).setWeights([this.tokenA.address], [parseEther('1')], 0);
+      await this.sl.c(this.gov).setWeights([this.tokenA.address], [Uint16Max], 0);
       // stake token A
       await this.sl.stake(parseEther('10'), this.alice.address, this.tokenA.address);
       // send SherX tokens to token A holder
@@ -773,7 +793,7 @@ describe('SherX', function () {
         .c(this.gov)
         .setWeights(
           [this.sl.address, this.tokenA.address],
-          [parseEther('0.3'), parseEther('0.7')],
+          [Uint16Fragment('0.3'), Uint16Fragment('0.7').add(1)],
           0,
         );
       this.b0 = await blockNumber(
@@ -796,14 +816,26 @@ describe('SherX', function () {
       expect(await this.sl.balanceOf(this.carol.address)).to.eq(0);
 
       expect(await this.sl.getUnallocatedSherXStored(this.sl.address)).to.eq(0);
-      expect(await this.sl.getTotalUnmintedSherX(this.sl.address)).to.eq(parseEther('0.3'));
-      expect(await this.sl.getUnallocatedSherXTotal(this.sl.address)).to.eq(parseEther('0.3'));
+      expect(await this.sl.getTotalUnmintedSherX(this.sl.address)).to.be.closeTo(
+        parseEther('0.3'),
+        parseUnits('1', 14),
+      );
+      expect(await this.sl.getUnallocatedSherXTotal(this.sl.address)).to.be.closeTo(
+        parseEther('0.3'),
+        parseUnits('1', 14),
+      );
       expect(await this.sl.getStakersPoolBalance(this.sl.address)).to.eq(0);
       expect(await this.sl.getSherXLastAccrued(this.sl.address)).to.eq(this.b0);
 
       expect(await this.sl.getUnallocatedSherXStored(this.tokenA.address)).to.eq(0);
-      expect(await this.sl.getTotalUnmintedSherX(this.tokenA.address)).to.eq(parseEther('0.7'));
-      expect(await this.sl.getUnallocatedSherXTotal(this.tokenA.address)).to.eq(parseEther('0.7'));
+      expect(await this.sl.getTotalUnmintedSherX(this.tokenA.address)).to.be.closeTo(
+        parseEther('0.7'),
+        parseUnits('1', 14),
+      );
+      expect(await this.sl.getUnallocatedSherXTotal(this.tokenA.address)).to.be.closeTo(
+        parseEther('0.7'),
+        parseUnits('1', 14),
+      );
       expect(await this.sl.getStakersPoolBalance(this.tokenA.address)).to.eq(0);
       expect(await this.sl.getSherXLastAccrued(this.tokenA.address)).to.eq(this.b0);
 
@@ -818,18 +850,33 @@ describe('SherX', function () {
       expect(await this.sl.balanceOf(this.carol.address)).to.eq(0);
 
       expect(await this.sl.getUnallocatedSherXStored(this.sl.address)).to.eq(0);
-      expect(await this.sl.getTotalUnmintedSherX(this.sl.address)).to.eq(parseEther('0.6'));
-      expect(await this.sl.getUnallocatedSherXTotal(this.sl.address)).to.eq(parseEther('0.6'));
+      expect(await this.sl.getTotalUnmintedSherX(this.sl.address)).to.be.closeTo(
+        parseEther('0.6'),
+        parseUnits('1', 14),
+      );
+      expect(await this.sl.getUnallocatedSherXTotal(this.sl.address)).to.be.closeTo(
+        parseEther('0.6'),
+        parseUnits('1', 14),
+      );
       expect(await this.sl.getStakersPoolBalance(this.sl.address)).to.eq(0);
       expect(await this.sl.getSherXLastAccrued(this.sl.address)).to.eq(this.b0);
 
-      expect(await this.sl.getUnallocatedSherXStored(this.tokenA.address)).to.eq(parseEther('1.4'));
+      expect(await this.sl.getUnallocatedSherXStored(this.tokenA.address)).to.be.closeTo(
+        parseEther('1.4'),
+        parseUnits('1', 14),
+      );
       expect(await this.sl.getTotalUnmintedSherX(this.tokenA.address)).to.eq(0);
-      expect(await this.sl.getUnallocatedSherXTotal(this.tokenA.address)).to.eq(parseEther('1.4'));
+      expect(await this.sl.getUnallocatedSherXTotal(this.tokenA.address)).to.be.closeTo(
+        parseEther('1.4'),
+        parseUnits('1', 14),
+      );
       expect(await this.sl.getStakersPoolBalance(this.tokenA.address)).to.eq(0);
       expect(await this.sl.getSherXLastAccrued(this.tokenA.address)).to.eq(b1);
 
-      expect(await this.sl.balanceOf(this.sl.address)).to.eq(parseEther('1.4'));
+      expect(await this.sl.balanceOf(this.sl.address)).to.be.closeTo(
+        parseEther('1.4'),
+        parseUnits('1', 14),
+      );
     });
   });
   describe('accrueSherX()', function () {
@@ -844,7 +891,7 @@ describe('SherX', function () {
         .c(this.gov)
         .setWeights(
           [this.sl.address, this.tokenA.address],
-          [parseEther('0.3'), parseEther('0.7')],
+          [Uint16Fragment('0.3'), Uint16Fragment('0.7').add(1)],
           0,
         );
       this.b0 = await blockNumber(
@@ -867,14 +914,26 @@ describe('SherX', function () {
       expect(await this.sl.balanceOf(this.carol.address)).to.eq(0);
 
       expect(await this.sl.getUnallocatedSherXStored(this.sl.address)).to.eq(0);
-      expect(await this.sl.getTotalUnmintedSherX(this.sl.address)).to.eq(parseEther('0.3'));
-      expect(await this.sl.getUnallocatedSherXTotal(this.sl.address)).to.eq(parseEther('0.3'));
+      expect(await this.sl.getTotalUnmintedSherX(this.sl.address)).to.be.closeTo(
+        parseEther('0.3'),
+        parseUnits('1', 14),
+      );
+      expect(await this.sl.getUnallocatedSherXTotal(this.sl.address)).to.be.closeTo(
+        parseEther('0.3'),
+        parseUnits('1', 14),
+      );
       expect(await this.sl.getStakersPoolBalance(this.sl.address)).to.eq(0);
       expect(await this.sl.getSherXLastAccrued(this.sl.address)).to.eq(this.b0);
 
       expect(await this.sl.getUnallocatedSherXStored(this.tokenA.address)).to.eq(0);
-      expect(await this.sl.getTotalUnmintedSherX(this.tokenA.address)).to.eq(parseEther('0.7'));
-      expect(await this.sl.getUnallocatedSherXTotal(this.tokenA.address)).to.eq(parseEther('0.7'));
+      expect(await this.sl.getTotalUnmintedSherX(this.tokenA.address)).to.be.closeTo(
+        parseEther('0.7'),
+        parseUnits('1', 14),
+      );
+      expect(await this.sl.getUnallocatedSherXTotal(this.tokenA.address)).to.be.closeTo(
+        parseEther('0.7'),
+        parseUnits('1', 14),
+      );
       expect(await this.sl.getStakersPoolBalance(this.tokenA.address)).to.eq(0);
       expect(await this.sl.getSherXLastAccrued(this.tokenA.address)).to.eq(this.b0);
 
@@ -891,16 +950,28 @@ describe('SherX', function () {
       expect(await this.sl.getUnallocatedSherXStored(this.sl.address)).to.eq(0);
       expect(await this.sl.getTotalUnmintedSherX(this.sl.address)).to.eq(0);
       expect(await this.sl.getUnallocatedSherXTotal(this.sl.address)).to.eq(0);
-      expect(await this.sl.getStakersPoolBalance(this.sl.address)).to.eq(parseEther('0.6'));
+      expect(await this.sl.getStakersPoolBalance(this.sl.address)).to.be.closeTo(
+        parseEther('0.6'),
+        parseUnits('1', 14),
+      );
       expect(await this.sl.getSherXLastAccrued(this.sl.address)).to.eq(b1);
 
-      expect(await this.sl.getUnallocatedSherXStored(this.tokenA.address)).to.eq(parseEther('1.4'));
+      expect(await this.sl.getUnallocatedSherXStored(this.tokenA.address)).to.be.closeTo(
+        parseEther('1.4'),
+        parseUnits('1', 14),
+      );
       expect(await this.sl.getTotalUnmintedSherX(this.tokenA.address)).to.eq(0);
-      expect(await this.sl.getUnallocatedSherXTotal(this.tokenA.address)).to.eq(parseEther('1.4'));
+      expect(await this.sl.getUnallocatedSherXTotal(this.tokenA.address)).to.be.closeTo(
+        parseEther('1.4'),
+        parseUnits('1', 14),
+      );
       expect(await this.sl.getStakersPoolBalance(this.tokenA.address)).to.eq(0);
       expect(await this.sl.getSherXLastAccrued(this.tokenA.address)).to.eq(b1);
 
-      expect(await this.sl.balanceOf(this.sl.address)).to.eq(parseEther('2'));
+      expect(await this.sl.balanceOf(this.sl.address)).to.be.closeTo(
+        parseEther('2'),
+        parseUnits('1', 1),
+      );
     });
   });
   describe('accrueSherXWatsons()', function () {
@@ -929,6 +1000,7 @@ describe('SherX', function () {
       expect(await this.sl.getWatsonsSherxLastAccrued()).to.eq(this.b0);
       expect(await this.sl.getWatsonsUnmintedSherX()).to.eq(parseEther('1'));
       expect(await this.sl.balanceOf(this.carol.address)).to.eq(0);
+      expect(await this.sl.getTotalSherXUnminted()).to.eq(parseEther('1'));
     });
     it('Do', async function () {
       const b1 = await blockNumber(this.sl.accrueSherXWatsons());
@@ -937,6 +1009,7 @@ describe('SherX', function () {
       expect(await this.sl.getWatsonsSherxLastAccrued()).to.eq(b1);
       expect(await this.sl.getWatsonsUnmintedSherX()).to.eq(0);
       expect(await this.sl.balanceOf(this.carol.address)).to.eq(parseEther('2'));
+      expect(await this.sl.getTotalSherXUnminted()).to.eq(0);
     });
   });
 });

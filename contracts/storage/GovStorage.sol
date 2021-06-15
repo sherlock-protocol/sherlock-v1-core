@@ -16,14 +16,14 @@ library GovStorage {
     // NOTE: UNUSED
     mapping(bytes32 => address) protocolManagers;
     mapping(bytes32 => address) protocolAgents;
-    uint256 unstakeCooldown;
-    uint256 unstakeWindow;
+    uint40 unstakeCooldown;
+    uint40 unstakeWindow;
     mapping(bytes32 => bool) protocolIsCovered;
     IERC20[] tokensStaker;
     IERC20[] tokensSherX;
     address watsonsAddress;
-    uint256 watsonsSherxWeight;
-    uint256 watsonsSherxLastAccrued;
+    uint16 watsonsSherxWeight;
+    uint40 watsonsSherxLastAccrued;
   }
 
   function gs() internal pure returns (Base storage gsx) {

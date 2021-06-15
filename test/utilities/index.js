@@ -142,4 +142,12 @@ module.exports = {
   },
   getDiamondCut,
   FacetCutAction,
+  Uint16Fragment: function (fragment) {
+    const f = BigNumber.from(fragment * 10000);
+    return BigNumber.from(2 ** 16 - 1)
+      .mul(f)
+      .div(10000);
+  },
+  Uint16Max: BigNumber.from(2 ** 16 - 1),
+  Uint32Max: BigNumber.from(2 ** 32 - 1),
 };
