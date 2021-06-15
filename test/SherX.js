@@ -989,6 +989,7 @@ describe('SherX', function () {
       expect(await this.sl.getWatsonsSherxLastAccrued()).to.eq(this.b0);
       expect(await this.sl.getWatsonsUnmintedSherX()).to.eq(parseEther('1'));
       expect(await this.sl.balanceOf(this.carol.address)).to.eq(0);
+      expect(await this.sl.getTotalSherXUnminted()).to.eq(parseEther('1'));
     });
     it('Do', async function () {
       const b1 = await blockNumber(this.sl.accrueSherXWatsons());
@@ -997,6 +998,7 @@ describe('SherX', function () {
       expect(await this.sl.getWatsonsSherxLastAccrued()).to.eq(b1);
       expect(await this.sl.getWatsonsUnmintedSherX()).to.eq(0);
       expect(await this.sl.balanceOf(this.carol.address)).to.eq(parseEther('2'));
+      expect(await this.sl.getTotalSherXUnminted()).to.eq(0);
     });
   });
 });

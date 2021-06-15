@@ -72,7 +72,7 @@ contract SherX is ISherX {
         .sub(gs.watsonsSherxLastAccrued)
         .mul(sx.sherXPerBlock)
         .mul(gs.watsonsSherxWeight)
-        .div(10**18);
+        .div(uint16(-1));
     for (uint256 i; i < gs.tokensStaker.length; i++) {
       total = total.add(getUnmintedSherX(gs.tokensStaker[i]));
     }
