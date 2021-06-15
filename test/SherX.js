@@ -139,6 +139,17 @@ describe('SherX', function () {
         this.sl.c(this.gov).setWeights([this.tokenB.address], [Uint16Max], 0),
       ).to.be.revertedWith('SUM');
     });
+    it('Do overflow', async function () {
+      await expect(
+        this.sl
+          .c(this.gov)
+          .setWeights(
+            [this.tokenA.address, this.tokenB.address],
+            [0, Uint16Max.add(Uint16Max).add(1)],
+            0,
+          ),
+      ).to.be.revertedWith('SUM');
+    });
     it('Do 30/70', async function () {
       await this.sl
         .c(this.gov)
