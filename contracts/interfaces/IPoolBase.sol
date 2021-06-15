@@ -217,7 +217,7 @@ interface IPoolBase {
   //
 
   /// @notice Set `_fee` used for activating cooldowns on `_token`
-  /// @param _fee Fee scaled by 10**18
+  /// @param _fee Fee scaled by uint32(-1)
   /// @param _token Token used
   function setCooldownFee(uint32 _fee, IERC20 _token) external;
 

@@ -40,8 +40,8 @@ interface IGov {
   /// @return Block number
   function getWatsonsSherxLastAccrued() external view returns (uint40);
 
-  /// @notice Returns the last block number the SherX was accrued to the Watsons
-  /// @return Block number
+  /// @notice Returns the amount of SherX the Watsons receive per block
+  /// @return Number of SherX per block
   function getWatsonsSherXPerBlock() external view returns (uint256);
 
   /// @notice Returns the total amount of uminted SherX for the Watsons
