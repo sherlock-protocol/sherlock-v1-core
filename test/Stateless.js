@@ -104,7 +104,7 @@ describe('Stateless', function () {
       it('Invalid sender', async function () {
         await expect(this.sl.setUnstakeWindow(1)).to.be.revertedWith('NOT_GOV_MAIN');
       });
-      it('Success', async function () {
+      it('Invalid window', async function () {
         await expect(this.sl.c(this.gov).setUnstakeWindow(25000001)).to.be.revertedWith('MAX');
       });
       it('Success', async function () {
@@ -115,7 +115,7 @@ describe('Stateless', function () {
       it('Invalid sender', async function () {
         await expect(this.sl.setCooldown(1)).to.be.revertedWith('NOT_GOV_MAIN');
       });
-      it('Success', async function () {
+      it('Invalid cooldown', async function () {
         await expect(this.sl.c(this.gov).setCooldown(25000001)).to.be.revertedWith('MAX');
       });
       it('Success', async function () {
