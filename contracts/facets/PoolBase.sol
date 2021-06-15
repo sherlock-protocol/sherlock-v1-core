@@ -211,7 +211,7 @@ contract PoolBase is IPoolBase {
       getTotalSherXPerBlock(_token).mul(_lock).div(baseData().lockToken.totalSupply().add(_lock));
   }
 
-  function getSherXLastAccrued(IERC20 _token) external view override returns (uint256) {
+  function getSherXLastAccrued(IERC20 _token) external view override returns (uint40) {
     return baseData().sherXLastAccrued;
   }
 

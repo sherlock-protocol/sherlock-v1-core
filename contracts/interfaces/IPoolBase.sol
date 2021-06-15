@@ -188,7 +188,7 @@ interface IPoolBase {
   /// @notice Returns block SHERX was last accrued to `_token`
   /// @param _token Token used
   /// @return Block last accrued
-  function getSherXLastAccrued(IERC20 _token) external view returns (uint256);
+  function getSherXLastAccrued(IERC20 _token) external view returns (uint40);
 
   /// @notice Current exchange rate from lockToken to `_token`
   /// @param _token Token used
