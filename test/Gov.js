@@ -804,7 +804,7 @@ describe('Gov', function () {
       );
     });
   });
-  describe.only('tokenRemove() ─ Balance & FMO', function () {
+  describe('tokenRemove() ─ Balance & FMO', function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
       await this.sl
