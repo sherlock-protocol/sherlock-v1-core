@@ -327,7 +327,6 @@ contract Gov is IGov {
     require(ps.protocols.length == 0, 'ACTIVE_PROTOCOLS');
     require(ps.stakeBalance == 0, 'BALANCE_SET');
     // NOTE: removed because firstMoneyOut will always be less or equal to stakeBalance
-    // require(ps.firstMoneyOut == 0, 'FMO_SET');
     require(ps.unallocatedSherX == 0, 'SHERX_SET');
 
     delete ps.govPool;
