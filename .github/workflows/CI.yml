@@ -16,8 +16,6 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - env:
-          ALCHEMY_KEY: ${{ secrets.ALCHEMY_KEY }}
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
         with:
@@ -36,3 +34,5 @@ jobs:
       - run: yarn
       - run: yarn prettier-diff
       - run: yarn test
+        env:
+          ALCHEMY_KEY: ${{ secrets.ALCHEMY_KEY }}
