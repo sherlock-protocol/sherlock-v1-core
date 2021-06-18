@@ -37,10 +37,23 @@ contract PoolStrategy is IPoolStrategy {
   // State changing methods
   //
 
+  function strategyRemove(IERC20 _token) external override {
+    PoolStorage.Base storage ps = baseData();
+    _enforceGovPool(ps);
+    require(address(ps.strategy) != address(0), 'ZERO');
+    // NOTE: don't check if the current strategy balance = 0
+    // In case the strategy is faulty and the balance can never return 0
+    // The strategy can never be removed. So this function should be used with caution.
+    delete ps.strategy;
+  }
+
   function strategyUpdate(IStrategy _strategy, IERC20 _token) external override {
     PoolStorage.Base storage ps = baseData();
     require(_strategy.want() == _token, 'WANT');
     _enforceGovPool(ps);
+    if (address(ps.strategy) != address(0)) {
+      require(ps.strategy.balanceOf() == 0, 'NOT_EMPTY');
+    }
 
     ps.strategy = _strategy;
   }

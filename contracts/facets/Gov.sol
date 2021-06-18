@@ -285,6 +285,7 @@ contract Gov is IGov {
 
     require(!ps.stakes, 'STAKES_SET');
     require(ps.totalPremiumPerBlock == 0, 'ACTIVE_PREMIUM');
+    require(address(ps.strategy) == address(0), 'ACTIVE_STRATEGY');
 
     uint256 totalToken = ps.firstMoneyOut.add(ps.sherXUnderlying);
 
@@ -313,9 +314,6 @@ contract Gov is IGov {
       _token.safeTransfer(_remaining, balance);
       delete ps.stakeBalance;
     }
-
-    // TODO
-    // verify is strategy is removed
 
     delete ps.sherXUnderlying;
     delete ps.firstMoneyOut;

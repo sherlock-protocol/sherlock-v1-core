@@ -16,6 +16,7 @@ describe('Gov', function () {
       'NativeLock',
       'ForeignLock',
       'RemoveMock',
+      'StrategyMock',
     ]);
 
     await solution(this, 'sl', this.gov);
@@ -31,7 +32,10 @@ describe('Gov', function () {
       ['lockX', this.NativeLock, ['Lock TokenX', 'lockX', this.sl.address]],
     ]);
 
-    await deploy(this, [['removeMock', this.RemoveMock, [this.tokenB.address]]]);
+    await deploy(this, [
+      ['removeMock', this.RemoveMock, [this.tokenB.address]],
+      ['strategyMockA', this.StrategyMock, [this.tokenA.address, this.sl.address]],
+    ]);
 
     await timeTraveler.snapshot();
   });
@@ -637,6 +641,24 @@ describe('Gov', function () {
           .c(this.gov)
           .tokenUnload(this.tokenA.address, this.removeMock.address, this.carol.address),
       ).to.be.revertedWith('ACTIVE_PREMIUM');
+    });
+  });
+  describe('tokenUnload() ─ Active strategy', function () {
+    before(async function () {
+      await timeTraveler.revertSnapshot();
+      await this.sl
+        .c(this.gov)
+        .tokenInit(this.tokenA.address, this.gov.address, this.lockA.address, false);
+
+      await this.sl.c(this.gov).strategyUpdate(this.strategyMockA.address, this.tokenA.address);
+      await this.sl.c(this.gov).tokenDisableStakers(this.tokenA.address, 0);
+    });
+    it('Do', async function () {
+      await expect(
+        this.sl
+          .c(this.gov)
+          .tokenUnload(this.tokenA.address, this.removeMock.address, this.carol.address),
+      ).to.be.revertedWith('ACTIVE_STRATEGY');
     });
   });
   describe('tokenUnload() ─ Active balances (+activate cooldown)', function () {

@@ -32,6 +32,24 @@ describe('PoolStrategy', function () {
 
     await timeTraveler.snapshot();
   });
+  describe('strategyRemove()', function () {
+    before(async function () {
+      await timeTraveler.revertSnapshot();
+      await this.sl.c(this.gov).strategyUpdate(this.strategyMockA.address, this.tokenA.address);
+    });
+    it('Initial state', async function () {
+      expect(await this.sl.getStrategy(this.tokenA.address)).to.eq(this.strategyMockA.address);
+    });
+    it('Do', async function () {
+      await this.sl.c(this.gov).strategyRemove(this.tokenA.address);
+      expect(await this.sl.getStrategy(this.tokenA.address)).to.eq(constants.AddressZero);
+    });
+    it('Do again', async function () {
+      await expect(this.sl.c(this.gov).strategyRemove(this.tokenA.address)).to.be.revertedWith(
+        'ZERO',
+      );
+    });
+  });
   describe('strategyUpdate()', function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
@@ -46,6 +64,15 @@ describe('PoolStrategy', function () {
     it('Do again', async function () {
       await this.sl.c(this.gov).strategyUpdate(this.strategyMockA2.address, this.tokenA.address);
       expect(await this.sl.getStrategy(this.tokenA.address)).to.eq(this.strategyMockA2.address);
+    });
+    it('Do again (active balance)', async function () {
+      await this.tokenA.approve(this.sl.address, parseEther('10000'));
+      await this.sl.stake(parseEther('10'), this.alice.address, this.tokenA.address);
+      await this.sl.c(this.gov).strategyDeposit(parseEther('3'), this.tokenA.address);
+
+      await expect(
+        this.sl.c(this.gov).strategyUpdate(this.strategyMockA.address, this.tokenA.address),
+      ).to.be.revertedWith('NOT_EMPTY');
     });
   });
   describe('strategyDeposit()', function () {

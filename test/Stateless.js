@@ -1508,6 +1508,16 @@ describe('Stateless', function () {
     describe('decimals()', function () {});
   });
   describe('PoolStrategy ─ State Changing', function () {
+    describe('strategyRemove()', function () {
+      it('Invalid sender', async function () {
+        await expect(this.sl.strategyRemove(this.tokenA.address)).to.be.revertedWith('GOV');
+      });
+      it('Invalid token', async function () {
+        await expect(this.sl.strategyRemove(this.tokenB.address)).to.be.revertedWith(
+          'INVALID_TOKEN',
+        );
+      });
+    });
     describe('strategyUpdate()', function () {
       it('Invalid sender', async function () {
         await expect(
