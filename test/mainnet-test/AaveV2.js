@@ -5,7 +5,7 @@ const { prepare, deploy, fork, unfork } = require('../utilities');
 const { constants } = require('ethers');
 const { TimeTraveler } = require('../utilities/snapshot');
 
-describe('Mainnet - AaveV2', function () {
+describe('Mainnet - AaveV2 [ @skip-on-coverage ]', function () {
   before(async function () {
     // MAINNET fork
     await fork(12650000);
