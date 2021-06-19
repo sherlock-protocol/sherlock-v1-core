@@ -26,7 +26,7 @@ Once added and initialized as a staking token, stakers can provide liquidity usi
 
 #### Premiums
 
-Accounts can deposit balance on behalf of a protocol using `depositProtocolBalance()` once a token has been added and initialized as a protocol token, and once the protocol is added to the registry with the token whitelisted as a payment method (using `protocolAdd()`).  Governance can set/update the rate of accruing debt (i.e. the price the protocol pays) using the `Manager.sol` facet. Multiple functions are defined so that premiums can be updated as gas efficiently as possible.
+Accounts can deposit balance on behalf of a protocol using `depositProtocolBalance()` once a token has been added and initialized as a protocol token, and once the protocol is added to the registry with the token whitelisted as a payment method (using `protocolAdd()`). Governance can set/update the rate of accruing debt (i.e. the price the protocol pays) using the `Manager.sol` facet. Multiple functions are defined so that premiums can be updated as gas efficiently as possible.
 
 #### Disable/remove
 
@@ -35,9 +35,10 @@ All good things come to an end, as do some tokens.
 For the longevity of the protocol it is important that tokens can be removed. This is done in multiple steps:
 
 1. `tokenDisableStakers()` is the first step towards completely removing a token. This function can also be called if governance decides to temporarily halt new deposits by stakers.
-2. `tokenUnload()` swaps/removes all the active tokens (of the type to be removed) for another token in the protocol. This way there will be zero balance of the token (to be removed) underlying SHERX.
-3. `tokenDisableProtocol()` requires no protocols to be actively accruing debt (i.e. paying in the token to be removed). It cleans up storage and removes the ability for any protocol to accrue debt in this token.
-4. `tokenRemove()` Removes the main storage in `GovStorage`.
+1. `strategyRemove()` needs to be called if the token still has an active strategy.
+1. `tokenUnload()` swaps/removes all the active tokens (of the type to be removed) for another token in the protocol. This way there will be zero balance of the token (to be removed) underlying SHERX.
+1. `tokenDisableProtocol()` requires no protocols to be actively accruing debt (i.e. paying in the token to be removed). It cleans up storage and removes the ability for any protocol to accrue debt in this token.
+1. `tokenRemove()` Removes the main storage in `GovStorage`.
 
 #### Re-enable
 
