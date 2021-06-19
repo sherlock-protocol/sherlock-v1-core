@@ -85,14 +85,10 @@ library LibPool {
     PoolStorage.Base storage ps = PoolStorage.ps(_token);
     uint256 blocks = block.number.sub(ps.totalPremiumLastPaid);
 
+    uint256 totalAccruedDebt;
     for (uint256 i = 0; i < ps.protocols.length; i++) {
-      _payOffDebt(ps, ps.protocols[i], blocks);
+      totalAccruedDebt = totalAccruedDebt.add(_payOffDebt(ps, ps.protocols[i], blocks));
     }
-    // TODO gas optimalisation check
-    // _getTotalAccruedDebt reads 1 variable from storage (200 gas)
-    // is it cheaper to sum up the debt return value of _payOffDebt()
-    // and store that into ps.sherXUnderlying?
-    uint256 totalAccruedDebt = _getTotalAccruedDebt(ps, blocks);
     // move funds to the sherX etf
     ps.sherXUnderlying = ps.sherXUnderlying.add(totalAccruedDebt);
     ps.totalPremiumLastPaid = uint40(block.number);
@@ -102,8 +98,8 @@ library LibPool {
     PoolStorage.Base storage ps,
     bytes32 _protocol,
     uint256 _blocks
-  ) private {
-    uint256 debt = _accruedDebt(ps, _protocol, _blocks);
+  ) private returns (uint256 debt) {
+    debt = _accruedDebt(ps, _protocol, _blocks);
     ps.protocolBalance[_protocol] = ps.protocolBalance[_protocol].sub(debt);
   }
 
