@@ -131,7 +131,12 @@ interface IPoolBase {
   /// @return Initial ID of unstaking entry
   function getInitialUnstakeEntry(address _staker, IERC20 _token) external view returns (uint256);
 
-  /// @notice Returns amount staked in `_token`
+  /// @notice Returns amount staked in `_token` that is not included in a yield strategy
+  /// @param _token Token used
+  /// @return Amount staked
+  function getUnactivatedStakersPoolBalance(IERC20 _token) external view returns (uint256);
+
+  /// @notice Returns amount staked in `_token` including yield strategy
   /// @param _token Token used
   /// @return Amount staked
   function getStakersPoolBalance(IERC20 _token) external view returns (uint256);

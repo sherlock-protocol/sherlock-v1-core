@@ -30,6 +30,10 @@ class TimeTraveler {
   async setNextBlockTimestamp(timestamp) {
     await this.ethereum.send('evm_setNextBlockTimestamp', [timestamp]);
   }
+
+  async request(request) {
+    await this.ethereum.request(request);
+  }
 }
 
 module.exports.TimeTraveler = TimeTraveler;

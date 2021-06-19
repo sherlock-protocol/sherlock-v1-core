@@ -19,6 +19,7 @@ import './IPayout.sol';
 import './IManager.sol';
 import './IPoolBase.sol';
 import './IPoolStake.sol';
+import './IPoolStrategy.sol';
 
 interface ISherlock is
   IERC173,
@@ -32,5 +33,6 @@ interface ISherlock is
   IPayout,
   IManager,
   IPoolBase,
-  IPoolStake
+  IPoolStake,
+  IPoolStrategy
 {}

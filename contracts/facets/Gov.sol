@@ -285,6 +285,7 @@ contract Gov is IGov {
 
     require(!ps.stakes, 'STAKES_SET');
     require(ps.totalPremiumPerBlock == 0, 'ACTIVE_PREMIUM');
+    require(address(ps.strategy) == address(0), 'ACTIVE_STRATEGY');
 
     uint256 totalToken = ps.firstMoneyOut.add(ps.sherXUnderlying);
 
@@ -297,11 +298,10 @@ contract Gov is IGov {
       PoolStorage.Base storage ps2 = PoolStorage.ps(newToken);
       require(ps2.govPool != address(0), 'EMPTY_SWAP');
 
+      ps2.stakeBalance = ps2.stakeBalance.add(newFmo);
       ps2.firstMoneyOut = ps2.firstMoneyOut.add(newFmo);
       ps2.sherXUnderlying = ps2.sherXUnderlying.add(newSherxUnderlying);
     }
-    delete ps.sherXUnderlying;
-    delete ps.firstMoneyOut;
 
     uint256 totalFee = ps.unallocatedSherX;
     if (totalFee > 0) {
@@ -309,11 +309,14 @@ contract Gov is IGov {
       delete ps.unallocatedSherX;
     }
 
-    uint256 balance = ps.stakeBalance;
+    uint256 balance = ps.stakeBalance.sub(ps.firstMoneyOut);
     if (balance > 0) {
       _token.safeTransfer(_remaining, balance);
       delete ps.stakeBalance;
     }
+
+    delete ps.sherXUnderlying;
+    delete ps.firstMoneyOut;
   }
 
   function tokenRemove(IERC20 _token) external override onlyGovMain {
@@ -323,7 +326,7 @@ contract Gov is IGov {
     require(!ps.premiums, 'PREMIUMS_SET');
     require(ps.protocols.length == 0, 'ACTIVE_PROTOCOLS');
     require(ps.stakeBalance == 0, 'BALANCE_SET');
-    require(ps.firstMoneyOut == 0, 'FMO_SET');
+    // NOTE: removed because firstMoneyOut will always be less or equal to stakeBalance
     require(ps.unallocatedSherX == 0, 'SHERX_SET');
 
     delete ps.govPool;

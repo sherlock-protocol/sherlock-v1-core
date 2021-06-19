@@ -140,9 +140,7 @@ contract Payout is IPayout {
       if (firstMoneyOut > 0) {
         ps.firstMoneyOut = ps.firstMoneyOut.sub(firstMoneyOut);
       }
-      if (amounts > 0) {
-        ps.stakeBalance = ps.stakeBalance.sub(amounts);
-      }
+      ps.stakeBalance = ps.stakeBalance.sub(total);
 
       if (address(token) == address(this)) {
         totalSherX = total;

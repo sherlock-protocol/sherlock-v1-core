@@ -31,16 +31,15 @@ contract PoolOpen is IPoolStake {
   ) internal returns (uint256 lock) {
     require(_amount > 0, 'AMOUNT');
     require(_receiver != address(0), 'RECEIVER');
-    (IERC20 token, PoolStorage.Base storage ps) = baseData();
+    PoolStorage.Base storage ps = baseData();
     require(ps.stakes, 'NO_STAKES');
-    token.safeTransferFrom(msg.sender, address(this), _amount);
+    _token.safeTransferFrom(msg.sender, address(this), _amount);
 
     lock = LibPool.stake(ps, _amount, _receiver);
   }
 
-  function baseData() internal view returns (IERC20 token, PoolStorage.Base storage ps) {
-    token = bps();
-    ps = PoolStorage.ps(token);
+  function baseData() internal view returns (PoolStorage.Base storage ps) {
+    ps = PoolStorage.ps(bps());
     require(ps.govPool != address(0), 'INVALID_TOKEN');
   }
 

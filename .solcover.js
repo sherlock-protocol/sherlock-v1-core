@@ -5,4 +5,10 @@ module.exports = {
   },
   istanbulFolder: './.coverage',
   istanbulReporter: ['html', 'text'],
+  skipFiles: [
+    'strategies/AaveV2.sol',
+    'util/ERC20Mock.sol',
+    'util/RemoveMock.sol',
+    'util/StrategyMock.sol',
+  ],
 };
