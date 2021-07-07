@@ -270,6 +270,7 @@ contract SherX is ISherX {
     LibSherX.accrueUSDPool();
 
     // Note: LibSherX.accrueSherX() is removed as the calcUnderlying already takes it into consideration (without changing state)
+    // Calculate the current `amounts` of underlying `tokens` for `_amount` of SherX
     (IERC20[] memory tokens, uint256[] memory amounts) = LibSherX.calcUnderlying(_amount);
     LibSherXERC20.burn(msg.sender, _amount);
 
@@ -277,11 +278,14 @@ contract SherX is ISherX {
     for (uint256 i; i < tokens.length; i++) {
       PoolStorage.Base storage ps = PoolStorage.ps(tokens[i]);
 
+      // Expensive operation, only execute to prevent tx reverts
       if (amounts[i] > ps.sherXUnderlying) {
         LibPool.payOffDebtAll(tokens[i]);
       }
+      // Remove the token as underlying of SherX
       ps.sherXUnderlying = ps.sherXUnderlying.sub(amounts[i]);
-
+      // As the tokens are transferred, remove from the current usdPool
+      // By summing the total that needs to be deducted in the `subUsdPool` value
       subUsdPool = subUsdPool.add(amounts[i].mul(sx.tokenUSD[tokens[i]]).div(10**18));
 
       tokens[i].safeTransfer(_receiver, amounts[i]);
@@ -329,7 +333,7 @@ contract SherX is ISherX {
       if (withdrawable_amount > 0) {
         // store the data in a single calc
         ps.sWithdrawn[from] = raw_amount.sub(ineglible_yield_amount);
-
+        // The `withdrawable_amount` is allocated to `from`, subtract from `unallocatedSherX`
         ps.unallocatedSherX = ps.unallocatedSherX.sub(withdrawable_amount);
         PoolStorage.Base storage psSherX = PoolStorage.ps(IERC20(address(this)));
         if (from == address(this)) {

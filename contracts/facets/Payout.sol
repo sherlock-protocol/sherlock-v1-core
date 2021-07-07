@@ -63,6 +63,12 @@ contract Payout is IPayout {
     ps.govPayout = _govPayout;
   }
 
+  /// @notice Transfer certain amount of underlying tokens of unallocated SherX to `_payout`
+  /// @param _payout Account to receive underlying tokens
+  /// @param _exclude Token to exclude from payout
+  /// @param curTotalUsdPool The current `sx.totalUsdPool`
+  /// @param totalSherX The amount of SherX to use for payout
+  /// @return sherUsd Total amount of USD of the underlying tokens that are being transferred
   function _doSherX(
     address _payout,
     address _exclude,
@@ -70,26 +76,32 @@ contract Payout is IPayout {
     uint256 totalSherX
   ) private returns (uint256 sherUsd) {
     SherXStorage.Base storage sx = SherXStorage.sx();
+    // Calculate the current `amounts` of underlying `tokens` for `totalSherX`
     (IERC20[] memory tokens, uint256[] memory amounts) = LibSherX.calcUnderlying(totalSherX);
     uint256 subUsdPool;
 
     for (uint256 i; i < tokens.length; i++) {
       PoolStorage.Base storage ps = PoolStorage.ps(tokens[i]);
 
+      // Expensive operation, only execute to prevent tx reverts
       if (amounts[i] > ps.sherXUnderlying) {
         LibPool.payOffDebtAll(tokens[i]);
       }
 
       if (address(tokens[i]) == _exclude) {
+        // Return USD value of token that is excluded from payout
         sherUsd = amounts[i].mul(sx.tokenUSD[tokens[i]]);
       } else {
+        // Remove the token as underlying of SherX
         ps.sherXUnderlying = ps.sherXUnderlying.sub(amounts[i]);
-
+        // As the tokens are transferred, remove from the current usdPool
+        // By summing the total that needs to be deducted in the `subUsdPool` value
         subUsdPool = subUsdPool.add(amounts[i].mul(sx.tokenUSD[tokens[i]]).div(10**18));
         // NOTE: transfer can potentially be optimized, as payout call itself also does transfers
         tokens[i].safeTransfer(_payout, amounts[i]);
       }
     }
+    // Subtract the total amount that needs to be subtracted from the `sx.totalUsdPool`
     sx.totalUsdPool = curTotalUsdPool.sub(subUsdPool);
   }
 
@@ -128,8 +140,11 @@ contract Payout is IPayout {
       require(ps.unallocatedSherX >= unallocatedSherX, 'ERR_UNALLOC_FEE');
 
       if (unallocatedSherX > 0) {
+        // Subtract from `sWeight` as the tokens are not claimable anymore
         ps.sWeight = ps.sWeight.sub(unallocatedSherX);
+        // Subtract from unallocated, as the tokens are now allocated to this payout call
         ps.unallocatedSherX = ps.unallocatedSherX.sub(unallocatedSherX);
+        // Update the memory variable `totalUnallocatedSherX` to execute on `_doSherX` later
         totalUnallocatedSherX = totalUnallocatedSherX.add(unallocatedSherX);
       }
 
@@ -143,6 +158,7 @@ contract Payout is IPayout {
       ps.stakeBalance = ps.stakeBalance.sub(total);
 
       if (address(token) == address(this)) {
+        // If the token address == address(this), it's SherX
         totalSherX = total;
       } else {
         // NOTE: Inside the _doSherX() call tokens are also transferred, potential gas optimalisation if tokens
@@ -152,6 +168,7 @@ contract Payout is IPayout {
     }
 
     if (totalUnallocatedSherX > 0) {
+      // Sum the SherX that is used from the pool + the SherX unallocated as rewards
       totalSherX = totalSherX.add(totalUnallocatedSherX);
     }
     if (totalSherX == 0) {

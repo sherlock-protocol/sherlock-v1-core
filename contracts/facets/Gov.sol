@@ -289,6 +289,13 @@ contract Gov is IGov {
 
     uint256 totalToken = ps.firstMoneyOut.add(ps.sherXUnderlying);
 
+    // `firstMoneyOut` and `sherXUnderlying` are two 'pools' that needs to be swapped
+    // in a single transaction.
+    // If `sherXUnderlying` is not swapped in a single tx, the price of SherX (underlying value)
+    // will drop
+    // If `firstMoneyOut` is not swapped in a single tx, the buffer will be reduced in $ value
+    // This code piece swaps these tokens for other tokens in the solution
+    // The goal is to keep the current $ value of these two 'pools' somewhat equal before/after swap
     if (totalToken > 0) {
       _token.approve(address(_native), totalToken);
 

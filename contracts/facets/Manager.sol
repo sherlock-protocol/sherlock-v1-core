@@ -181,6 +181,8 @@ contract Manager is IManager {
 
     for (uint256 i; i < _protocol.length; i++) {
       require(ps.isProtocol[_protocol[i]], 'NON_PROTOCOL');
+      // This calculation mimicks the logic in `_setProtocolPremium() private`
+      // But only write `newPremium` to storage once
       newPremium = newPremium.sub(ps.protocolPremium[_protocol[i]]).add(_premium[i]);
       ps.protocolPremium[_protocol[i]] = _premium[i];
     }
@@ -318,9 +320,13 @@ contract Manager is IManager {
     require(ps.isProtocol[_protocol], 'NON_PROTOCOL');
 
     oldPremium = ps.totalPremiumPerBlock;
+    // to calculate the new totalPremiumPerBlock
+    // - subtract the original premium the protocol paid.
+    // - add the new premium the protocol is about to pay.
     newPremium = oldPremium.sub(ps.protocolPremium[_protocol]).add(_premium);
 
     ps.totalPremiumPerBlock = newPremium;
+    // Actually register the new premium for the protocol
     ps.protocolPremium[_protocol] = _premium;
   }
 
@@ -386,16 +392,29 @@ contract Manager is IManager {
     uint256 _oldUsd,
     uint256 _newUsd
   ) private view returns (uint256, uint256) {
+    // `sub` represents the old usdPerBlock for this particulair token
+    // This is calculated using the previous stored `totalPremiumPerBlock` and `tokenUSD`
     uint256 sub = _oldPremium.mul(_oldUsd);
+    // `add` represents the new usdPerblock for this particulair token
+    // This is calculated using the current in memory value of `_newPremium` and `_newUsd`
     uint256 add = _newPremium.mul(_newUsd);
+
+    // To make sure the usdPerBlock uint doesn't attempt a potential underflow operation
+    // Changed the order of sub and add's based on if statement
+    // Goal is to subtract the old value `sub` and add the new value `add from `usdPerBlock`
     if (sub > add) {
       usdPerBlock = usdPerBlock.sub(sub.sub(add).div(10**18));
     } else {
       usdPerBlock = usdPerBlock.add(add.sub(sub).div(10**18));
     }
 
-    // Dont change usdPool is prices are equal
+    // In case underyling == 0, the token is not part of the usdPool.
     if (ps.sherXUnderlying > 0) {
+      // To make sure the usdPool uint doesn't attempt a potential underflow operation
+      // Goal is to update the current usdPool based on the `_newUsd` value
+      // ~ substract `_oldUsd` * `ps.sherXUnderlying`
+      // ~ add `_newUsd` * `ps.sherXUnderlying`
+      // If _newUsd == _oldUsd, nothing changes
       if (_newUsd > _oldUsd) {
         usdPool = usdPool.add(_newUsd.sub(_oldUsd).mul(ps.sherXUnderlying).div(10**18));
       } else if (_newUsd < _oldUsd) {
@@ -418,9 +437,10 @@ contract Manager is IManager {
     uint256 _currentTotalSupply = sx20.totalSupply;
 
     if (usdPerBlock > 0 && _currentTotalSupply == 0) {
-      // initial accrue
+      // initial accrue, mint 1 SHERX per block
       sx.sherXPerBlock = 10**18;
     } else if (usdPool > 0) {
+      // Calculate new sherXPerBlock based on the updated usdPerBlock and usdPool values
       sx.sherXPerBlock = _currentTotalSupply.mul(usdPerBlock).div(usdPool);
     } else {
       sx.sherXPerBlock = 0;
