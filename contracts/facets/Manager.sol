@@ -26,6 +26,7 @@ contract Manager is IManager {
     _;
   }
 
+  // Validates if token is eligble for premium payments
   function onlyValidToken(PoolStorage.Base storage ps, IERC20 _token) private view {
     require(address(_token) != address(this), 'SHERX');
     require(ps.premiums, 'WHITELIST');
@@ -225,6 +226,13 @@ contract Manager is IManager {
     _setData(usdPerBlock, usdPool);
   }
 
+  /// @notice Update internal (storage) USD price of `_token` with `_newUsd` and return updated memory variables
+  /// @param _token Token address
+  /// @param _newUsd USD amount
+  /// @param usdPerBlock The sum of internal USD that protocols pay as premium
+  /// @param usdPool The sum of all premiums paid that are still in the pool, multiplied by the internal USD value
+  /// @return Updated usdPerBlock based on `_newUsd`
+  /// @return Updated usdPool based on `_newUsd`
   function _setTokenPrice(
     IERC20 _token,
     uint256 _newUsd,
@@ -248,6 +256,10 @@ contract Manager is IManager {
     return (usdPerBlock, usdPool);
   }
 
+  /// @notice Update internal (storage) USD price of `_token` with `_newUsd`
+  /// @param _token Token address
+  /// @param _newUsd USD amount
+  /// @return The previous usd amount that was stored
   function _setTokenPrice(IERC20 _token, uint256 _newUsd) private returns (uint256 oldUsd) {
     SherXStorage.Base storage sx = SherXStorage.sx();
 
@@ -258,6 +270,14 @@ contract Manager is IManager {
     }
   }
 
+  /// @notice Update premium of `_protocol` using `_token` with `_premium` and return updated memory variables
+  /// @param _protocol Protocol identifier
+  /// @param _token Token address
+  /// @param _premium The new premium per block
+  /// @param usdPerBlock The sum of internal USD that protocols pay as premium
+  /// @param usdPool The sum of all premiums paid that are still in the pool, multiplied by the internal USD value
+  /// @return Updated usdPerBlock based on `_premium`
+  /// @return Updated usdPool based on `_premium`
   function _setProtocolPremium(
     bytes32 _protocol,
     IERC20 _token,
@@ -284,6 +304,12 @@ contract Manager is IManager {
     return (usdPerBlock, usdPool);
   }
 
+  /// @notice Update premium of `_protocol` with `_premium` using pool storage `ps` and return old and new total premium per block
+  /// @param ps Pointer to pool storage based on token address
+  /// @param _protocol Protocol identifier
+  /// @param _premium The new premium per block
+  /// @return Previous sum of premiums being paid in the used token
+  /// @return Updated sum of premiums being paid in the used token
   function _setProtocolPremium(
     PoolStorage.Base storage ps,
     bytes32 _protocol,
@@ -298,6 +324,15 @@ contract Manager is IManager {
     ps.protocolPremium[_protocol] = _premium;
   }
 
+  /// @notice Update premium of `_protocol` using `_token` with `_premium` + update `_token` USD value with `_newUsd` and returns updated memory variables
+  /// @param _protocol Protocol identifier
+  /// @param _token Token address
+  /// @param _premium The new premium per block
+  /// @param _newUsd USD amount
+  /// @param usdPerBlock The sum of internal USD that protocols pay as premium
+  /// @param usdPool The sum of all premiums paid that are still in the pool, multiplied by the internal USD value
+  /// @return Updated usdPerBlock based on `_premium`
+  /// @return Updated usdPool based on `_premium`
   function _setProtocolPremiumAndTokenPrice(
     bytes32 _protocol,
     IERC20 _token,
@@ -323,12 +358,25 @@ contract Manager is IManager {
     return (usdPerBlock, usdPool);
   }
 
+  /// @notice Read current usdPerBlock and usdPool from storage
+  /// @return Current usdPerBlock
+  /// @return Current usdPool
   function _getData() private view returns (uint256 usdPerBlock, uint256 usdPool) {
     SherXStorage.Base storage sx = SherXStorage.sx();
     usdPerBlock = sx.totalUsdPerBlock;
     usdPool = LibSherX.viewAccrueUSDPool();
   }
 
+  /// @notice Update in memory `usdPerBlock` and `usdPool` based on the old/new premiums and prices. Return updated values.
+  /// @param ps Pointer to pool storage based on token address
+  /// @param usdPerBlock Current in memory value of usdPerBlock
+  /// @param usdPool Current in memory value of usdPool
+  /// @param _oldPremium Old sum of premiums paid by protocols using token
+  /// @param _newPremium new sum of premium paid by protocols using token (based on update)
+  /// @param _oldUsd Old stored usd price of token
+  /// @param _newUsd New stored usd price of token (based on update)
+  /// @return Updated usdPerBlock
+  /// @return Updated usdPool
   function _updateData(
     PoolStorage.Base storage ps,
     uint256 usdPerBlock,
@@ -358,6 +406,9 @@ contract Manager is IManager {
     return (usdPerBlock, usdPool);
   }
 
+  /// @notice Use in memory variables of `usdPerBlock` and `usdPool` and write to storage
+  /// @param usdPerBlock Current in memory value of usdPerBlock
+  /// @param usdPool Current in memory value of usdPool
   function _setData(uint256 usdPerBlock, uint256 usdPool) private {
     SherXStorage.Base storage sx = SherXStorage.sx();
     SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
