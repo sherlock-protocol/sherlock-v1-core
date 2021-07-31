@@ -306,12 +306,19 @@ contract SherX is ISherX {
     LibSherX.accrueSherXWatsons();
   }
 
+  /// @notice The `from` account could earn SHERX by holding `token` overtime, the earned amount will be staked.
+  /// @param token The LockToken that could be eligble for SHERX rewards
+  /// @param from The current account that is holding the tokens
+  /// @param to The new account that will be holding the tokens
+  /// @param amount The amount of tokens being transferred
   function doYield(
     ILock token,
     address from,
     address to,
     uint256 amount
   ) private {
+    // The LockToken represents a token staked in the solution.
+    // Verify if the right LockToken is used.
     IERC20 underlying = token.underlying();
     PoolStorage.Base storage ps = PoolStorage.ps(underlying);
     require(ps.lockToken == token, 'SENDER');
@@ -322,6 +329,7 @@ contract SherX is ISherX {
 
     uint256 ineglible_yield_amount;
     if (totalAmount > 0) {
+      // TODO for @evort0x, doesn't `amount` need to be `userAmount`? What are the implications
       ineglible_yield_amount = ps.sWeight.mul(amount).div(totalAmount);
     } else {
       ineglible_yield_amount = amount;
