@@ -462,3 +462,123 @@ describe('Payout - Non active', function () {
     expect(tokensSherX.length).to.eq(0);
   });
 });
+
+describe('Payout - Active users', function () {
+  before(async function () {
+    timeTraveler = new TimeTraveler(network.provider);
+
+    await prepare(this, ['ERC20Mock', 'ERC20Mock6d', 'ERC20Mock8d', 'NativeLock', 'ForeignLock']);
+
+    await solution(this, 'sl', this.gov);
+    await deploy(this, [
+      ['tokenA', this.ERC20Mock, ['TokenA', 'A', parseUnits('1000', 18)]],
+      ['tokenB', this.ERC20Mock6d, ['TokenB', 'B', parseUnits('1000', 6)]],
+      ['tokenC', this.ERC20Mock8d, ['TokenC', 'C', parseUnits('1000', 8)]],
+    ]);
+    await deploy(this, [
+      ['lockA', this.ForeignLock, ['Lock TokenA', 'lockA', this.sl.address, this.tokenA.address]],
+      ['lockB', this.ForeignLock, ['Lock TokenB', 'lockB', this.sl.address, this.tokenB.address]],
+      ['lockC', this.ForeignLock, ['Lock TokenC', 'lockC', this.sl.address, this.tokenC.address]],
+      ['lockX', this.NativeLock, ['Lock TokenX', 'lockX', this.sl.address]],
+    ]);
+    // Add tokenA as valid token
+    await this.sl
+      .c(this.gov)
+      .tokenInit(this.tokenA.address, this.gov.address, this.lockA.address, true);
+
+    await this.sl
+      .c(this.gov)
+      .tokenInit(this.sl.address, this.gov.address, this.lockX.address, false);
+
+    await this.sl.c(this.gov).setCooldown(1);
+    await this.sl.c(this.gov).setUnstakeWindow(1);
+    await this.tokenA.approve(this.sl.address, parseEther('10000'));
+    await this.tokenA.connect(this.bob).approve(this.sl.address, parseEther('10000'));
+    await this.lockA.approve(this.sl.address, parseEther('10000'));
+    await this.lockA.connect(this.bob).approve(this.sl.address, parseEther('10000'));
+
+    await this.tokenA.transfer(this.bob.address, parseEther('10'));
+
+    await this.sl
+      .c(this.gov)
+      .protocolAdd(this.protocolX, this.gov.address, this.gov.address, [this.tokenA.address]);
+    await this.sl.depositProtocolBalance(this.protocolX, parseEther('100'), this.tokenA.address);
+
+    await this.sl.c(this.bob).stake(parseEther('10'), this.bob.address, this.tokenA.address);
+    await this.sl.stake(parseEther('10'), this.alice.address, this.tokenA.address);
+
+    await this.sl.c(this.gov).setWatsonsAddress(this.alice.address);
+    await this.sl.c(this.gov).setInitialWeight();
+    await this.sl.c(this.gov).setWeights([this.tokenA.address], [Uint16Max], 0);
+
+    await this.sl
+      .c(this.gov)
+      ['setProtocolPremiumAndTokenPrice(bytes32,address[],uint256[],uint256[])'](
+        this.protocolX,
+        [this.tokenA.address],
+        [parseEther('1')],
+        [parseEther('1')],
+      );
+
+    await timeTraveler.mine(4);
+    this.b0 = await blockNumber(
+      this.sl
+        .c(this.gov)
+        ['setProtocolPremiumAndTokenPrice(bytes32,address[],uint256[],uint256[])'](
+          this.protocolX,
+          [this.tokenA.address],
+          [parseEther('0')],
+          [parseEther('1')],
+        ),
+    );
+
+    await timeTraveler.snapshot();
+  });
+  it('Initital state', async function () {
+    expect(await this.sl['getSherXBalance(address)'](this.alice.address)).to.eq(parseEther('2.5'));
+    expect(
+      await this.sl['getUnallocatedSherXFor(address,address)'](
+        this.alice.address,
+        this.tokenA.address,
+      ),
+    ).to.eq(parseEther('2.5'));
+
+    expect(await this.sl['getSherXBalance(address)'](this.bob.address)).to.eq(parseEther('2.5'));
+    expect(
+      await this.sl['getUnallocatedSherXFor(address,address)'](
+        this.bob.address,
+        this.tokenA.address,
+      ),
+    ).to.eq(parseEther('2.5'));
+  });
+  it('Do', async function () {
+    await blockNumber(
+      this.sl
+        .c(this.gov)
+        .payout(
+          this.carol.address,
+          [this.tokenA.address],
+          [0],
+          [0],
+          [parseEther('3')],
+          constants.AddressZero,
+        ),
+    );
+
+    expect(await this.sl['getSherXBalance(address)'](this.alice.address)).to.eq(parseEther('1'));
+    expect(
+      await this.sl['getUnallocatedSherXFor(address,address)'](
+        this.alice.address,
+        this.tokenA.address,
+      ),
+    ).to.eq(parseEther('1'));
+
+    expect(await this.sl['getSherXBalance(address)'](this.bob.address)).to.eq(parseEther('1'));
+    expect(
+      await this.sl['getUnallocatedSherXFor(address,address)'](
+        this.bob.address,
+        this.tokenA.address,
+      ),
+    ).to.eq(parseEther('1'));
+  });
+});
