@@ -841,5 +841,37 @@ describe('Pool', function () {
         parseEther('0.4'),
       );
     });
+    describe('Exchange rates, non 18 decimals', function () {
+      before(async function () {
+        await timeTraveler.revertSnapshot();
+        // Add tokenB as valid token
+        await this.sl
+          .c(this.gov)
+          .tokenInit(this.tokenB.address, this.gov.address, this.lockB.address, true);
+        await this.tokenB.approve(this.sl.address, parseEther('10000'));
+      });
+      it('Initial state', async function () {
+        await expect(this.sl.LockToTokenXRate(this.tokenB.address)).to.be.revertedWith('NO_DATA');
+        await expect(this.sl.LockToToken(parseEther('2'), this.tokenB.address)).to.be.revertedWith(
+          'NO_DATA',
+        );
+        expect(await this.sl.TokenToLockXRate(this.tokenB.address)).to.be.eq(parseEther('1'));
+        expect(await this.sl.TokenToLock(parseEther('2'), this.tokenB.address)).to.be.eq(
+          parseEther('1'),
+        );
+      });
+      it('Initial user stake', async function () {
+        await this.sl.stake(parseUnits('10', 6), this.alice.address, this.tokenB.address);
+
+        expect(await this.sl.LockToTokenXRate(this.tokenB.address)).to.be.eq(parseUnits('10', 6));
+        expect(await this.sl.LockToToken(parseEther('2'), this.tokenB.address)).to.be.eq(
+          parseUnits('20', 6),
+        );
+        expect(await this.sl.TokenToLockXRate(this.tokenB.address)).to.be.eq(parseUnits('0.1', 30));
+        expect(await this.sl.TokenToLock(parseEther('2'), this.tokenB.address)).to.be.eq(
+          parseUnits('0.2', 30),
+        );
+      });
+    });
   });
 });
