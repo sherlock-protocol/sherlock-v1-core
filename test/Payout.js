@@ -463,7 +463,7 @@ describe('Payout - Non active', function () {
   });
 });
 
-describe('Payout - Active users', function () {
+describe.only('Payout - Using unallocated SHERX', function () {
   before(async function () {
     timeTraveler = new TimeTraveler(network.provider);
 
@@ -552,6 +552,7 @@ describe('Payout - Active users', function () {
     ).to.eq(parseEther('2.5'));
   });
   it('Do', async function () {
+    await this.sl['harvest()']();
     await blockNumber(
       this.sl
         .c(this.gov)
@@ -560,25 +561,12 @@ describe('Payout - Active users', function () {
           [this.tokenA.address],
           [0],
           [0],
-          [parseEther('3')],
+          [parseEther('2.5')],
           constants.AddressZero,
         ),
     );
-
-    expect(await this.sl['getSherXBalance(address)'](this.alice.address)).to.eq(parseEther('1'));
-    expect(
-      await this.sl['getUnallocatedSherXFor(address,address)'](
-        this.alice.address,
-        this.tokenA.address,
-      ),
-    ).to.eq(parseEther('1'));
-
-    expect(await this.sl['getSherXBalance(address)'](this.bob.address)).to.eq(parseEther('1'));
-    expect(
-      await this.sl['getUnallocatedSherXFor(address,address)'](
-        this.bob.address,
-        this.tokenA.address,
-      ),
-    ).to.eq(parseEther('1'));
+    // CRITICAL, all lock tokens transfers blocked
+    // this includes unstaking, swapping, transferring
+    await this.sl.c(this.bob)['harvest()']();
   });
 });
