@@ -22,7 +22,7 @@ contract PoolStrategy is IPoolStrategy {
   //
 
   function getStrategy(IERC20 _token) external view override returns (IStrategy) {
-    return baseData().strategy;
+    return baseData(_token).strategy;
   }
 
   function _enforceStrategy(PoolStorage.Base storage ps) internal {
@@ -38,7 +38,7 @@ contract PoolStrategy is IPoolStrategy {
   //
 
   function strategyRemove(IERC20 _token) external override {
-    PoolStorage.Base storage ps = baseData();
+    PoolStorage.Base storage ps = baseData(_token);
     _enforceGovPool(ps);
     require(address(ps.strategy) != address(0), 'ZERO');
     // NOTE: don't check if the current strategy balance = 0
@@ -48,7 +48,7 @@ contract PoolStrategy is IPoolStrategy {
   }
 
   function strategyUpdate(IStrategy _strategy, IERC20 _token) external override {
-    PoolStorage.Base storage ps = baseData();
+    PoolStorage.Base storage ps = baseData(_token);
     require(_strategy.want() == _token, 'WANT');
     _enforceGovPool(ps);
     if (address(ps.strategy) != address(0)) {
@@ -60,7 +60,7 @@ contract PoolStrategy is IPoolStrategy {
 
   function strategyDeposit(uint256 _amount, IERC20 _token) external override {
     require(_amount > 0, 'AMOUNT');
-    PoolStorage.Base storage ps = baseData();
+    PoolStorage.Base storage ps = baseData(_token);
     _enforceGovPool(ps);
     _enforceStrategy(ps);
 
@@ -72,7 +72,7 @@ contract PoolStrategy is IPoolStrategy {
 
   function strategyWithdraw(uint256 _amount, IERC20 _token) external override {
     require(_amount > 0, 'AMOUNT');
-    PoolStorage.Base storage ps = baseData();
+    PoolStorage.Base storage ps = baseData(_token);
     _enforceGovPool(ps);
     _enforceStrategy(ps);
 
@@ -81,7 +81,7 @@ contract PoolStrategy is IPoolStrategy {
   }
 
   function strategyWithdrawAll(IERC20 _token) external override {
-    PoolStorage.Base storage ps = baseData();
+    PoolStorage.Base storage ps = baseData(_token);
     _enforceGovPool(ps);
     _enforceStrategy(ps);
 
@@ -89,20 +89,8 @@ contract PoolStrategy is IPoolStrategy {
     ps.stakeBalance = ps.stakeBalance.add(amount);
   }
 
-  function baseData() internal view returns (PoolStorage.Base storage ps) {
-    ps = PoolStorage.ps(bps());
+  function baseData(IERC20 _token) internal view returns (PoolStorage.Base storage ps) {
+    ps = PoolStorage.ps(_token);
     require(ps.govPool != address(0), 'INVALID_TOKEN');
-  }
-
-  function bps() internal pure returns (IERC20 rt) {
-    // These fields are not accessible from assembly
-    bytes memory array = msg.data;
-    uint256 index = msg.data.length;
-
-    // solhint-disable-next-line no-inline-assembly
-    assembly {
-      // Load the 32 bytes word from memory with the address on the lower 20 bytes, and mask those.
-      rt := and(mload(add(array, index)), 0xffffffffffffffffffffffffffffffffffffffff)
-    }
   }
 }
