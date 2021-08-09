@@ -126,27 +126,18 @@ contract Payout is IPayout {
 
     LibSherX.accrueSherX();
 
-    uint256 totalUnallocatedSherX;
     uint256 totalSherX;
 
     for (uint256 i; i < _tokens.length; i++) {
       IERC20 token = _tokens[i];
       uint256 firstMoneyOut = _firstMoneyOut[i];
       uint256 amounts = _amounts[i];
-      uint256 unallocatedSherX = _unallocatedSherX[i];
+      // Unallocated SHERX can not be used for a payout. This could break lock token transfers.
+      // Keep this line here until a fix is found
+      require(_unallocatedSherX[i] == 0, 'NO_UNALLOC');
 
       PoolStorage.Base storage ps = PoolStorage.ps(token);
       require(ps.govPool != address(0), 'INIT');
-      require(ps.unallocatedSherX >= unallocatedSherX, 'ERR_UNALLOC_FEE');
-
-      if (unallocatedSherX > 0) {
-        // Subtract from `sWeight` as the tokens are not claimable anymore
-        ps.sWeight = ps.sWeight.sub(unallocatedSherX);
-        // Subtract from unallocated, as the tokens are now allocated to this payout call
-        ps.unallocatedSherX = ps.unallocatedSherX.sub(unallocatedSherX);
-        // Update the memory variable `totalUnallocatedSherX` to execute on `_doSherX` later
-        totalUnallocatedSherX = totalUnallocatedSherX.add(unallocatedSherX);
-      }
 
       uint256 total = firstMoneyOut.add(amounts);
       if (total == 0) {
@@ -167,10 +158,6 @@ contract Payout is IPayout {
       }
     }
 
-    if (totalUnallocatedSherX > 0) {
-      // Sum the SherX that is used from the pool + the SherX unallocated as rewards
-      totalSherX = totalSherX.add(totalUnallocatedSherX);
-    }
     if (totalSherX == 0) {
       return;
     }

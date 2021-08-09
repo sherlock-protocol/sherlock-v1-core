@@ -1065,7 +1065,7 @@ describe('Stateless', function () {
         await expect(
           this.sl
             .c(this.gov)
-            .payout(this.bob.address, [this.tokenB.address], [1], [1], [1], this.tokenC.address),
+            .payout(this.bob.address, [this.tokenB.address], [1], [1], [0], this.tokenC.address),
         ).to.be.revertedWith('INIT');
       });
       it('Success', async function () {

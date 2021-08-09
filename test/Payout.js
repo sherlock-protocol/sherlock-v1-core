@@ -118,58 +118,6 @@ describe('Payout', function () {
       expect(await this.sl.balanceOf(this.bob.address)).to.eq(parseEther('0'));
     });
   });
-  describe('Unallocated too big', function () {
-    before(async function () {
-      await timeTraveler.revertSnapshot();
-    });
-    it('Do', async function () {
-      await expect(
-        this.sl
-          .c(this.gov)
-          .payout(
-            this.bob.address,
-            [this.tokenA.address],
-            [0],
-            [0],
-            [parseEther('2.1')],
-            constants.AddressZero,
-          ),
-      ).to.be.revertedWith('ERR_UNALLOC_FEE');
-    });
-  });
-  describe('Unallocated', function () {
-    before(async function () {
-      await timeTraveler.revertSnapshot();
-    });
-    it('Do', async function () {
-      const before = await this.sl.getTotalSherX();
-
-      const b1 = await blockNumber(
-        this.sl
-          .c(this.gov)
-          .payout(
-            this.bob.address,
-            [this.tokenA.address],
-            [0],
-            [0],
-            [parseEther('1.5')],
-            constants.AddressZero,
-          ),
-      );
-      // before + 1 for this block minus payout
-      expect(await this.sl.getInternalTotalSupply()).to.eq(
-        before.add(parseEther('1')).sub(parseEther('1.5')),
-      );
-      expect(await this.sl.getInternalTotalSupplySettled()).to.eq(b1);
-
-      expect(await this.sl.getFirstMoneyOut(this.tokenA.address)).to.eq(parseEther('10'));
-      expect(await this.sl.getStakersPoolBalance(this.tokenA.address)).to.eq(parseEther('10'));
-      expect(await this.sl.getUnallocatedSherXTotal(this.tokenA.address)).to.eq(parseEther('0.5'));
-      // The underlying 1.5 tokenA is transferred instead of 1.5 SherX
-      expect(await this.tokenA.balanceOf(this.bob.address)).to.eq(parseEther('1.5'));
-      expect(await this.sl.balanceOf(this.bob.address)).to.eq(0);
-    });
-  });
 });
 
 describe('Payout - SherX', function () {
@@ -370,6 +318,7 @@ describe('Payout - SherX', function () {
     });
   });
 });
+
 describe('Payout - Non active', function () {
   before(async function () {
     timeTraveler = new TimeTraveler(network.provider);
@@ -463,7 +412,7 @@ describe('Payout - Non active', function () {
   });
 });
 
-describe.only('Payout - Using unallocated SHERX', function () {
+describe('Payout - Using unallocated SHERX', function () {
   before(async function () {
     timeTraveler = new TimeTraveler(network.provider);
 
@@ -553,7 +502,7 @@ describe.only('Payout - Using unallocated SHERX', function () {
   });
   it('Do', async function () {
     await this.sl['harvest()']();
-    await blockNumber(
+    await expect(
       this.sl
         .c(this.gov)
         .payout(
@@ -564,9 +513,7 @@ describe.only('Payout - Using unallocated SHERX', function () {
           [parseEther('2.5')],
           constants.AddressZero,
         ),
-    );
-    // CRITICAL, all lock tokens transfers blocked
-    // this includes unstaking, swapping, transferring
+    ).to.be.revertedWith('NO_UNALLOC');
     await this.sl.c(this.bob)['harvest()']();
   });
 });
