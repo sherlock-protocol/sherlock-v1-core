@@ -317,6 +317,46 @@ describe('Payout - SherX', function () {
       expect(await this.tokenC.balanceOf(this.bob.address)).to.eq(0);
     });
   });
+  describe('With unpaid premium', function () {
+    before(async function () {
+      await timeTraveler.revertSnapshot();
+
+      await this.sl.stake(parseEther('10'), this.alice.address, this.tokenA.address);
+      this.b2 = await blockNumber(
+        this.sl
+          .c(this.gov)
+          ['setProtocolPremiumAndTokenPrice(bytes32,address[],uint256[],uint256[])'](
+            this.protocolX,
+            [this.tokenA.address, this.tokenC.address],
+            [parseEther('10'), parseUnits('10', this.tokenC.dec)],
+            [parseEther('1'), parseUnits('1', this.tokenC.usdDec)],
+          ),
+      );
+      await timeTraveler.mine(5);
+      await this.sl['harvest()']();
+    });
+    it('Initital state', async function () {
+      expect(await this.sl.LockToTokenXRate(this.sl.address)).to.eq(parseEther('2'));
+      expect(await this.sl.getPremiumLastPaid(this.tokenC.address)).to.eq(this.b2);
+    });
+    it('Do', async function () {
+      const b3 = await blockNumber(
+        this.sl
+          .c(this.gov)
+          .payout(
+            this.bob.address,
+            [this.sl.address],
+            [0],
+            [parseEther('15')],
+            [0],
+            constants.AddressZero,
+          ),
+      );
+
+      expect(await this.sl.LockToTokenXRate(this.sl.address)).to.eq(parseEther('1.0625'));
+      expect(await this.sl.getPremiumLastPaid(this.tokenC.address)).to.eq(b3);
+    });
+  });
 });
 
 describe('Payout - Non active', function () {
