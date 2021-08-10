@@ -1510,12 +1510,14 @@ describe('Stateless', function () {
   describe('PoolStrategy ─ State Changing', function () {
     describe('strategyRemove()', function () {
       it('Invalid sender', async function () {
-        await expect(this.sl.strategyRemove(this.tokenA.address)).to.be.revertedWith('GOV');
+        await expect(
+          this.sl.strategyRemove(this.tokenA.address, this.bob.address, []),
+        ).to.be.revertedWith('GOV');
       });
       it('Invalid token', async function () {
-        await expect(this.sl.strategyRemove(this.tokenB.address)).to.be.revertedWith(
-          'INVALID_TOKEN',
-        );
+        await expect(
+          this.sl.strategyRemove(this.tokenB.address, this.bob.address, []),
+        ).to.be.revertedWith('INVALID_TOKEN');
       });
     });
     describe('strategyUpdate()', function () {

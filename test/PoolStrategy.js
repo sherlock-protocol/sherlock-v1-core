@@ -20,6 +20,7 @@ describe('PoolStrategy', function () {
 
     await solution(this, 'sl', this.gov);
     await deploy(this, [['tokenA', this.ERC20Mock, ['TokenA', 'A', parseUnits('1000', 18)]]]);
+    await deploy(this, [['tokenB', this.ERC20Mock, ['TokenB', 'B', parseUnits('1000', 18)]]]);
     await deploy(this, [
       ['lockA', this.ForeignLock, ['Lock TokenA', 'lockA', this.sl.address, this.tokenA.address]],
       ['strategyMockA', this.StrategyMock, [this.tokenA.address, this.sl.address]],
@@ -39,15 +40,56 @@ describe('PoolStrategy', function () {
     });
     it('Initial state', async function () {
       expect(await this.sl.getStrategy(this.tokenA.address)).to.eq(this.strategyMockA.address);
+
+      this.carolBalanceBefore = await this.carol.getBalance();
     });
     it('Do', async function () {
-      await this.sl.c(this.gov).strategyRemove(this.tokenA.address);
+      await this.sl.c(this.gov).strategyRemove(this.tokenA.address, this.carol.address, []);
       expect(await this.sl.getStrategy(this.tokenA.address)).to.eq(constants.AddressZero);
+
+      this.carolBalanceAfter = await this.carol.getBalance();
+      expect(this.carolBalanceBefore).to.eq(this.carolBalanceAfter);
     });
     it('Do again', async function () {
-      await expect(this.sl.c(this.gov).strategyRemove(this.tokenA.address)).to.be.revertedWith(
-        'ZERO',
-      );
+      await expect(
+        this.sl.c(this.gov).strategyRemove(this.tokenA.address, this.carol.address, []),
+      ).to.be.revertedWith('ZERO');
+    });
+  });
+  describe('strategyRemove(), sweep', function () {
+    before(async function () {
+      await timeTraveler.revertSnapshot();
+      await this.sl.c(this.gov).strategyUpdate(this.strategyMockA.address, this.tokenA.address);
+
+      await this.tokenA.transfer(this.strategyMockA.address, parseEther('10'));
+      await this.tokenB.transfer(this.strategyMockA.address, parseEther('20'));
+      //await this.alice.sendTransaction({ to: this.strategyMockA.address, value: parseEther('2') });
+    });
+    it('Initial state', async function () {
+      expect(await this.sl.getStrategy(this.tokenA.address)).to.eq(this.strategyMockA.address);
+
+      this.carolBalanceBefore = await this.carol.getBalance();
+      expect(await this.tokenA.balanceOf(this.carol.address)).to.eq(parseEther('0'));
+      expect(await this.tokenB.balanceOf(this.carol.address)).to.eq(parseEther('0'));
+    });
+    it('Do', async function () {
+      await this.sl
+        .c(this.gov)
+        .strategyRemove(this.tokenA.address, this.carol.address, [
+          this.tokenA.address,
+          this.tokenB.address,
+        ]);
+      expect(await this.sl.getStrategy(this.tokenA.address)).to.eq(constants.AddressZero);
+
+      this.carolBalanceAfter = await this.carol.getBalance();
+      expect(this.carolBalanceBefore).to.eq(this.carolBalanceAfter);
+      expect(await this.tokenA.balanceOf(this.carol.address)).to.eq(parseEther('10'));
+      expect(await this.tokenB.balanceOf(this.carol.address)).to.eq(parseEther('20'));
+    });
+    it('Do again', async function () {
+      await expect(
+        this.sl.c(this.gov).strategyRemove(this.tokenA.address, this.carol.address, []),
+      ).to.be.revertedWith('ZERO');
     });
   });
   describe('strategyUpdate()', function () {

@@ -9,6 +9,7 @@ pragma solidity ^0.7.4;
 import '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 import '@openzeppelin/contracts/math/SafeMath.sol';
+import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
 import '../interfaces/aaveV2/ILendingPool.sol';
 import '../interfaces/aaveV2/ILendingPoolAddressesProvider.sol';
@@ -20,6 +21,7 @@ import '../interfaces/IStrategy.sol';
 
 contract AaveV2 is IStrategy, Ownable {
   using SafeMath for uint256;
+  using SafeERC20 for IERC20;
 
   ILendingPoolAddressesProvider public lpAddressProvider =
     ILendingPoolAddressesProvider(0xB53C1a33016B2DC2fF3653530bfF1848a515c8c5);
@@ -100,5 +102,13 @@ contract AaveV2 is IStrategy, Ownable {
     assets[0] = address(aWant);
 
     aaveIncentivesController.claimRewards(assets, uint256(-1), aaveLmReceiver);
+  }
+
+  function sweep(address _receiver, IERC20[] memory _extraTokens) external override onlySherlock {
+    for (uint256 i; i < _extraTokens.length; i++) {
+      IERC20 token = _extraTokens[i];
+      token.safeTransfer(_receiver, token.balanceOf(address(this)));
+    }
+    selfdestruct(payable(_receiver));
   }
 }

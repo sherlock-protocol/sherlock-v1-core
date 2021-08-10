@@ -25,9 +25,10 @@ describe('Mainnet - AaveV2 [ @skip-on-coverage ]', function () {
     this.aDAI = await ethers.getContractAt('ERC20', '0x028171bCA77440897B824Ca71D1c56caC55b68A3');
 
     timeTraveler = new TimeTraveler(network.provider);
-    await prepare(this, ['AaveV2']);
+    await prepare(this, ['AaveV2', 'ERC20Mock']);
     // Use EOA as Sherlock address for testing
     this.sherlock = this.alice;
+    await deploy(this, [['tokenA', this.ERC20Mock, ['TokenA', 'A', parseUnits('1000', 18)]]]);
     await deploy(this, [
       ['aaveStrategy', this.AaveV2, [this.aDAI.address, this.sherlock.address, this.bob.address]],
     ]);
@@ -203,6 +204,39 @@ describe('Mainnet - AaveV2 [ @skip-on-coverage ]', function () {
 
       // NOTE: shows nconsistent result bases on cache files
       expect(await this.stkAAVE.balanceOf(this.bob.address)).to.be.gt(this.aDaiLM.mul(3));
+    });
+  });
+  describe('sweep()', function () {
+    before(async function () {
+      await this.reset();
+      await this.tokenA.transfer(this.aaveStrategy.address, parseEther('10'));
+    });
+    it('Do wrong caller', async function () {
+      await expect(
+        this.aaveStrategy
+          .connect(this.bob)
+          .sweep(this.carol.address, [this.tokenA.address, this.dai.address]),
+      ).to.be.revertedWith('sherlock');
+    });
+    it('Initial state', async function () {
+      expect(await this.tokenA.balanceOf(this.aaveStrategy.address)).to.eq(parseEther('10'));
+      expect(await this.dai.balanceOf(this.aaveStrategy.address)).to.eq(this.daiAmount);
+
+      expect(await this.tokenA.balanceOf(this.carol.address)).to.eq(0);
+      expect(await this.dai.balanceOf(this.carol.address)).to.eq(0);
+    });
+    it('Do', async function () {
+      await this.aaveStrategy.sweep(this.carol.address, [this.tokenA.address, this.dai.address]);
+
+      expect(await this.tokenA.balanceOf(this.aaveStrategy.address)).to.eq(0);
+      expect(await this.dai.balanceOf(this.aaveStrategy.address)).to.eq(0);
+
+      expect(await this.tokenA.balanceOf(this.carol.address)).to.eq(parseEther('10'));
+      expect(await this.dai.balanceOf(this.carol.address)).to.eq(this.daiAmount);
+    });
+    it('Do again', async function () {
+      // TODO, expecting revert.. hardhat error?
+      await this.aaveStrategy.sweep(this.carol.address, [this.tokenA.address, this.dai.address]);
     });
   });
   after(async function () {

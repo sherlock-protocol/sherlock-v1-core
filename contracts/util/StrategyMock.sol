@@ -8,12 +8,14 @@ pragma solidity ^0.7.4;
 
 import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 import '@openzeppelin/contracts/math/SafeMath.sol';
+import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
 import '../interfaces/IStrategy.sol';
 
 contract StrategyMock is IStrategy {
   using SafeMath for uint256;
   using SafeERC20 for ERC20;
+  using SafeERC20 for IERC20;
 
   ERC20 public override want;
   address internal sherlock;
@@ -36,5 +38,13 @@ contract StrategyMock is IStrategy {
 
   function balanceOf() public view override returns (uint256) {
     return want.balanceOf(address(this));
+  }
+
+  function sweep(address _receiver, IERC20[] memory _extraTokens) external override {
+    for (uint256 i; i < _extraTokens.length; i++) {
+      IERC20 token = _extraTokens[i];
+      token.safeTransfer(_receiver, token.balanceOf(address(this)));
+    }
+    selfdestruct(payable(_receiver));
   }
 }

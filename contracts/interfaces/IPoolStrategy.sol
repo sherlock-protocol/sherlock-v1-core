@@ -20,7 +20,11 @@ import './IStrategy.sol';
 interface IPoolStrategy {
   function getStrategy(IERC20 _token) external view returns (IStrategy);
 
-  function strategyRemove(IERC20 _token) external;
+  function strategyRemove(
+    IERC20 _token,
+    address _receiver,
+    IERC20[] memory _extraTokens
+  ) external;
 
   function strategyUpdate(IStrategy _strategy, IERC20 _token) external;
 
