@@ -18,4 +18,6 @@ interface IStrategy {
   function deposit() external;
 
   function balanceOf() external view returns (uint256);
+
+  function sweep(address _receiver, IERC20[] memory _extraTokens) external;
 }
