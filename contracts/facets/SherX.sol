@@ -327,12 +327,12 @@ contract SherX is ISherX {
     uint256 userAmount = ps.lockToken.balanceOf(from);
     uint256 totalAmount = ps.lockToken.totalSupply();
 
-    uint256 ineglible_yield_amount;
+    uint256 ineligible_yield_amount;
     if (totalAmount > 0) {
       // TODO for @evort0x, doesn't `amount` need to be `userAmount`? What are the implications
-      ineglible_yield_amount = ps.sWeight.mul(amount).div(totalAmount);
+      ineligible_yield_amount = ps.sWeight.mul(amount).div(totalAmount);
     } else {
-      ineglible_yield_amount = amount;
+      ineligible_yield_amount = amount;
     }
 
     if (from != address(0)) {
@@ -340,7 +340,7 @@ contract SherX is ISherX {
       uint256 withdrawable_amount = raw_amount.sub(ps.sWithdrawn[from]);
       if (withdrawable_amount > 0) {
         // store the data in a single calc
-        ps.sWithdrawn[from] = raw_amount.sub(ineglible_yield_amount);
+        ps.sWithdrawn[from] = raw_amount.sub(ineligible_yield_amount);
         // The `withdrawable_amount` is allocated to `from`, subtract from `unallocatedSherX`
         ps.unallocatedSherX = ps.unallocatedSherX.sub(withdrawable_amount);
         PoolStorage.Base storage psSherX = PoolStorage.ps(IERC20(address(this)));
@@ -352,16 +352,16 @@ contract SherX is ISherX {
           LibPool.stake(psSherX, withdrawable_amount, from);
         }
       } else {
-        ps.sWithdrawn[from] = ps.sWithdrawn[from].sub(ineglible_yield_amount);
+        ps.sWithdrawn[from] = ps.sWithdrawn[from].sub(ineligible_yield_amount);
       }
     } else {
-      ps.sWeight = ps.sWeight.add(ineglible_yield_amount);
+      ps.sWeight = ps.sWeight.add(ineligible_yield_amount);
     }
 
     if (to != address(0)) {
-      ps.sWithdrawn[to] = ps.sWithdrawn[to].add(ineglible_yield_amount);
+      ps.sWithdrawn[to] = ps.sWithdrawn[to].add(ineligible_yield_amount);
     } else {
-      ps.sWeight = ps.sWeight.sub(ineglible_yield_amount);
+      ps.sWeight = ps.sWeight.sub(ineligible_yield_amount);
     }
   }
 }
