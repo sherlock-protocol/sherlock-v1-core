@@ -134,11 +134,13 @@ contract Gov is IGov {
   }
 
   function setUnstakeWindow(uint40 _unstakeWindow) external override onlyGovMain {
+    require(_unstakeWindow != 0, 'ZERO');
     require(_unstakeWindow < 25000000, 'MAX'); // ~ approximate 10 years of blocks
     GovStorage.gs().unstakeWindow = _unstakeWindow;
   }
 
   function setCooldown(uint40 _period) external override onlyGovMain {
+    require(_period != 0, 'ZERO');
     require(_period < 25000000, 'MAX'); // ~ approximate 10 years of blocks
     GovStorage.gs().unstakeCooldown = _period;
   }
