@@ -136,11 +136,13 @@ describe('Payout - SherX', function () {
       ['tokenA', this.ERC20Mock, ['TokenA', 'A', parseUnits('1000', 18)]],
       ['tokenB', this.ERC20Mock6d, ['TokenB', 'B', parseUnits('1000', 6)]],
       ['tokenC', this.ERC20Mock8d, ['TokenC', 'C', parseUnits('1000', 8)]],
+      ['tokenD', this.ERC20Mock8d, ['TokenD', 'D', parseUnits('1000', 8)]],
     ]);
     await deploy(this, [
       ['lockA', this.ForeignLock, ['Lock TokenA', 'lockA', this.sl.address, this.tokenA.address]],
       ['lockB', this.ForeignLock, ['Lock TokenB', 'lockB', this.sl.address, this.tokenB.address]],
       ['lockC', this.ForeignLock, ['Lock TokenC', 'lockC', this.sl.address, this.tokenC.address]],
+      ['lockD', this.ForeignLock, ['Lock TokenD', 'lockD', this.sl.address, this.tokenD.address]],
       ['lockX', this.NativeLock, ['Lock TokenX', 'lockX', this.sl.address]],
     ]);
 
@@ -159,6 +161,10 @@ describe('Payout - SherX', function () {
     await this.sl
       .c(this.gov)
       .tokenInit(this.sl.address, this.gov.address, this.lockX.address, false);
+
+    await this.sl
+      .c(this.gov)
+      .tokenInit(this.tokenD.address, this.gov.address, constants.AddressZero, false);
 
     await this.sl.c(this.gov).setCooldown(1);
     await this.sl.c(this.gov).setUnstakeWindow(1);
@@ -253,6 +259,13 @@ describe('Payout - SherX', function () {
             constants.AddressZero,
           ),
       ).to.be.revertedWith('STAKE');
+    });
+    it('Do premium token', async function () {
+      await expect(
+        this.sl
+          .c(this.gov)
+          .payout(this.bob.address, [this.tokenD.address], [0], [0], [0], constants.AddressZero),
+      ).to.be.revertedWith('INIT');
     });
     it('Do', async function () {
       const b1 = await blockNumber(

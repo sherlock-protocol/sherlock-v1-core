@@ -136,7 +136,7 @@ contract Payout is IPayout {
       require(_unallocatedSherX[i] == 0, 'NO_UNALLOC');
 
       PoolStorage.Base storage ps = PoolStorage.ps(token);
-      require(ps.govPool != address(0), 'INIT');
+      require(address(ps.lockToken) != address(0), 'INIT');
 
       uint256 total = firstMoneyOut.add(amounts);
       if (total == 0) {
