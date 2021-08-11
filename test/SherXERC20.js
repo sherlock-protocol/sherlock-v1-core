@@ -21,16 +21,16 @@ describe('SherXERC20', function () {
     expect(await this.sl.balanceOf(this.alice.address)).to.eq(0);
     expect(await this.sl.totalSupply()).to.eq(0);
   });
-  it('increaseApproval()', async function () {
-    await this.sl.increaseApproval(this.bob.address, 10);
+  it('increaseAllowance()', async function () {
+    await this.sl.increaseAllowance(this.bob.address, 10);
     expect(await this.sl.allowance(this.alice.address, this.bob.address)).to.eq(10);
-    await this.sl.increaseApproval(this.bob.address, 10);
+    await this.sl.increaseAllowance(this.bob.address, 10);
     expect(await this.sl.allowance(this.alice.address, this.bob.address)).to.eq(20);
   });
-  it('decreaseApproval()', async function () {
-    await this.sl.decreaseApproval(this.bob.address, 5);
+  it('decreaseAllowance()', async function () {
+    await this.sl.decreaseAllowance(this.bob.address, 5);
     expect(await this.sl.allowance(this.alice.address, this.bob.address)).to.eq(15);
-    await this.sl.decreaseApproval(this.bob.address, 25);
+    await this.sl.decreaseAllowance(this.bob.address, 25);
     expect(await this.sl.allowance(this.alice.address, this.bob.address)).to.eq(0);
   });
   it('approve()', async function () {

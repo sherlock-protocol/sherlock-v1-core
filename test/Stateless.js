@@ -1490,34 +1490,34 @@ describe('Stateless', function () {
         );
       });
     });
-    describe('increaseApproval()', function () {
+    describe('increaseAllowance()', function () {
       it('Invalid spender', async function () {
         await expect(
-          this.sl.c(this.gov).increaseApproval(constants.AddressZero, 1),
+          this.sl.c(this.gov).increaseAllowance(constants.AddressZero, 1),
         ).to.be.revertedWith('SPENDER');
       });
       it('Invalid amount', async function () {
         await expect(
-          this.sl.c(this.gov).increaseApproval(this.alice.address, 0),
+          this.sl.c(this.gov).increaseAllowance(this.alice.address, 0),
         ).to.be.revertedWith('AMOUNT');
       });
       it('Success', async function () {
-        await this.sl.c(this.gov).increaseApproval(this.alice.address, 1);
+        await this.sl.c(this.gov).increaseAllowance(this.alice.address, 1);
       });
     });
-    describe('decreaseApproval()', function () {
+    describe('decreaseAllowance()', function () {
       it('Invalid spender', async function () {
         await expect(
-          this.sl.c(this.gov).decreaseApproval(constants.AddressZero, 1),
+          this.sl.c(this.gov).decreaseAllowance(constants.AddressZero, 1),
         ).to.be.revertedWith('SPENDER');
       });
       it('Invalid amount', async function () {
         await expect(
-          this.sl.c(this.gov).decreaseApproval(this.alice.address, 0),
+          this.sl.c(this.gov).decreaseAllowance(this.alice.address, 0),
         ).to.be.revertedWith('AMOUNT');
       });
       it('Success', async function () {
-        await this.sl.c(this.gov).decreaseApproval(this.alice.address, 1);
+        await this.sl.c(this.gov).decreaseAllowance(this.alice.address, 1);
       });
     });
     describe('approve()', function () {

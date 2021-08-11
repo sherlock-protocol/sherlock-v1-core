@@ -35,10 +35,10 @@ interface ISherXERC20 {
   /// @notice Increase the amount of tokens another address can spend
   /// @param _spender Spender
   /// @param _amount Amount to increase by
-  function increaseApproval(address _spender, uint256 _amount) external returns (bool);
+  function increaseAllowance(address _spender, uint256 _amount) external returns (bool);
 
   /// @notice Decrease the amount of tokens another address can spend
   /// @param _spender Spender
   /// @param _amount Amount to decrease by
-  function decreaseApproval(address _spender, uint256 _amount) external returns (bool);
+  function decreaseAllowance(address _spender, uint256 _amount) external returns (bool);
 }

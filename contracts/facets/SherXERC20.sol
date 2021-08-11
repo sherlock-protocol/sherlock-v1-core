@@ -64,7 +64,7 @@ contract SherXERC20 is IERC20, ISherXERC20 {
     sx20.symbol = _symbol;
   }
 
-  function increaseApproval(address _spender, uint256 _amount) external override returns (bool) {
+  function increaseAllowance(address _spender, uint256 _amount) external override returns (bool) {
     require(_spender != address(0), 'SPENDER');
     require(_amount != 0, 'AMOUNT');
     SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
@@ -73,7 +73,7 @@ contract SherXERC20 is IERC20, ISherXERC20 {
     return true;
   }
 
-  function decreaseApproval(address _spender, uint256 _amount) external override returns (bool) {
+  function decreaseAllowance(address _spender, uint256 _amount) external override returns (bool) {
     require(_spender != address(0), 'SPENDER');
     require(_amount != 0, 'AMOUNT');
     SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
