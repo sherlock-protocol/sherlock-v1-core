@@ -23,7 +23,7 @@ library PoolStorage {
     // Address of the lockToken. Representing stakes in this pool
     ILock lockToken;
     // Variable used to calculate the fee when activating the cooldown
-    // Max value is uint32(-1) which creates a 100% fee on the withdrawal
+    // Max value is type(uint32).max which creates a 100% fee on the withdrawal
     uint32 activateCooldownFee;
     // The total amount staked by the stakers in this pool, including value of `firstMoneyOut`
     // if you exclude the `firstMoneyOut` from this value, you get the actual amount of tokens staked
@@ -40,7 +40,7 @@ library PoolStorage {
     // Minted SherX that is assigned as reward for the pool will be added to this value
     uint256 unallocatedSherX;
     // How much sherX is distributed to stakers of this token
-    // The max value is uint16(-1), which means 100% of the total SherX minted is allocated to this pool
+    // The max value is type(uint16).max, which means 100% of the total SherX minted is allocated to this pool
     uint16 sherXWeight;
     // The last block the total amount of rewards were accrued.
     // Accrueing SherX increases the `unallocatedSherX` variable

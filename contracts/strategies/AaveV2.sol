@@ -78,7 +78,7 @@ contract AaveV2 is IStrategy, Ownable {
     require(amount > 0, 'ZERO_AMOUNT');
 
     if (want.allowance(address(this), address(lp)) < amount) {
-      want.safeApprove(address(lp), uint256(-1));
+      want.safeApprove(address(lp), type(uint256).max);
     }
 
     lp.deposit(address(want), amount, address(this), 0);
@@ -89,11 +89,11 @@ contract AaveV2 is IStrategy, Ownable {
     if (aBalance() == 0) {
       return 0;
     }
-    return lp.withdraw(address(want), uint256(-1), msg.sender);
+    return lp.withdraw(address(want), type(uint256).max, msg.sender);
   }
 
   function withdraw(uint256 _amount) external override onlySherlock {
-    require(_amount != uint256(-1), 'MAX');
+    require(_amount != type(uint256).max, 'MAX');
 
     ILendingPool lp = getLp();
     require(lp.withdraw(address(want), _amount, msg.sender) == _amount, 'AAVE');
@@ -103,7 +103,7 @@ contract AaveV2 is IStrategy, Ownable {
     address[] memory assets = new address[](1);
     assets[0] = address(aWant);
 
-    aaveIncentivesController.claimRewards(assets, uint256(-1), aaveLmReceiver);
+    aaveIncentivesController.claimRewards(assets, type(uint256).max, aaveLmReceiver);
   }
 
   function sweep(address _receiver, IERC20[] memory _extraTokens) external override onlySherlock {

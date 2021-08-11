@@ -33,7 +33,7 @@ interface IGov {
 
   /// @notice Returns the weight for the Watsons compensation
   /// @return Watsons compensation weight
-  /// @dev Value is scaled by uint16(-1)
+  /// @dev Value is scaled by type(uint16).max
   function getWatsonsSherXWeight() external view returns (uint16);
 
   /// @notice Returns the last block number the SherX was accrued to the Watsons

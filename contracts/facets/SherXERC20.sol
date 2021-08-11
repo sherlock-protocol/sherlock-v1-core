@@ -109,7 +109,7 @@ contract SherXERC20 is IERC20, ISherXERC20 {
 
     uint256 approval = sx20.allowances[_from][msg.sender];
     // Update approval if not set to max uint256
-    if (approval != uint256(-1)) {
+    if (approval != type(uint256).max) {
       approval = approval.sub(_amount);
 
       sx20.allowances[_from][msg.sender] = approval;

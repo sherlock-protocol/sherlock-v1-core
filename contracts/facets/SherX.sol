@@ -58,7 +58,7 @@ contract SherX is ISherX {
 
     return
       block.number.sub(ps.sherXLastAccrued).mul(sx.sherXPerBlock).mul(ps.sherXWeight).div(
-        uint16(-1)
+        type(uint16).max
       );
   }
 
@@ -72,7 +72,7 @@ contract SherX is ISherX {
         .sub(gs.watsonsSherxLastAccrued)
         .mul(sx.sherXPerBlock)
         .mul(gs.watsonsSherxWeight)
-        .div(uint16(-1));
+        .div(type(uint16).max);
     for (uint256 i; i < gs.tokensStaker.length; i++) {
       total = total.add(getUnmintedSherX(gs.tokensStaker[i]));
     }
@@ -186,7 +186,7 @@ contract SherX is ISherX {
       require(ps.sherXWeight == 0, 'ALREADY_INIT_2');
     }
 
-    gs.watsonsSherxWeight = uint16(-1);
+    gs.watsonsSherxWeight = type(uint16).max;
   }
 
   function setWeights(
@@ -214,7 +214,7 @@ contract SherX is ISherX {
       weightSub = weightSub.add(ps.sherXWeight);
       ps.sherXWeight = _weights[i];
     }
-    if (_watsons != uint256(-1)) {
+    if (_watsons != type(uint256).max) {
       weightAdd = weightAdd.add(uint16(_watsons));
       weightSub = weightSub.add(gs.watsonsSherxWeight);
 

@@ -191,7 +191,7 @@ contract PoolBase is IPoolBase {
   }
 
   function getTotalSherXPerBlock(IERC20 _token) public view override returns (uint256) {
-    return SherXStorage.sx().sherXPerBlock.mul(baseData(_token).sherXWeight).div(uint16(-1));
+    return SherXStorage.sx().sherXPerBlock.mul(baseData(_token).sherXWeight).div(type(uint16).max);
   }
 
   function getSherXPerBlock(IERC20 _token) external view override returns (uint256) {
@@ -289,7 +289,7 @@ contract PoolBase is IPoolBase {
 
     LibPool.payOffDebtAll(_token);
 
-    if (_amount == uint256(-1)) {
+    if (_amount == type(uint256).max) {
       _amount = ps.protocolBalance[_protocol];
     }
 
@@ -302,7 +302,7 @@ contract PoolBase is IPoolBase {
     PoolStorage.Base storage ps = baseData(_token);
 
     ps.lockToken.safeTransferFrom(msg.sender, address(this), _amount);
-    uint256 fee = _amount.mul(ps.activateCooldownFee).div(uint32(-1));
+    uint256 fee = _amount.mul(ps.activateCooldownFee).div(type(uint32).max);
     if (fee > 0) {
       // stake of user gets burned
       // representative amount token get added to first money out pool

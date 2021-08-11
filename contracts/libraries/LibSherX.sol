@@ -110,7 +110,7 @@ library LibSherX {
         .sub(gs.watsonsSherxLastAccrued)
         .mul(sherXPerBlock)
         .mul(gs.watsonsSherxWeight)
-        .div(uint16(-1));
+        .div(type(uint16).max);
     // need to settle before return, as updating the sherxperlblock/weight
     // after it was 0 will result in a too big amount (accured will be < block.number)
     gs.watsonsSherxLastAccrued = uint40(block.number);
@@ -123,7 +123,7 @@ library LibSherX {
   function _accrueSherX(IERC20 _token, uint256 sherXPerBlock) private returns (uint256 sherX) {
     PoolStorage.Base storage ps = PoolStorage.ps(_token);
     sherX = block.number.sub(ps.sherXLastAccrued).mul(sherXPerBlock).mul(ps.sherXWeight).div(
-      uint16(-1)
+      type(uint16).max
     );
     // need to settle before return, as updating the sherxperlblock/weight
     // after it was 0 will result in a too big amount (accured will be < block.number)

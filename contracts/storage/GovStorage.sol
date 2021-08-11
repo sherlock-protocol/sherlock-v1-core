@@ -32,7 +32,7 @@ library GovStorage {
     // The address of the watsons, an account that can receive SherX rewards
     address watsonsAddress;
     // How much sherX is distributed to this account
-    // The max value is uint16(-1), which means 100% of the total SherX minted is allocated to this acocunt
+    // The max value is type(uint16).max, which means 100% of the total SherX minted is allocated to this acocunt
     uint16 watsonsSherxWeight;
     // The last block the total amount of rewards were accrued.
     uint40 watsonsSherxLastAccrued;

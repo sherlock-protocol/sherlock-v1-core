@@ -55,7 +55,7 @@ contract Gov is IGov {
     GovStorage.Base storage gs = GovStorage.gs();
     SherXStorage.Base storage sx = SherXStorage.sx();
 
-    return sx.sherXPerBlock.mul(gs.watsonsSherxWeight).div(uint16(-1));
+    return sx.sherXPerBlock.mul(gs.watsonsSherxWeight).div(type(uint16).max);
   }
 
   function getWatsonsUnmintedSherX() external view override returns (uint256) {
