@@ -202,26 +202,26 @@ contract SherX is ISherX {
 
     GovStorage.Base storage gs = GovStorage.gs();
 
-    uint256 weightAdd;
-    uint256 weightSub;
+    uint256 totalWeightNew;
+    uint256 totalWeightOld;
 
     for (uint256 i; i < _tokens.length; i++) {
       PoolStorage.Base storage ps = PoolStorage.ps(_tokens[i]);
       // Disabled tokens can not have ps.sherXWeight > 0
       require(ps.stakes, 'DISABLED');
 
-      weightAdd = weightAdd.add(_weights[i]);
-      weightSub = weightSub.add(ps.sherXWeight);
+      totalWeightNew = totalWeightNew.add(_weights[i]);
+      totalWeightOld = totalWeightOld.add(ps.sherXWeight);
       ps.sherXWeight = _weights[i];
     }
     if (_watsons != type(uint256).max) {
-      weightAdd = weightAdd.add(uint16(_watsons));
-      weightSub = weightSub.add(gs.watsonsSherxWeight);
+      totalWeightNew = totalWeightNew.add(uint16(_watsons));
+      totalWeightOld = totalWeightOld.add(gs.watsonsSherxWeight);
 
       gs.watsonsSherxWeight = uint16(_watsons);
     }
 
-    require(weightAdd == weightSub, 'SUM');
+    require(totalWeightNew == totalWeightOld, 'SUM');
   }
 
   function harvest() external override {
