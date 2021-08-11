@@ -94,7 +94,7 @@ contract AaveV2 is IStrategy, Ownable {
     require(_amount != uint256(-1), 'MAX');
 
     ILendingPool lp = getLp();
-    lp.withdraw(address(want), _amount, msg.sender);
+    require(lp.withdraw(address(want), _amount, msg.sender) == _amount, 'AAVE');
   }
 
   function claimRewards() external {
