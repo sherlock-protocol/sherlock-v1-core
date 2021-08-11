@@ -232,10 +232,7 @@ contract Gov is IGov {
       if (address(ps.lockToken) == address(0)) {
         require(_lock.getOwner() == address(this), 'OWNER');
         require(_lock.totalSupply() == 0, 'SUPPLY');
-        // If not native (e.g. NOT SherX), verify underlying mapping
-        if (address(_token) != address(this)) {
-          require(_lock.underlying() == _token, 'UNDERLYING');
-        }
+        require(_lock.underlying() == _token, 'UNDERLYING');
         ps.lockToken = _lock;
       }
       if (address(ps.lockToken) == address(_lock)) {
