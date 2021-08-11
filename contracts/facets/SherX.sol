@@ -40,8 +40,7 @@ contract SherX is ISherX {
   }
 
   function getTotalUsdPool() external view override returns (uint256) {
-    SherXStorage.Base storage sx = SherXStorage.sx();
-    return sx.totalUsdPool.add(block.number.sub(sx.totalUsdLastSettled).mul(sx.totalUsdPerBlock));
+    return LibSherX.viewAccrueUSDPool();
   }
 
   function getTotalUsdLastSettled() external view override returns (uint256) {
@@ -207,7 +206,7 @@ contract SherX is ISherX {
 
     for (uint256 i; i < _tokens.length; i++) {
       PoolStorage.Base storage ps = PoolStorage.ps(_tokens[i]);
-      // Disabled tokens can not have ps.sherXWeight > 0
+      // Disabled tokens can not have ps.sherXWeight != 0
       require(ps.stakes, 'DISABLED');
 
       totalWeightNew = totalWeightNew.add(_weights[i]);
@@ -240,7 +239,8 @@ contract SherX is ISherX {
 
   function harvestFor(address _user) public override {
     GovStorage.Base storage gs = GovStorage.gs();
-    for (uint256 i; i < gs.tokensStaker.length; i++) {
+    uint256 length = gs.tokensStaker.length;
+    for (uint256 i; i < length; i++) {
       PoolStorage.Base storage ps = PoolStorage.ps(gs.tokensStaker[i]);
       harvestFor(_user, ps.lockToken);
     }
@@ -248,9 +248,9 @@ contract SherX is ISherX {
 
   function harvestFor(address _user, ILock _token) public override {
     // could potentially call harvest function for token that are not in the pool
-    // if balance > 0, tx will revert
+    // if balance != 0, tx will revert
     uint256 stakeBalance = _token.balanceOf(_user);
-    if (stakeBalance > 0) {
+    if (stakeBalance != 0) {
       doYield(_token, _user, _user, 0);
     }
     emit Harvest(_user, _token);
@@ -263,7 +263,7 @@ contract SherX is ISherX {
   }
 
   function redeem(uint256 _amount, address _receiver) external override {
-    require(_amount > 0, 'AMOUNT');
+    require(_amount != 0, 'AMOUNT');
     require(_receiver != address(0), 'RECEIVER');
 
     SherXStorage.Base storage sx = SherXStorage.sx();
@@ -328,7 +328,7 @@ contract SherX is ISherX {
     uint256 totalAmount = ps.lockToken.totalSupply();
 
     uint256 ineligible_yield_amount;
-    if (totalAmount > 0) {
+    if (totalAmount != 0) {
       // TODO for @evort0x, doesn't `amount` need to be `userAmount`? What are the implications
       ineligible_yield_amount = ps.sWeight.mul(amount).div(totalAmount);
     } else {
@@ -338,7 +338,7 @@ contract SherX is ISherX {
     if (from != address(0)) {
       uint256 raw_amount = ps.sWeight.mul(userAmount).div(totalAmount);
       uint256 withdrawable_amount = raw_amount.sub(ps.sWithdrawn[from]);
-      if (withdrawable_amount > 0) {
+      if (withdrawable_amount != 0) {
         // store the data in a single calc
         ps.sWithdrawn[from] = raw_amount.sub(ineligible_yield_amount);
         // The `withdrawable_amount` is allocated to `from`, subtract from `unallocatedSherX`

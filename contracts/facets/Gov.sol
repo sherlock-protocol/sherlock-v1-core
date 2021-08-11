@@ -184,7 +184,7 @@ contract Gov is IGov {
     onlyGovMain
   {
     require(_protocol != bytes32(0), 'ZERO_PROTOCOL');
-    require(_tokens.length > 0, 'ZERO');
+    require(_tokens.length != 0, 'ZERO');
 
     GovStorage.Base storage gs = GovStorage.gs();
     require(gs.protocolIsCovered[_protocol], 'NOT_COVERED');
@@ -208,7 +208,7 @@ contract Gov is IGov {
       IERC20 token = gs.tokensSherX[i];
 
       PoolStorage.Base storage ps = PoolStorage.ps(token);
-      // basically need to check if accruedDebt > 0, but this is true in case protocolPremium > 0
+      // basically need to check if accruedDebt != 0, but this is true in case protocolPremium != 0
       require(ps.protocolPremium[_protocol] == 0, 'DEBT');
       require(!ps.isProtocol[_protocol], 'POOL_PROTOCOL');
     }
@@ -312,7 +312,7 @@ contract Gov is IGov {
     // If `firstMoneyOut` is not swapped in a single tx, the buffer will be reduced in $ value
     // This code piece swaps these tokens for other tokens in the solution
     // The goal is to keep the current $ value of these two 'pools' somewhat equal before/after swap
-    if (totalToken > 0) {
+    if (totalToken != 0) {
       _token.safeApprove(address(_native), totalToken);
 
       (IERC20 newToken, uint256 newFmo, uint256 newSherxUnderlying) =
@@ -327,13 +327,13 @@ contract Gov is IGov {
     }
 
     uint256 totalFee = ps.unallocatedSherX;
-    if (totalFee > 0) {
+    if (totalFee != 0) {
       IERC20(address(this)).safeTransfer(_remaining, totalFee);
       delete ps.unallocatedSherX;
     }
 
     uint256 balance = ps.stakeBalance.sub(ps.firstMoneyOut);
-    if (balance > 0) {
+    if (balance != 0) {
       _token.safeTransfer(_remaining, balance);
     }
 

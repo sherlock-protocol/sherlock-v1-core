@@ -11,10 +11,25 @@ import '../interfaces/IStrategy.sol';
 
 // TokenStorage
 library PoolStorage {
-  string constant POOL_STORAGE_PREFIX = 'diamond.sherlock.pool.';
+  bytes32 constant POOL_STORAGE_PREFIX = 'diamond.sherlock.pool.';
 
   struct Base {
     address govPool;
+    // Variable used to calculate the fee when activating the cooldown
+    // Max value is type(uint32).max which creates a 100% fee on the withdrawal
+    uint32 activateCooldownFee;
+    // How much sherX is distributed to stakers of this token
+    // The max value is type(uint16).max, which means 100% of the total SherX minted is allocated to this pool
+    uint16 sherXWeight;
+    // The last block the total amount of rewards were accrued.
+    // Accrueing SherX increases the `unallocatedSherX` variable
+    uint40 sherXLastAccrued;
+    // Indicates if protocol are able to pay premiums with this token
+    // If this value is true, the token is also included as underlying of the SherX
+    bool premiums;
+    // Protocol debt can only be settled at once for all the protocols at the same time
+    // This variable is the block number the last time all the protocols debt was settled
+    uint40 totalPremiumLastPaid;
     //
     // Staking
     //
@@ -22,9 +37,6 @@ library PoolStorage {
     bool stakes;
     // Address of the lockToken. Representing stakes in this pool
     ILock lockToken;
-    // Variable used to calculate the fee when activating the cooldown
-    // Max value is type(uint32).max which creates a 100% fee on the withdrawal
-    uint32 activateCooldownFee;
     // The total amount staked by the stakers in this pool, including value of `firstMoneyOut`
     // if you exclude the `firstMoneyOut` from this value, you get the actual amount of tokens staked
     // This value is also excluding funds deposited in a strategy.
@@ -39,22 +51,10 @@ library PoolStorage {
     // SherX could be minted before the stakers call the harvest() function
     // Minted SherX that is assigned as reward for the pool will be added to this value
     uint256 unallocatedSherX;
-    // How much sherX is distributed to stakers of this token
-    // The max value is type(uint16).max, which means 100% of the total SherX minted is allocated to this pool
-    uint16 sherXWeight;
-    // The last block the total amount of rewards were accrued.
-    // Accrueing SherX increases the `unallocatedSherX` variable
-    uint40 sherXLastAccrued;
     // Non-native variables
     // These variables are used to calculate the right amount of SherX rewards for the token staked
     mapping(address => uint256) sWithdrawn;
     uint256 sWeight;
-    //
-    // Protocol payments
-    //
-    // Indicates if protocol are able to pay premiums with this token
-    // If this value is true, the token is also included as underlying of the SherX
-    bool premiums;
     // Storing the protocol token balance based on the protocols bytes32 indentifier
     mapping(bytes32 => uint256) protocolBalance;
     // Storing the protocol premium, the amount of debt the protocol builds up per block.
@@ -62,9 +62,6 @@ library PoolStorage {
     mapping(bytes32 => uint256) protocolPremium;
     // The sum of all the protocol premiums, the total amount of debt that builds up in this token. (per block)
     uint256 totalPremiumPerBlock;
-    // Protocol debt can only be settled at once for all the protocols at the same time
-    // This variable is the block number the last time all the protocols debt was settled
-    uint40 totalPremiumLastPaid;
     // How much token (this) is available for sherX holders
     uint256 sherXUnderlying;
     // Check if the protocol is included in the token pool
@@ -84,7 +81,7 @@ library PoolStorage {
   }
 
   function ps(IERC20 _token) internal pure returns (Base storage psx) {
-    bytes32 position = keccak256(abi.encode(POOL_STORAGE_PREFIX, _token));
+    bytes32 position = keccak256(abi.encodePacked(POOL_STORAGE_PREFIX, _token));
     assembly {
       psx.slot := position
     }

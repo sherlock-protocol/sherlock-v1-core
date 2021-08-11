@@ -143,7 +143,12 @@ contract PoolBase is IPoolBase {
     return ps.unstakeEntries[_staker].length;
   }
 
-  function getUnactivatedStakersPoolBalance(IERC20 _token) public view override returns (uint256) {
+  function getUnactivatedStakersPoolBalance(IERC20 _token)
+    external
+    view
+    override
+    returns (uint256)
+  {
     return baseData(_token).stakeBalance;
   }
 
@@ -167,7 +172,7 @@ contract PoolBase is IPoolBase {
       );
   }
 
-  function getTotalUnmintedSherX(IERC20 _token) public view override returns (uint256) {
+  function getTotalUnmintedSherX(IERC20 _token) external view override returns (uint256) {
     baseData(_token);
     return LibPool.getTotalUnmintedSherX(_token);
   }
@@ -267,7 +272,7 @@ contract PoolBase is IPoolBase {
     uint256 _amount,
     IERC20 _token
   ) external override {
-    require(_amount > 0, 'AMOUNT');
+    require(_amount != 0, 'AMOUNT');
     require(GovStorage.gs().protocolIsCovered[_protocol], 'PROTOCOL');
     PoolStorage.Base storage ps = baseData(_token);
     require(ps.isProtocol[_protocol], 'NO_DEPOSIT');
@@ -283,7 +288,7 @@ contract PoolBase is IPoolBase {
     IERC20 _token
   ) external override {
     require(msg.sender == GovStorage.gs().protocolAgents[_protocol], 'SENDER');
-    require(_amount > 0, 'AMOUNT');
+    require(_amount != 0, 'AMOUNT');
     require(_receiver != address(0), 'RECEIVER');
     PoolStorage.Base storage ps = baseData(_token);
 
@@ -298,12 +303,12 @@ contract PoolBase is IPoolBase {
   }
 
   function activateCooldown(uint256 _amount, IERC20 _token) external override returns (uint256) {
-    require(_amount > 0, 'AMOUNT');
+    require(_amount != 0, 'AMOUNT');
     PoolStorage.Base storage ps = baseData(_token);
 
     ps.lockToken.safeTransferFrom(msg.sender, address(this), _amount);
     uint256 fee = _amount.mul(ps.activateCooldownFee).div(type(uint32).max);
-    if (fee > 0) {
+    if (fee != 0) {
       // stake of user gets burned
       // representative amount token get added to first money out pool
       uint256 tokenAmount = fee.mul(LibPool.stakeBalance(ps)).div(ps.lockToken.totalSupply());
@@ -406,13 +411,13 @@ contract PoolBase is IPoolBase {
     }
 
     // send the remainder of the protocol balance to the sherx underlying
-    if (_forceDebt && accrued > 0) {
+    if (_forceDebt && accrued != 0) {
       ps.sherXUnderlying = ps.sherXUnderlying.add(ps.protocolBalance[_protocol]);
       delete ps.protocolBalance[_protocol];
     }
 
     // send any leftovers back to the protocol receiver
-    if (ps.protocolBalance[_protocol] > 0) {
+    if (ps.protocolBalance[_protocol] != 0) {
       _token.safeTransfer(_receiver, ps.protocolBalance[_protocol]);
       delete ps.protocolBalance[_protocol];
     }
@@ -423,7 +428,7 @@ contract PoolBase is IPoolBase {
     ps.protocols.pop();
     ps.isProtocol[_protocol] = false;
     // could still be >0, if accrued more debt than needed.
-    if (ps.protocolPremium[_protocol] > 0) {
+    if (ps.protocolPremium[_protocol] != 0) {
       ps.totalPremiumPerBlock = ps.totalPremiumPerBlock.sub(ps.protocolPremium[_protocol]);
       delete ps.protocolPremium[_protocol];
     }

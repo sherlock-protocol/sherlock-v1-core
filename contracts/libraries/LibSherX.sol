@@ -52,35 +52,34 @@ library LibSherX {
   {
     GovStorage.Base storage gs = GovStorage.gs();
 
-    tokens = new IERC20[](gs.tokensSherX.length);
-    amounts = new uint256[](gs.tokensSherX.length);
+    uint256 length = gs.tokensSherX.length;
+
+    tokens = gs.tokensSherX;
+    amounts = new uint256[](length);
 
     uint256 total = getTotalSherX();
 
-    for (uint256 i; i < gs.tokensSherX.length; i++) {
+    for (uint256 i; i < length; i++) {
       IERC20 token = gs.tokensSherX[i];
-      tokens[i] = token;
 
-      if (total > 0) {
+      if (total != 0) {
         PoolStorage.Base storage ps = PoolStorage.ps(token);
         amounts[i] = ps.sherXUnderlying.add(LibPool.getTotalAccruedDebt(token)).mul(_amount).div(
           total
         );
-      } else {
-        amounts[i] = 0;
       }
     }
   }
 
-  function accrueSherX(IERC20 _token) public {
+  function accrueSherX(IERC20 _token) external {
     SherXStorage.Base storage sx = SherXStorage.sx();
     uint256 sherX = _accrueSherX(_token, sx.sherXPerBlock);
-    if (sherX > 0) {
+    if (sherX != 0) {
       LibSherXERC20.mint(address(this), sherX);
     }
   }
 
-  function accrueSherXWatsons() public {
+  function accrueSherXWatsons() external {
     SherXStorage.Base storage sx = SherXStorage.sx();
     _accrueSherXWatsons(sx.sherXPerBlock);
   }
@@ -91,10 +90,11 @@ library LibSherX {
     GovStorage.Base storage gs = GovStorage.gs();
     uint256 sherXPerBlock = sx.sherXPerBlock;
     uint256 sherX;
-    for (uint256 i; i < gs.tokensStaker.length; i++) {
+    uint256 length = gs.tokensStaker.length;
+    for (uint256 i; i < length; i++) {
       sherX = sherX.add(_accrueSherX(gs.tokensStaker[i], sherXPerBlock));
     }
-    if (sherX > 0) {
+    if (sherX != 0) {
       LibSherXERC20.mint(address(this), sherX);
     }
 
@@ -122,15 +122,16 @@ library LibSherX {
 
   function _accrueSherX(IERC20 _token, uint256 sherXPerBlock) private returns (uint256 sherX) {
     PoolStorage.Base storage ps = PoolStorage.ps(_token);
-    sherX = block.number.sub(ps.sherXLastAccrued).mul(sherXPerBlock).mul(ps.sherXWeight).div(
+    uint256 lastAccrued = ps.sherXLastAccrued;
+    if (lastAccrued == block.number) {
+      return 0;
+    }
+    sherX = block.number.sub(lastAccrued).mul(sherXPerBlock).mul(ps.sherXWeight).div(
       type(uint16).max
     );
     // need to settle before return, as updating the sherxperlblock/weight
     // after it was 0 will result in a too big amount (accured will be < block.number)
     ps.sherXLastAccrued = uint40(block.number);
-    if (sherX == 0) {
-      return 0;
-    }
     if (address(_token) == address(this)) {
       ps.stakeBalance = ps.stakeBalance.add(sherX);
     } else {

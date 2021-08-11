@@ -6,7 +6,6 @@ pragma solidity 0.7.6;
 * Sherlock Protocol: https://sherlock.xyz
 /******************************************************************************/
 
-import '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/token/ERC20/SafeERC20.sol';
 import '@openzeppelin/contracts/math/SafeMath.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
@@ -19,20 +18,20 @@ import '../interfaces/aaveV2/IAToken.sol';
 
 import '../interfaces/IStrategy.sol';
 
-contract AaveV2 is IStrategy, Ownable {
+contract AaveV2 is IStrategy {
   using SafeMath for uint256;
   using SafeERC20 for IERC20;
   using SafeERC20 for ERC20;
 
-  ILendingPoolAddressesProvider public lpAddressProvider =
+  ILendingPoolAddressesProvider public constant lpAddressProvider =
     ILendingPoolAddressesProvider(0xB53C1a33016B2DC2fF3653530bfF1848a515c8c5);
-  IAaveIncentivesController public aaveIncentivesController;
+  IAaveIncentivesController public immutable aaveIncentivesController;
 
-  ERC20 public override want;
-  IAToken public aWant;
+  ERC20 public immutable override want;
+  IAToken public immutable aWant;
 
-  address public sherlock;
-  address public aaveLmReceiver;
+  address public immutable sherlock;
+  address public immutable aaveLmReceiver;
 
   modifier onlySherlock() {
     require(msg.sender == sherlock, 'sherlock');
@@ -56,26 +55,22 @@ contract AaveV2 is IStrategy, Ownable {
     View methods
   */
 
-  function aBalance() internal view returns (uint256) {
-    return aWant.balanceOf(address(this));
-  }
-
   function getLp() internal view returns (ILendingPool) {
     return ILendingPool(lpAddressProvider.getLendingPool());
   }
 
-  function balanceOf() external view override returns (uint256) {
-    return aBalance();
+  function balanceOf() public view override returns (uint256) {
+    return aWant.balanceOf(address(this));
   }
 
   /**
     Sherlock strategy methods
   */
 
-  function deposit() public override {
+  function deposit() external override {
     ILendingPool lp = getLp();
     uint256 amount = want.balanceOf(address(this));
-    require(amount > 0, 'ZERO_AMOUNT');
+    require(amount != 0, 'ZERO_AMOUNT');
 
     if (want.allowance(address(this), address(lp)) < amount) {
       want.safeApprove(address(lp), type(uint256).max);
@@ -86,7 +81,7 @@ contract AaveV2 is IStrategy, Ownable {
 
   function withdrawAll() external override onlySherlock returns (uint256) {
     ILendingPool lp = getLp();
-    if (aBalance() == 0) {
+    if (balanceOf() == 0) {
       return 0;
     }
     return lp.withdraw(address(want), type(uint256).max, msg.sender);

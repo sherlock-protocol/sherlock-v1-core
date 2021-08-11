@@ -28,12 +28,12 @@ library LibPool {
     return balance.sub(ps.firstMoneyOut);
   }
 
-  function accruedDebt(bytes32 _protocol, IERC20 _token) public view returns (uint256) {
+  function accruedDebt(bytes32 _protocol, IERC20 _token) external view returns (uint256) {
     PoolStorage.Base storage ps = PoolStorage.ps(_token);
     return _accruedDebt(ps, _protocol, block.number.sub(ps.totalPremiumLastPaid));
   }
 
-  function getTotalAccruedDebt(IERC20 _token) public view returns (uint256) {
+  function getTotalAccruedDebt(IERC20 _token) external view returns (uint256) {
     PoolStorage.Base storage ps = PoolStorage.ps(_token);
     return _getTotalAccruedDebt(ps, block.number.sub(ps.totalPremiumLastPaid));
   }
@@ -86,7 +86,8 @@ library LibPool {
     uint256 blocks = block.number.sub(ps.totalPremiumLastPaid);
 
     uint256 totalAccruedDebt;
-    for (uint256 i = 0; i < ps.protocols.length; i++) {
+    uint256 length = ps.protocols.length;
+    for (uint256 i = 0; i < length; i++) {
       totalAccruedDebt = totalAccruedDebt.add(_payOffDebt(ps, ps.protocols[i], blocks));
     }
     // move funds to the sherX etf

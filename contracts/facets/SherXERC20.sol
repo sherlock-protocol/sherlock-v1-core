@@ -67,9 +67,12 @@ contract SherXERC20 is IERC20, ISherXERC20 {
   function increaseAllowance(address _spender, uint256 _amount) external override returns (bool) {
     require(_spender != address(0), 'SPENDER');
     require(_amount != 0, 'AMOUNT');
+
     SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
-    sx20.allowances[msg.sender][_spender] = sx20.allowances[msg.sender][_spender].add(_amount);
-    emit Approval(msg.sender, _spender, sx20.allowances[msg.sender][_spender]);
+    uint256 newAllowance = sx20.allowances[msg.sender][_spender].add(_amount);
+
+    sx20.allowances[msg.sender][_spender] = newAllowance;
+    emit Approval(msg.sender, _spender, newAllowance);
     return true;
   }
 

@@ -18,10 +18,6 @@ library GovStorage {
     mapping(bytes32 => address) protocolManagers;
     // Based on the protocol identifier, get the address of the protocol that is able the withdraw balances
     mapping(bytes32 => address) protocolAgents;
-    // The amount of blocks the cooldown period takes
-    uint40 unstakeCooldown;
-    // The amount of blocks for the window of opportunity of unstaking
-    uint40 unstakeWindow;
     // Check if the protocol is included in the solution at all
     mapping(bytes32 => bool) protocolIsCovered;
     // The array of tokens the accounts are able to stake in
@@ -42,6 +38,10 @@ library GovStorage {
     uint8 maxTokensStaker;
     // Max amount of protocol to be in single pool
     uint8 maxProtocolPool;
+    // The amount of blocks the cooldown period takes
+    uint40 unstakeCooldown;
+    // The amount of blocks for the window of opportunity of unstaking
+    uint40 unstakeWindow;
   }
 
   function gs() internal pure returns (Base storage gsx) {

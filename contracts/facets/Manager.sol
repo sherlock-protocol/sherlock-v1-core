@@ -188,7 +188,7 @@ contract Manager is IManager {
     }
     ps.totalPremiumPerBlock = newPremium;
     (usdPerBlock, usdPool) = _updateData(
-      ps,
+      ps.sherXUnderlying,
       usdPerBlock,
       usdPool,
       oldPremium,
@@ -247,7 +247,7 @@ contract Manager is IManager {
     uint256 oldUsd = _setTokenPrice(_token, _newUsd);
     uint256 premium = ps.totalPremiumPerBlock;
     (usdPerBlock, usdPool) = _updateData(
-      ps,
+      ps.sherXUnderlying,
       usdPerBlock,
       usdPool,
       premium,
@@ -295,7 +295,7 @@ contract Manager is IManager {
 
     uint256 usd = sx.tokenUSD[_token];
     (usdPerBlock, usdPool) = _updateData(
-      ps,
+      ps.sherXUnderlying,
       usdPerBlock,
       usdPool,
       oldPremium,
@@ -353,7 +353,7 @@ contract Manager is IManager {
     uint256 oldUsd = _setTokenPrice(_token, _newUsd);
     (uint256 oldPremium, uint256 newPremium) = _setProtocolPremium(ps, _protocol, _premium);
     (usdPerBlock, usdPool) = _updateData(
-      ps,
+      ps.sherXUnderlying,
       usdPerBlock,
       usdPool,
       oldPremium,
@@ -374,7 +374,7 @@ contract Manager is IManager {
   }
 
   /// @notice Update in memory `usdPerBlock` and `usdPool` based on the old/new premiums and prices. Return updated values.
-  /// @param ps Pointer to pool storage based on token address
+  /// @param sherXUnderlying Amount of underlying SherX
   /// @param usdPerBlock Current in memory value of usdPerBlock
   /// @param usdPool Current in memory value of usdPool
   /// @param _oldPremium Old sum of premiums paid by protocols using token
@@ -384,7 +384,7 @@ contract Manager is IManager {
   /// @return Updated usdPerBlock
   /// @return Updated usdPool
   function _updateData(
-    PoolStorage.Base storage ps,
+    uint256 sherXUnderlying,
     uint256 usdPerBlock,
     uint256 usdPool,
     uint256 _oldPremium,
@@ -392,33 +392,33 @@ contract Manager is IManager {
     uint256 _oldUsd,
     uint256 _newUsd
   ) private view returns (uint256, uint256) {
-    // `sub` represents the old usdPerBlock for this particulair token
+    // `oldUsdPerBlock` represents the old usdPerBlock for this particulair token
     // This is calculated using the previous stored `totalPremiumPerBlock` and `tokenUSD`
-    uint256 sub = _oldPremium.mul(_oldUsd);
-    // `add` represents the new usdPerblock for this particulair token
+    uint256 oldUsdPerBlock = _oldPremium.mul(_oldUsd);
+    // `newUsdPerBlock` represents the new usdPerblock for this particulair token
     // This is calculated using the current in memory value of `_newPremium` and `_newUsd`
-    uint256 add = _newPremium.mul(_newUsd);
+    uint256 newUsdPerBlock = _newPremium.mul(_newUsd);
 
     // To make sure the usdPerBlock uint doesn't attempt a potential underflow operation
     // Changed the order of sub and add's based on if statement
-    // Goal is to subtract the old value `sub` and add the new value `add from `usdPerBlock`
-    if (sub > add) {
-      usdPerBlock = usdPerBlock.sub(sub.sub(add).div(10**18));
-    } else {
-      usdPerBlock = usdPerBlock.add(add.sub(sub).div(10**18));
+    // Goal is to subtract the old value `oldUsdPerBlock` and add the new value `newUsdPerBlock from `usdPerBlock`
+    if (oldUsdPerBlock > newUsdPerBlock) {
+      usdPerBlock = usdPerBlock.sub((oldUsdPerBlock - newUsdPerBlock).div(10**18));
+    } else if (oldUsdPerBlock < newUsdPerBlock) {
+      usdPerBlock = usdPerBlock.add((newUsdPerBlock - oldUsdPerBlock).div(10**18));
     }
 
     // In case underyling == 0, the token is not part of the usdPool.
-    if (ps.sherXUnderlying > 0) {
+    if (sherXUnderlying != 0) {
       // To make sure the usdPool uint doesn't attempt a potential underflow operation
       // Goal is to update the current usdPool based on the `_newUsd` value
       // ~ substract `_oldUsd` * `ps.sherXUnderlying`
       // ~ add `_newUsd` * `ps.sherXUnderlying`
       // If _newUsd == _oldUsd, nothing changes
       if (_newUsd > _oldUsd) {
-        usdPool = usdPool.add(_newUsd.sub(_oldUsd).mul(ps.sherXUnderlying).div(10**18));
+        usdPool = usdPool.add((_newUsd - _oldUsd).mul(sherXUnderlying).div(10**18));
       } else if (_newUsd < _oldUsd) {
-        usdPool = usdPool.sub(_oldUsd.sub(_newUsd).mul(ps.sherXUnderlying).div(10**18));
+        usdPool = usdPool.sub((_oldUsd - _newUsd).mul(sherXUnderlying).div(10**18));
       }
     }
 
@@ -436,10 +436,10 @@ contract Manager is IManager {
 
     uint256 _currentTotalSupply = sx20.totalSupply;
 
-    if (usdPerBlock > 0 && _currentTotalSupply == 0) {
+    if (usdPerBlock != 0 && _currentTotalSupply == 0) {
       // initial accrue, mint 1 SHERX per block
       sx.sherXPerBlock = 10**18;
-    } else if (usdPool > 0) {
+    } else if (usdPool != 0) {
       // Calculate new sherXPerBlock based on the updated usdPerBlock and usdPool values
       sx.sherXPerBlock = _currentTotalSupply.mul(usdPerBlock).div(usdPool);
     } else {

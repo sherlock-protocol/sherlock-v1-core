@@ -142,7 +142,7 @@ contract Payout is IPayout {
       if (total == 0) {
         continue;
       }
-      if (firstMoneyOut > 0) {
+      if (firstMoneyOut != 0) {
         ps.firstMoneyOut = ps.firstMoneyOut.sub(firstMoneyOut);
       }
       ps.stakeBalance = ps.stakeBalance.sub(total);
@@ -163,7 +163,7 @@ contract Payout is IPayout {
       return;
     }
 
-    // NOTE: sx20().totalSupply is always > 0 when this codes hit.
+    // NOTE: sx20().totalSupply is always != 0 when this codes hit.
 
     uint256 curTotalUsdPool = LibSherX.viewAccrueUSDPool();
     uint256 excludeUsd = _doSherX(_payout, _exclude, curTotalUsdPool, totalSherX);

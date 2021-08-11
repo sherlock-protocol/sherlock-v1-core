@@ -64,7 +64,7 @@ contract PoolStrategy is IPoolStrategy {
   }
 
   function strategyDeposit(uint256 _amount, IERC20 _token) external override {
-    require(_amount > 0, 'AMOUNT');
+    require(_amount != 0, 'AMOUNT');
     PoolStorage.Base storage ps = baseData(_token);
     _enforceGovPool(ps);
     _enforceStrategy(ps);
@@ -76,7 +76,7 @@ contract PoolStrategy is IPoolStrategy {
   }
 
   function strategyWithdraw(uint256 _amount, IERC20 _token) external override {
-    require(_amount > 0, 'AMOUNT');
+    require(_amount != 0, 'AMOUNT');
     PoolStorage.Base storage ps = baseData(_token);
     _enforceGovPool(ps);
     _enforceStrategy(ps);
