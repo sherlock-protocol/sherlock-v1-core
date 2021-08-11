@@ -22,6 +22,9 @@ interface IGovDev {
   /// @param _govDev New dev address
   function transferGovDev(address _govDev) external;
 
+  /// @notice Renounce dev role
+  function renounceGovDev() external;
+
   /// @notice Delete, update or add functions
   /// @param _diamondCut Struct containing data of function mutation
   /// @param _init Address to call after pushing changes

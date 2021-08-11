@@ -34,9 +34,17 @@ describe('GovDev', function () {
       await this.sl.transferGovDev(this.gov.address);
       expect(await this.sl.getGovDev()).to.eq(this.gov.address);
     });
-    it('Renounce', async function () {
-      await this.sl.c(this.gov).transferGovDev(constants.AddressZero);
+  });
+  describe('renounceGovDev()', function () {
+    before(async function () {
+      await timeTraveler.revertSnapshot();
+    });
+    it('Do', async function () {
+      await this.sl.c(this.gov).renounceGovDev();
       expect(await this.sl.getGovDev()).to.eq(constants.AddressZero);
+    });
+    it('Do again', async function () {
+      await expect(this.sl.renounceGovDev()).to.be.revertedWith('NOT_DEV');
     });
   });
   describe('updateSolution() [ @skip-on-coverage ]', function () {
