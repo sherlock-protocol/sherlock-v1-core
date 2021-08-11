@@ -146,6 +146,8 @@ contract Payout is IPayout {
         ps.firstMoneyOut = ps.firstMoneyOut.sub(firstMoneyOut);
       }
       ps.stakeBalance = ps.stakeBalance.sub(total);
+      // If stakeBalance is 0, it could break stake() function
+      require(ps.stakeBalance >= 1, 'STAKE');
 
       if (address(token) == address(this)) {
         // If the token address == address(this), it's SherX

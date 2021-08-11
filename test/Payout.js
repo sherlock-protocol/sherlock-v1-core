@@ -240,6 +240,20 @@ describe('Payout - SherX', function () {
     before(async function () {
       await timeTraveler.revertSnapshot();
     });
+    it('Do complete depletion', async function () {
+      await expect(
+        this.sl
+          .c(this.gov)
+          .payout(
+            this.bob.address,
+            [this.sl.address],
+            [0],
+            [parseEther('2')],
+            [0],
+            constants.AddressZero,
+          ),
+      ).to.be.revertedWith('STAKE');
+    });
     it('Do', async function () {
       const b1 = await blockNumber(
         this.sl
@@ -248,7 +262,7 @@ describe('Payout - SherX', function () {
             this.bob.address,
             [this.sl.address],
             [0],
-            [parseEther('2')],
+            [parseEther('1')],
             [0],
             constants.AddressZero,
           ),
@@ -260,25 +274,25 @@ describe('Payout - SherX', function () {
 
       // SherX
       expect(await this.sl.getFirstMoneyOut(this.sl.address)).to.eq(parseEther('0'));
-      expect(await this.sl.getStakersPoolBalance(this.sl.address)).to.eq(parseEther('0'));
+      expect(await this.sl.getStakersPoolBalance(this.sl.address)).to.eq(parseEther('1'));
 
       // SherX Data
       expect(await this.sl['calcUnderlyingInStoredUSD(uint256)'](parseEther('1'))).to.eq(
         parseEther('2'),
       );
-      expect(await this.sl.getTotalSherX()).to.eq(parseEther('4'));
+      expect(await this.sl.getTotalSherX()).to.eq(parseEther('5'));
 
       const data = await this.sl['calcUnderlying(uint256)'](parseEther('1'));
       expect(data.amounts[0]).to.eq(parseEther('1'));
       expect(data.amounts[1]).to.eq(parseUnits('1', this.tokenC.dec));
       expect(data.amounts.length).to.eq(2);
 
-      expect(await this.sl.getInternalTotalSupply()).to.eq(parseEther('4'));
+      expect(await this.sl.getInternalTotalSupply()).to.eq(parseEther('5'));
       expect(await this.sl.getInternalTotalSupplySettled()).to.eq(b1);
 
       // Payout balances
-      expect(await this.tokenA.balanceOf(this.bob.address)).to.eq(parseEther('2'));
-      expect(await this.tokenC.balanceOf(this.bob.address)).to.eq(parseUnits('2', this.tokenC.dec));
+      expect(await this.tokenA.balanceOf(this.bob.address)).to.eq(parseEther('1'));
+      expect(await this.tokenC.balanceOf(this.bob.address)).to.eq(parseUnits('1', this.tokenC.dec));
     });
   });
   describe('Excluding tokenC', function () {
@@ -293,7 +307,7 @@ describe('Payout - SherX', function () {
             this.bob.address,
             [this.sl.address],
             [0],
-            [parseEther('2')],
+            [parseEther('2').sub(1)],
             [0],
             this.tokenC.address,
           ),
@@ -305,24 +319,24 @@ describe('Payout - SherX', function () {
 
       // SherX
       expect(await this.sl.getFirstMoneyOut(this.sl.address)).to.eq(parseEther('0'));
-      expect(await this.sl.getStakersPoolBalance(this.sl.address)).to.eq(parseEther('0'));
+      expect(await this.sl.getStakersPoolBalance(this.sl.address)).to.eq(1);
 
       // SherX Data
       expect(await this.sl['calcUnderlyingInStoredUSD(uint256)'](parseEther('1'))).to.eq(
-        parseEther('2'),
+        parseEther('2').add(2000000000),
       );
-      expect(await this.sl.getTotalSherX()).to.eq(parseEther('5'));
+      expect(await this.sl.getTotalSherX()).to.eq(parseEther('5').sub(4999999999));
 
       const data = await this.sl['calcUnderlying(uint256)'](parseEther('1'));
-      expect(data.amounts[0]).to.eq(parseEther('0.8'));
+      expect(data.amounts[0]).to.eq(parseEther('0.8').add(800000000));
       expect(data.amounts[1]).to.eq(parseUnits('1.2', this.tokenC.dec));
       expect(data.amounts.length).to.eq(2);
 
-      expect(await this.sl.getInternalTotalSupply()).to.eq(parseEther('5'));
+      expect(await this.sl.getInternalTotalSupply()).to.eq(parseEther('5').sub(4999999999));
       expect(await this.sl.getInternalTotalSupplySettled()).to.eq(b1);
 
       // Payout balances
-      expect(await this.tokenA.balanceOf(this.bob.address)).to.eq(parseEther('2'));
+      expect(await this.tokenA.balanceOf(this.bob.address)).to.eq(parseEther('2').sub(1));
       expect(await this.tokenC.balanceOf(this.bob.address)).to.eq(0);
     });
   });
