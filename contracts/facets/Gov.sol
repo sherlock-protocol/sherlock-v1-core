@@ -309,7 +309,7 @@ contract Gov is IGov {
     // This code piece swaps these tokens for other tokens in the solution
     // The goal is to keep the current $ value of these two 'pools' somewhat equal before/after swap
     if (totalToken > 0) {
-      _token.approve(address(_native), totalToken);
+      _token.safeApprove(address(_native), totalToken);
 
       (IERC20 newToken, uint256 newFmo, uint256 newSherxUnderlying) =
         _native.swap(_token, ps.firstMoneyOut, ps.sherXUnderlying);

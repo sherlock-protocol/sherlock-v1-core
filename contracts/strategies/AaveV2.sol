@@ -22,6 +22,7 @@ import '../interfaces/IStrategy.sol';
 contract AaveV2 is IStrategy, Ownable {
   using SafeMath for uint256;
   using SafeERC20 for IERC20;
+  using SafeERC20 for ERC20;
 
   ILendingPoolAddressesProvider public lpAddressProvider =
     ILendingPoolAddressesProvider(0xB53C1a33016B2DC2fF3653530bfF1848a515c8c5);
@@ -77,7 +78,7 @@ contract AaveV2 is IStrategy, Ownable {
     require(amount > 0, 'ZERO_AMOUNT');
 
     if (want.allowance(address(this), address(lp)) < amount) {
-      want.approve(address(lp), uint256(-1));
+      want.safeApprove(address(lp), uint256(-1));
     }
 
     lp.deposit(address(want), amount, address(this), 0);
