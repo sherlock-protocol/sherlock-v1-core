@@ -58,6 +58,8 @@ contract SherXERC20 is IERC20, ISherXERC20 {
     require(bytes(_name).length != 0, 'NAME');
     require(bytes(_symbol).length != 0, 'SYMBOL');
 
+    require(bytes(sx20.name).length == 0, 'SET');
+
     sx20.name = _name;
     sx20.symbol = _symbol;
   }
