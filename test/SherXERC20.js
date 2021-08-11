@@ -58,6 +58,11 @@ describe('SherXERC20 - Active', function () {
       ['lockA', this.ForeignLock, ['Lock TokenA', 'lockA', this.sl.address, this.tokenA.address]],
       ['lockX', this.NativeLock, ['Lock TokenX', 'lockX', this.sl.address]],
     ]);
+
+    await this.sl.c(this.gov).setMaxTokensSherX(8);
+    await this.sl.c(this.gov).setMaxTokensStaker(8);
+    await this.sl.c(this.gov).setMaxProtocolPool(8);
+
     // Add tokenA as valid token
     await this.sl
       .c(this.gov)

@@ -84,6 +84,18 @@ interface IGov {
   /// @dev Account is able to withdraw protocol balance
   function getProtocolAgent(bytes32 _protocol) external view returns (address);
 
+  /// @notice Get the maximum of tokens to be in the SherX array
+  /// @return Max maximum amount of tokens
+  function getMaxTokensSherX() external view returns (uint8);
+
+  /// @notice Get the maximum of tokens to be in the Staker array
+  /// @return Max maximum amount of tokens
+  function getMaxTokensStaker() external view returns (uint8);
+
+  /// @notice Get the maximum of protocol to be in a single pool
+  /// @return Max maximum amount of protocol
+  function getMaxProtocolPool() external view returns (uint8);
+
   //
   // State changing methods
   //
@@ -180,4 +192,16 @@ interface IGov {
   /// @notice Remove a token from storage
   /// @param _token Address of the token
   function tokenRemove(IERC20 _token) external;
+
+  /// @notice Set the maximum of tokens to be in the SherX array
+  /// @param _max maximum amount of tokens
+  function setMaxTokensSherX(uint8 _max) external;
+
+  /// @notice Set the maximum of tokens to be in the Staker array
+  /// @param _max maximum amount of tokens
+  function setMaxTokensStaker(uint8 _max) external;
+
+  /// @notice Set the maximum of protocol to be in a single pool
+  /// @param _max maximum amount of protocol
+  function setMaxProtocolPool(uint8 _max) external;
 }

@@ -22,6 +22,11 @@ describe('Payout', function () {
       ['lockB', this.ForeignLock, ['Lock TokenB', 'lockB', this.sl.address, this.tokenB.address]],
       ['lockC', this.ForeignLock, ['Lock TokenC', 'lockC', this.sl.address, this.tokenC.address]],
     ]);
+
+    await this.sl.c(this.gov).setMaxTokensSherX(8);
+    await this.sl.c(this.gov).setMaxTokensStaker(8);
+    await this.sl.c(this.gov).setMaxProtocolPool(8);
+
     // Add tokenA as valid token
     await this.sl
       .c(this.gov)
@@ -138,6 +143,10 @@ describe('Payout - SherX', function () {
       ['lockC', this.ForeignLock, ['Lock TokenC', 'lockC', this.sl.address, this.tokenC.address]],
       ['lockX', this.NativeLock, ['Lock TokenX', 'lockX', this.sl.address]],
     ]);
+
+    await this.sl.c(this.gov).setMaxTokensSherX(8);
+    await this.sl.c(this.gov).setMaxTokensStaker(8);
+    await this.sl.c(this.gov).setMaxProtocolPool(8);
     // Add tokenA as valid token
     await this.sl
       .c(this.gov)
@@ -377,6 +386,10 @@ describe('Payout - Non active', function () {
       ['lockC', this.ForeignLock, ['Lock TokenC', 'lockC', this.sl.address, this.tokenC.address]],
     ]);
 
+    await this.sl.c(this.gov).setMaxTokensSherX(8);
+    await this.sl.c(this.gov).setMaxTokensStaker(8);
+    await this.sl.c(this.gov).setMaxProtocolPool(8);
+
     await this.tokenA.approve(this.sl.address, parseEther('10000'));
     await this.lockA.approve(this.sl.address, parseEther('10000'));
     // Add tokenA as valid token
@@ -470,6 +483,10 @@ describe('Payout - Using unallocated SHERX', function () {
       ['lockC', this.ForeignLock, ['Lock TokenC', 'lockC', this.sl.address, this.tokenC.address]],
       ['lockX', this.NativeLock, ['Lock TokenX', 'lockX', this.sl.address]],
     ]);
+
+    await this.sl.c(this.gov).setMaxTokensSherX(8);
+    await this.sl.c(this.gov).setMaxTokensStaker(8);
+    await this.sl.c(this.gov).setMaxProtocolPool(8);
     // Add tokenA as valid token
     await this.sl
       .c(this.gov)

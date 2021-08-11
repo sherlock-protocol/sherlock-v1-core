@@ -36,6 +36,12 @@ library GovStorage {
     uint16 watsonsSherxWeight;
     // The last block the total amount of rewards were accrued.
     uint40 watsonsSherxLastAccrued;
+    // Max amount of SherX token to be in the `tokensSherX` array
+    uint8 maxTokensSherX;
+    // Max amount of Staker token to be in the `tokensStaker` array
+    uint8 maxTokensStaker;
+    // Max amount of protocol to be in single pool
+    uint8 maxProtocolPool;
   }
 
   function gs() internal pure returns (Base storage gsx) {
