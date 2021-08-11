@@ -68,7 +68,7 @@ contract Payout is IPayout {
   /// @param _exclude Token to exclude from payout
   /// @param curTotalUsdPool The current `sx.totalUsdPool`
   /// @param totalSherX The amount of SherX to use for payout
-  /// @return sherUsd Total amount of USD of the underlying tokens that are being transferred
+  /// @return sherUsd Total amount of USD of the underlying tokens that are excluded being transferred
   function _doSherX(
     address _payout,
     address _exclude,
