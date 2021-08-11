@@ -173,7 +173,7 @@ contract Gov is IGov {
     GovStorage.Base storage gs = GovStorage.gs();
     require(gs.protocolIsCovered[_protocol], 'NOT_COVERED');
 
-    // NOTE: UNUSED
+    // NOTE: protocolManagers UNUSED
     gs.protocolManagers[_protocol] = _eoaManager;
     gs.protocolAgents[_protocol] = _eoaProtocolAgent;
   }
