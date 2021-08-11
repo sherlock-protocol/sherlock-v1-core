@@ -37,6 +37,10 @@ describe('Gov', function () {
       ['strategyMockA', this.StrategyMock, [this.tokenA.address, this.sl.address]],
     ]);
 
+    await this.sl.c(this.gov).setMaxTokensSherX(8);
+    await this.sl.c(this.gov).setMaxTokensStaker(8);
+    await this.sl.c(this.gov).setMaxProtocolPool(8);
+
     await timeTraveler.snapshot();
   });
   describe('setInitialGovMain()', function () {
@@ -967,6 +971,54 @@ describe('Gov', function () {
       await expect(
         await this.sl.getInitialUnstakeEntry(this.alice.address, this.tokenA.address),
       ).to.eq(2);
+    });
+  });
+  describe('setMaxTokensSherX()', function () {
+    before(async function () {
+      await timeTraveler.revertSnapshot();
+    });
+    it('Initial state', async function () {
+      expect(await this.sl.getMaxTokensSherX()).to.eq(8);
+    });
+    it('Do', async function () {
+      await this.sl.c(this.gov).setMaxTokensSherX(12);
+      expect(await this.sl.getMaxTokensSherX()).to.eq(12);
+    });
+    it('Do again', async function () {
+      await this.sl.c(this.gov).setMaxTokensSherX(100);
+      expect(await this.sl.getMaxTokensSherX()).to.eq(100);
+    });
+  });
+  describe('setMaxTokensStaker()', function () {
+    before(async function () {
+      await timeTraveler.revertSnapshot();
+    });
+    it('Initial state', async function () {
+      expect(await this.sl.getMaxTokensStaker()).to.eq(8);
+    });
+    it('Do', async function () {
+      await this.sl.c(this.gov).setMaxTokensStaker(12);
+      expect(await this.sl.getMaxTokensStaker()).to.eq(12);
+    });
+    it('Do again', async function () {
+      await this.sl.c(this.gov).setMaxTokensStaker(100);
+      expect(await this.sl.getMaxTokensStaker()).to.eq(100);
+    });
+  });
+  describe('setMaxProtocolPool()', function () {
+    before(async function () {
+      await timeTraveler.revertSnapshot();
+    });
+    it('Initial state', async function () {
+      expect(await this.sl.getMaxProtocolPool()).to.eq(8);
+    });
+    it('Do', async function () {
+      await this.sl.c(this.gov).setMaxProtocolPool(12);
+      expect(await this.sl.getMaxProtocolPool()).to.eq(12);
+    });
+    it('Do again', async function () {
+      await this.sl.c(this.gov).setMaxProtocolPool(100);
+      expect(await this.sl.getMaxProtocolPool()).to.eq(100);
     });
   });
 });

@@ -34,6 +34,11 @@ describe('Stateless', function () {
       ['strategyMockA', this.StrategyMock, [this.tokenA.address, this.sl.address]],
       ['strategyMockB', this.StrategyMock, [this.tokenB.address, this.sl.address]],
     ]);
+
+    await this.sl.c(this.gov).setMaxTokensSherX(8);
+    await this.sl.c(this.gov).setMaxTokensStaker(8);
+    await this.sl.c(this.gov).setMaxProtocolPool(8);
+
     // Add tokenA as valid token
     await this.sl
       .c(this.gov)
@@ -435,6 +440,21 @@ describe('Stateless', function () {
       });
       it('Success', async function () {
         await this.sl.c(this.gov).tokenRemove(this.tokenB.address);
+      });
+    });
+    describe('setMaxTokensSherX()', function () {
+      it('Invalid sender', async function () {
+        await expect(this.sl.setMaxTokensSherX(100)).to.be.revertedWith('NOT_GOV_MAIN');
+      });
+    });
+    describe('setMaxTokensStaker()', function () {
+      it('Invalid sender', async function () {
+        await expect(this.sl.setMaxTokensStaker(100)).to.be.revertedWith('NOT_GOV_MAIN');
+      });
+    });
+    describe('setMaxProtocolPool()', function () {
+      it('Invalid sender', async function () {
+        await expect(this.sl.setMaxProtocolPool(100)).to.be.revertedWith('NOT_GOV_MAIN');
       });
     });
   });

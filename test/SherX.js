@@ -32,6 +32,11 @@ describe('SherX', function () {
       ['lockC', this.ForeignLock, ['Lock TokenC', 'lockC', this.sl.address, this.tokenC.address]],
       ['lockX', this.NativeLock, ['Lock TokenX', 'lockX', this.sl.address]],
     ]);
+
+    await this.sl.c(this.gov).setMaxTokensSherX(8);
+    await this.sl.c(this.gov).setMaxTokensStaker(8);
+    await this.sl.c(this.gov).setMaxProtocolPool(8);
+
     // Add tokenA as valid token
     await this.sl
       .c(this.gov)

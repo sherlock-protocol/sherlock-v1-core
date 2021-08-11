@@ -23,6 +23,10 @@ describe('Manager - Clean', function () {
       ['lockC', this.ForeignLock, ['Lock TokenC', 'lockC', this.sl.address, this.tokenC.address]],
     ]);
 
+    await this.sl.c(this.gov).setMaxTokensSherX(8);
+    await this.sl.c(this.gov).setMaxTokensStaker(8);
+    await this.sl.c(this.gov).setMaxProtocolPool(8);
+
     // Add tokenA as valid protocol token
     await this.sl
       .c(this.gov)
@@ -988,6 +992,10 @@ describe('Manager - Active', function () {
       ['lockC', this.ForeignLock, ['Lock TokenC', 'lockC', this.sl.address, this.tokenC.address]],
     ]);
 
+    await this.sl.c(this.gov).setMaxTokensSherX(8);
+    await this.sl.c(this.gov).setMaxTokensStaker(8);
+    await this.sl.c(this.gov).setMaxProtocolPool(8);
+
     // Add tokenA as valid protocol token
     await this.sl
       .c(this.gov)
@@ -1645,6 +1653,10 @@ describe('Manager - No Weights', function () {
       ['lockB', this.ForeignLock, ['Lock TokenB', 'lockB', this.sl.address, this.tokenB.address]],
       ['lockC', this.ForeignLock, ['Lock TokenC', 'lockC', this.sl.address, this.tokenC.address]],
     ]);
+
+    await this.sl.c(this.gov).setMaxTokensSherX(8);
+    await this.sl.c(this.gov).setMaxTokensStaker(8);
+    await this.sl.c(this.gov).setMaxProtocolPool(8);
 
     // Add tokenA as valid protocol token
     await this.sl

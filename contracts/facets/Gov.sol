@@ -93,6 +93,18 @@ contract Gov is IGov {
     return GovStorage.gs().protocolAgents[_protocol];
   }
 
+  function getMaxTokensSherX() external view override returns (uint8) {
+    return GovStorage.gs().maxTokensSherX;
+  }
+
+  function getMaxTokensStaker() external view override returns (uint8) {
+    return GovStorage.gs().maxTokensStaker;
+  }
+
+  function getMaxProtocolPool() external view override returns (uint8) {
+    return GovStorage.gs().maxProtocolPool;
+  }
+
   //
   // State changing methods
   //
@@ -179,6 +191,7 @@ contract Gov is IGov {
       require(!ps.isProtocol[_protocol], 'ALREADY_ADDED');
 
       ps.isProtocol[_protocol] = true;
+      require(ps.protocols.length < gs.maxProtocolPool, 'MAX_POOL');
       ps.protocols.push(_protocol);
     }
   }
@@ -228,6 +241,7 @@ contract Gov is IGov {
       if (address(ps.lockToken) == address(_lock)) {
         require(!ps.stakes, 'STAKES_SET');
         ps.stakes = true;
+        require(gs.tokensStaker.length < gs.maxTokensStaker, 'MAX_STAKER');
         gs.tokensStaker.push(_token);
       } else {
         revert('WRONG_LOCK');
@@ -237,6 +251,7 @@ contract Gov is IGov {
     if (_protocolPremium) {
       require(!ps.premiums, 'PREMIUMS_SET');
       ps.premiums = true;
+      require(gs.tokensSherX.length < gs.maxTokensSherX, 'MAX_STAKER');
       gs.tokensSherX.push(_token);
     }
   }
@@ -349,5 +364,17 @@ contract Gov is IGov {
     //delete ps.sWeight;
 
     delete ps.totalPremiumLastPaid;
+  }
+
+  function setMaxTokensSherX(uint8 _max) external override onlyGovMain {
+    GovStorage.gs().maxTokensSherX = _max;
+  }
+
+  function setMaxTokensStaker(uint8 _max) external override onlyGovMain {
+    GovStorage.gs().maxTokensStaker = _max;
+  }
+
+  function setMaxProtocolPool(uint8 _max) external override onlyGovMain {
+    GovStorage.gs().maxProtocolPool = _max;
   }
 }

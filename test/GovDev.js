@@ -17,6 +17,10 @@ describe('GovDev', function () {
       ['lockA', this.ForeignLock, ['Lock TokenA', 'lockA', this.sl.address, this.tokenA.address]],
     ]);
 
+    await this.sl.c(this.gov).setMaxTokensSherX(8);
+    await this.sl.c(this.gov).setMaxTokensStaker(8);
+    await this.sl.c(this.gov).setMaxProtocolPool(8);
+
     await timeTraveler.snapshot();
   });
   it('Initial state', async function () {
