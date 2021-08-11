@@ -106,11 +106,13 @@ contract SherXERC20 is IERC20, ISherXERC20 {
     SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
     require(_from != address(0), 'FROM');
 
+    uint256 approval = sx20.allowances[_from][msg.sender];
     // Update approval if not set to max uint256
-    if (sx20.allowances[_from][msg.sender] != uint256(-1)) {
-      uint256 newApproval = sx20.allowances[_from][msg.sender].sub(_amount);
-      sx20.allowances[_from][msg.sender] = newApproval;
-      emit Approval(_from, msg.sender, newApproval);
+    if (approval != uint256(-1)) {
+      approval = approval.sub(_amount);
+
+      sx20.allowances[_from][msg.sender] = approval;
+      emit Approval(_from, msg.sender, approval);
     }
 
     _transfer(_from, _to, _amount);
