@@ -153,6 +153,17 @@ describe('SherX', function () {
             [0, Uint16Max.add(Uint16Max).add(1)],
             0,
           ),
+      ).to.be.reverted;
+    });
+    it('Do overflow with watsons', async function () {
+      await expect(
+        this.sl
+          .c(this.gov)
+          .setWeights(
+            [this.tokenA.address, this.tokenB.address],
+            [0, Uint16Max],
+            Uint16Max.add(Uint16Max).add(1),
+          ),
       ).to.be.revertedWith('SUM');
     });
     it('Do 30/70', async function () {
@@ -275,9 +286,7 @@ describe('SherX', function () {
       expect(
         await this.sl['getSherXPerBlock(uint256,address)'](parseEther('1'), this.tokenA.address),
       ).to.eq(parseEther('0.5'));
-      expect(
-        await this.sl['getSherXPerBlock(uint256,address)'](0, this.tokenA.address),
-      ).to.eq(0);
+      expect(await this.sl['getSherXPerBlock(uint256,address)'](0, this.tokenA.address)).to.eq(0);
       expect(await this.sl.getStakersPoolBalance(this.tokenA.address)).to.eq(parseEther('10'));
     });
     it('Do', async function () {

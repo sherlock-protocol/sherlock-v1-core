@@ -1400,7 +1400,7 @@ describe('Stateless', function () {
       });
       it('Success', async function () {
         await expect(
-          this.sl.c(this.gov).setWeights([this.tokenA.address], [parseEther('1')], 0),
+          this.sl.c(this.gov).setWeights([this.tokenA.address], [1], 0),
         ).to.be.revertedWith('SUM');
       });
     });
