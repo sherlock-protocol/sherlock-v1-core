@@ -83,15 +83,14 @@ contract Payout is IPayout {
     for (uint256 i; i < tokens.length; i++) {
       PoolStorage.Base storage ps = PoolStorage.ps(tokens[i]);
 
-      // Expensive operation, only execute to prevent tx reverts
-      if (amounts[i] > ps.sherXUnderlying) {
-        LibPool.payOffDebtAll(tokens[i]);
-      }
-
       if (address(tokens[i]) == _exclude) {
         // Return USD value of token that is excluded from payout
         sherUsd = amounts[i].mul(sx.tokenUSD[tokens[i]]);
       } else {
+        // Expensive operation, only execute to prevent tx reverts
+        if (amounts[i] > ps.sherXUnderlying) {
+          LibPool.payOffDebtAll(tokens[i]);
+        }
         // Remove the token as underlying of SherX
         ps.sherXUnderlying = ps.sherXUnderlying.sub(amounts[i]);
         // As the tokens are transferred, remove from the current usdPool
