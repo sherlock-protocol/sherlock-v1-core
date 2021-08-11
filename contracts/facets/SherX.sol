@@ -191,7 +191,7 @@ contract SherX is ISherX {
 
   function setWeights(
     IERC20[] memory _tokens,
-    uint256[] memory _weights,
+    uint16[] memory _weights,
     uint256 _watsons
   ) external override onlyGovMain {
     require(_tokens.length == _weights.length, 'LENGTH');
@@ -212,10 +212,10 @@ contract SherX is ISherX {
 
       weightAdd = weightAdd.add(_weights[i]);
       weightSub = weightSub.add(ps.sherXWeight);
-      ps.sherXWeight = uint16(_weights[i]);
+      ps.sherXWeight = _weights[i];
     }
     if (_watsons != uint256(-1)) {
-      weightAdd = weightAdd.add(_watsons);
+      weightAdd = weightAdd.add(uint16(_watsons));
       weightSub = weightSub.add(gs.watsonsSherxWeight);
 
       gs.watsonsSherxWeight = uint16(_watsons);

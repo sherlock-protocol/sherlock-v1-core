@@ -135,7 +135,7 @@ interface ISherX {
   /// @param _watsons Weighting to set for the Watsons
   function setWeights(
     IERC20[] memory _tokens,
-    uint256[] memory _weights,
+    uint16[] memory _weights,
     uint256 _watsons
   ) external;
 
