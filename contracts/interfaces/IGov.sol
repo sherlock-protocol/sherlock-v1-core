@@ -158,14 +158,14 @@ interface IGov {
   /// @param _token Address of the token
   /// @param _govPool Account responsible for the token
   /// @param _lock Corresponding lock token, indicating staker token
-  /// @param _protocolPremium Boolean indicating if token should be registered as protocol payment
+  /// @param _isProtocolPremium Boolean indicating if token should be registered as protocol payment
   /// @dev Token can be reinitialiezd
   /// @dev Zero address for _lock will not enable stakers to deposit with the _token
   function tokenInit(
     IERC20 _token,
     address _govPool,
     ILock _lock,
-    bool _protocolPremium
+    bool _isProtocolPremium
   ) external;
 
   /// @notice Disable a token for stakers

@@ -217,7 +217,7 @@ contract Gov is IGov {
     IERC20 _token,
     address _govPool,
     ILock _lock,
-    bool _protocolPremium
+    bool _isProtocolPremium
   ) external override onlyGovMain {
     GovStorage.Base storage gs = GovStorage.gs();
     PoolStorage.Base storage ps = PoolStorage.ps(_token);
@@ -248,7 +248,7 @@ contract Gov is IGov {
       }
     }
 
-    if (_protocolPremium) {
+    if (_isProtocolPremium) {
       require(!ps.premiums, 'PREMIUMS_SET');
       ps.premiums = true;
       require(gs.tokensSherX.length < gs.maxTokensSherX, 'MAX_PREMIUM');
