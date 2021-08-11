@@ -49,9 +49,6 @@ contract AaveV2 is IStrategy, Ownable {
 
     sherlock = _sherlock;
     aaveLmReceiver = _aaveLmReceiver;
-
-    ILendingPool lp = getLp();
-    want.approve(address(lp), uint256(-1));
   }
 
   /**
@@ -78,6 +75,10 @@ contract AaveV2 is IStrategy, Ownable {
     ILendingPool lp = getLp();
     uint256 amount = want.balanceOf(address(this));
     require(amount > 0, 'ZERO_AMOUNT');
+
+    if (want.allowance(address(this), address(lp)) < amount) {
+      want.approve(address(lp), uint256(-1));
+    }
 
     lp.deposit(address(want), amount, address(this), 0);
   }

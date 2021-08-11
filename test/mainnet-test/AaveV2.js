@@ -64,9 +64,7 @@ describe('Mainnet - AaveV2 [ @skip-on-coverage ]', function () {
 
     expect(await this.aaveStrategy.lpAddressProvider()).to.eq(this.lpAddProvider);
 
-    expect(await this.dai.allowance(this.aaveStrategy.address, this.lp)).to.eq(
-      constants.MaxUint256,
-    );
+    expect(await this.dai.allowance(this.aaveStrategy.address, this.lp)).to.eq(0);
   });
   it('Initial state', async function () {
     expect(await this.dai.balanceOf(this.sherlock.address)).to.eq(0);
@@ -91,6 +89,9 @@ describe('Mainnet - AaveV2 [ @skip-on-coverage ]', function () {
       expect(await this.aDAI.balanceOf(this.aaveStrategy.address)).to.eq(this.daiAmount);
 
       expect(await this.aaveStrategy.balanceOf()).to.eq(this.daiAmount);
+      expect(await this.dai.allowance(this.aaveStrategy.address, this.lp)).to.eq(
+        constants.MaxUint256,
+      );
     });
     it('Do again', async function () {
       await expect(this.aaveStrategy.deposit()).to.be.revertedWith('ZERO_AMOUNT');
