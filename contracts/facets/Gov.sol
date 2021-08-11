@@ -331,9 +331,9 @@ contract Gov is IGov {
     uint256 balance = ps.stakeBalance.sub(ps.firstMoneyOut);
     if (balance > 0) {
       _token.safeTransfer(_remaining, balance);
-      delete ps.stakeBalance;
     }
 
+    delete ps.stakeBalance;
     delete ps.sherXUnderlying;
     delete ps.firstMoneyOut;
   }
