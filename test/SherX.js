@@ -275,6 +275,9 @@ describe('SherX', function () {
       expect(
         await this.sl['getSherXPerBlock(uint256,address)'](parseEther('1'), this.tokenA.address),
       ).to.eq(parseEther('0.5'));
+      expect(
+        await this.sl['getSherXPerBlock(uint256,address)'](0, this.tokenA.address),
+      ).to.eq(0);
       expect(await this.sl.getStakersPoolBalance(this.tokenA.address)).to.eq(parseEther('10'));
     });
     it('Do', async function () {

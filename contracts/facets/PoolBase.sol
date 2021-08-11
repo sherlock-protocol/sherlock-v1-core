@@ -211,6 +211,9 @@ contract PoolBase is IPoolBase {
 
   function getSherXPerBlock(uint256 _lock, IERC20 _token) external view override returns (uint256) {
     // simulates staking (adding lock)
+    if (_lock == 0) {
+      return 0;
+    }
     return
       getTotalSherXPerBlock(_token).mul(_lock).div(
         baseData(_token).lockToken.totalSupply().add(_lock)
