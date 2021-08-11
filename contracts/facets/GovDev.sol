@@ -17,9 +17,15 @@ contract GovDev is IGovDev {
   }
 
   function transferGovDev(address _govDev) external override {
+    require(_govDev != address(0), 'ZERO');
     require(msg.sender == LibDiamond.contractOwner(), 'NOT_DEV');
     require(_govDev != LibDiamond.contractOwner(), 'SAME_DEV');
     LibDiamond.setContractOwner(_govDev);
+  }
+
+  function renounceGovDev() external override {
+    require(msg.sender == LibDiamond.contractOwner(), 'NOT_DEV');
+    LibDiamond.setContractOwner(address(0));
   }
 
   function updateSolution(

@@ -456,10 +456,20 @@ describe('Stateless', function () {
       it('Invalid sender', async function () {
         await expect(this.sl.transferGovDev(this.gov.address)).to.be.revertedWith('NOT_DEV');
       });
+      it('Invalid gov (zero)', async function () {
+        await expect(this.sl.c(this.gov).transferGovDev(constants.AddressZero)).to.be.revertedWith(
+          'ZERO',
+        );
+      });
       it('Invalid gov (same)', async function () {
         await expect(this.sl.c(this.gov).transferGovDev(this.gov.address)).to.be.revertedWith(
           'SAME_DEV',
         );
+      });
+    });
+    describe('renounceGovDev()', function () {
+      it('Invalid sender', async function () {
+        await expect(this.sl.renounceGovDev()).to.be.revertedWith('NOT_DEV');
       });
     });
     describe('updateSolution()', function () {
