@@ -21,11 +21,6 @@ describe('SherXERC20', function () {
     expect(await this.sl.balanceOf(this.alice.address)).to.eq(0);
     expect(await this.sl.totalSupply()).to.eq(0);
   });
-  it('initializeSherXERC20()', async function () {
-    await this.sl.c(this.gov).initializeSherXERC20('Sherlock ETF 2', 'SHERX 2');
-    expect(await this.sl.name()).to.eq('Sherlock ETF 2');
-    expect(await this.sl.symbol()).to.eq('SHERX 2');
-  });
   it('increaseApproval()', async function () {
     await this.sl.increaseApproval(this.bob.address, 10);
     expect(await this.sl.allowance(this.alice.address, this.bob.address)).to.eq(10);

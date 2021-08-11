@@ -1485,7 +1485,9 @@ describe('Stateless', function () {
         );
       });
       it('Success', async function () {
-        await this.sl.c(this.gov).initializeSherXERC20('SHERX', 'SHR');
+        await expect(this.sl.c(this.gov).initializeSherXERC20('SHERX', 'SHR')).to.be.revertedWith(
+          'SET',
+        );
       });
     });
     describe('increaseApproval()', function () {
