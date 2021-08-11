@@ -105,6 +105,7 @@ contract SherXERC20 is IERC20, ISherXERC20 {
   ) external override returns (bool) {
     SherXERC20Storage.Base storage sx20 = SherXERC20Storage.sx20();
     require(_from != address(0), 'FROM');
+    require(_to != address(0), 'TO');
 
     uint256 approval = sx20.allowances[_from][msg.sender];
     // Update approval if not set to max uint256

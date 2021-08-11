@@ -171,5 +171,12 @@ describe('SherXERC20 - Active', function () {
         constants.MaxUint256,
       );
     });
+    it('Do fail burn', async function () {
+      await expect(
+        this.sl
+          .c(this.carol)
+          .transferFrom(this.alice.address, constants.AddressZero, parseEther('0.05')),
+      ).to.be.revertedWith('TO');
+    });
   });
 });
