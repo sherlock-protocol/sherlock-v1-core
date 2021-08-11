@@ -248,12 +248,18 @@ describe('Pool', function () {
       );
 
       expect(await this.sl.getInitialUnstakeEntry(this.alice.address, this.tokenA.address)).to.eq(
-        1,
+        0,
       );
       expect(await this.sl.getUnstakeEntrySize(this.alice.address, this.tokenA.address)).to.eq(1);
       const w = await this.sl.getUnstakeEntry(this.alice.address, 0, this.tokenA.address);
       expect(w.blockInitiated).to.eq(b0);
       expect(w.lock).to.eq(parseEther('0.2'));
+    });
+    it('Expired', async function () {
+      await timeTraveler.mine(1);
+      expect(await this.sl.getInitialUnstakeEntry(this.alice.address, this.tokenA.address)).to.eq(
+        1,
+      );
     });
   });
   describe('activateCooldown() ─ Fee', function () {
@@ -321,12 +327,18 @@ describe('Pool', function () {
       );
 
       expect(await this.sl.getInitialUnstakeEntry(this.alice.address, this.tokenA.address)).to.eq(
-        1,
+        0,
       );
       expect(await this.sl.getUnstakeEntrySize(this.alice.address, this.tokenA.address)).to.eq(1);
       const w = await this.sl.getUnstakeEntry(this.alice.address, 0, this.tokenA.address);
       expect(w.blockInitiated).to.eq(b0);
       expect(w.lock).to.be.closeTo(parseEther('0.45'), parseUnits('1', 10));
+    });
+    it('Expired', async function () {
+      await timeTraveler.mine(1);
+      expect(await this.sl.getInitialUnstakeEntry(this.alice.address, this.tokenA.address)).to.eq(
+        1,
+      );
     });
   });
   describe('cancelCooldown()', function () {

@@ -133,7 +133,7 @@ contract PoolBase is IPoolBase {
         continue;
       }
       if (
-        ps.unstakeEntries[_staker][i].blockInitiated + gs.unstakeCooldown + gs.unstakeWindow <=
+        ps.unstakeEntries[_staker][i].blockInitiated + gs.unstakeCooldown + gs.unstakeWindow <
         uint40(block.number)
       ) {
         continue;
