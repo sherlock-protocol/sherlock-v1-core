@@ -251,7 +251,7 @@ contract Gov is IGov {
     if (_protocolPremium) {
       require(!ps.premiums, 'PREMIUMS_SET');
       ps.premiums = true;
-      require(gs.tokensSherX.length < gs.maxTokensSherX, 'MAX_STAKER');
+      require(gs.tokensSherX.length < gs.maxTokensSherX, 'MAX_PREMIUM');
       gs.tokensSherX.push(_token);
     }
   }

@@ -177,6 +177,15 @@ describe('Gov', function () {
       const protocols = await this.sl.getProtocols(this.tokenB.address);
       expect(protocols.length).to.eq(0);
     });
+    it('Do max', async function () {
+      await this.sl.c(this.gov).setMaxProtocolPool(0);
+
+      await expect(
+        this.sl.c(this.gov).protocolDepositAdd(this.protocolX, [this.tokenB.address]),
+      ).to.be.revertedWith('MAX_POOL');
+
+      await this.sl.c(this.gov).setMaxProtocolPool(2);
+    });
     it('Do', async function () {
       await this.sl.c(this.gov).protocolDepositAdd(this.protocolX, [this.tokenB.address]);
       expect(await this.sl.isProtocol(this.protocolX, this.tokenB.address)).to.eq(true);
@@ -266,6 +275,28 @@ describe('Gov', function () {
       expect(await this.sl.getProtocolManager(this.protocolX)).to.eq(constants.AddressZero);
       expect(await this.sl.getProtocolAgent(this.protocolX)).to.eq(constants.AddressZero);
       expect(await this.sl.isProtocol(this.protocolX, this.tokenA.address)).to.eq(false);
+    });
+  });
+  describe('tokenInit(), exceed limits', function () {
+    before(async function () {
+      await timeTraveler.revertSnapshot();
+      await this.sl.c(this.gov).setMaxTokensSherX(0);
+      await this.sl.c(this.gov).setMaxTokensStaker(0);
+      await this.sl.c(this.gov).setMaxProtocolPool(0);
+    });
+    it('Exceed staker limit', async function () {
+      await expect(
+        this.sl
+          .c(this.gov)
+          .tokenInit(this.tokenA.address, this.gov.address, this.lockA.address, false),
+      ).to.be.revertedWith('MAX_STAKER');
+    });
+    it('Exceed premium limit', async function () {
+      await expect(
+        this.sl
+          .c(this.gov)
+          .tokenInit(this.tokenA.address, this.gov.address, constants.AddressZero, true),
+      ).to.be.revertedWith('MAX_PREMIUM');
     });
   });
   describe('tokenInit()', function () {
