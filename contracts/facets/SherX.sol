@@ -52,13 +52,7 @@ contract SherX is ISherX {
   }
 
   function getUnmintedSherX(IERC20 _token) internal view returns (uint256) {
-    PoolStorage.Base storage ps = PoolStorage.ps(_token);
-    SherXStorage.Base storage sx = SherXStorage.sx();
-
-    return
-      block.number.sub(ps.sherXLastAccrued).mul(sx.sherXPerBlock).mul(ps.sherXWeight).div(
-        type(uint16).max
-      );
+    return LibPool.getTotalUnmintedSherX(_token);
   }
 
   function getTotalSherXUnminted() external view override returns (uint256) {
