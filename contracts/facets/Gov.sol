@@ -361,8 +361,7 @@ contract Gov is IGov {
     // NOTE: storage variables need to be kept. To make sure readding the token works
     // IF readding the token, verify off chain if the storage is sufficient.
     // Create re-adding plan off chain if this isn't the case. (e.g. clean storage by doing calls)
-    //delete ps.sWithdrawn
-    //delete ps.sWeight;
+    // The spirit of these calls would be `delete ps.sWithdrawn` and `delete ps.sWeight`
 
     delete ps.totalPremiumLastPaid;
   }

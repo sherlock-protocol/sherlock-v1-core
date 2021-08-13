@@ -62,7 +62,7 @@ library PoolStorage {
     mapping(bytes32 => uint256) protocolPremium;
     // The sum of all the protocol premiums, the total amount of debt that builds up in this token. (per block)
     uint256 totalPremiumPerBlock;
-    // How much token (this) is available for sherX holders
+    // How much tokens are used as underlying for SherX
     uint256 sherXUnderlying;
     // Check if the protocol is included in the token pool
     // The protocol can deposit balances if this is the case

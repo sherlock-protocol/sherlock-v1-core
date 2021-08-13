@@ -15,8 +15,6 @@ import '../libraries/LibPool.sol';
 contract Manager is IManager {
   using SafeMath for uint256;
 
-  // Once transaction has been mined, protocol is officialy insured.
-
   //
   // Modifiers
   //
@@ -27,7 +25,8 @@ contract Manager is IManager {
   }
 
   // Validates if token is eligble for premium payments
-  function onlyValidToken(PoolStorage.Base storage ps, IERC20 _token) private view {
+  function onlyValidToken(IERC20 _token) private view returns (PoolStorage.Base storage ps) {
+    ps = PoolStorage.ps(_token);
     require(address(_token) != address(this), 'SHERX');
     require(ps.premiums, 'WHITELIST');
   }
@@ -169,8 +168,7 @@ contract Manager is IManager {
     uint256 _newUsd
   ) external override onlyGovMain {
     require(_protocol.length == _premium.length, 'LENGTH');
-    PoolStorage.Base storage ps = PoolStorage.ps(_token);
-    onlyValidToken(ps, _token);
+    PoolStorage.Base storage ps = onlyValidToken(_token);
     LibPool.payOffDebtAll(_token);
 
     uint256 oldPremium = ps.totalPremiumPerBlock;
@@ -241,8 +239,7 @@ contract Manager is IManager {
     uint256 usdPerBlock,
     uint256 usdPool
   ) private returns (uint256, uint256) {
-    PoolStorage.Base storage ps = PoolStorage.ps(_token);
-    onlyValidToken(ps, _token);
+    PoolStorage.Base storage ps = onlyValidToken(_token);
 
     uint256 oldUsd = _setTokenPrice(_token, _newUsd);
     uint256 premium = ps.totalPremiumPerBlock;
@@ -288,8 +285,7 @@ contract Manager is IManager {
     uint256 usdPool
   ) private returns (uint256, uint256) {
     SherXStorage.Base storage sx = SherXStorage.sx();
-    PoolStorage.Base storage ps = PoolStorage.ps(_token);
-    onlyValidToken(ps, _token);
+    PoolStorage.Base storage ps = onlyValidToken(_token);
 
     (uint256 oldPremium, uint256 newPremium) = _setProtocolPremium(ps, _protocol, _premium);
 
@@ -347,9 +343,7 @@ contract Manager is IManager {
     uint256 usdPerBlock,
     uint256 usdPool
   ) private returns (uint256, uint256) {
-    PoolStorage.Base storage ps = PoolStorage.ps(_token);
-    onlyValidToken(ps, _token);
-
+    PoolStorage.Base storage ps = onlyValidToken(_token);
     uint256 oldUsd = _setTokenPrice(_token, _newUsd);
     (uint256 oldPremium, uint256 newPremium) = _setProtocolPremium(ps, _protocol, _premium);
     (usdPerBlock, usdPool) = _updateData(
@@ -391,7 +385,7 @@ contract Manager is IManager {
     uint256 _newPremium,
     uint256 _oldUsd,
     uint256 _newUsd
-  ) private view returns (uint256, uint256) {
+  ) private pure returns (uint256, uint256) {
     // `oldUsdPerBlock` represents the old usdPerBlock for this particulair token
     // This is calculated using the previous stored `totalPremiumPerBlock` and `tokenUSD`
     uint256 oldUsdPerBlock = _oldPremium.mul(_oldUsd);

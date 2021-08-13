@@ -25,11 +25,11 @@ contract PoolStrategy is IPoolStrategy {
     return baseData(_token).strategy;
   }
 
-  function _enforceStrategy(PoolStorage.Base storage ps) internal {
+  function _enforceStrategy(PoolStorage.Base storage ps) internal view {
     require(address(ps.strategy) != address(0), 'STRATEGY');
   }
 
-  function _enforceGovPool(PoolStorage.Base storage ps) internal {
+  function _enforceGovPool(PoolStorage.Base storage ps) internal view {
     require(ps.govPool == msg.sender, 'GOV');
   }
 

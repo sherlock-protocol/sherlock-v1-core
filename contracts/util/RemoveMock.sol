@@ -26,11 +26,13 @@ contract RemoveMock is IRemove {
     token = _token;
   }
 
-  function swapFMO(uint256 _fmo) private returns (uint256) {
+  function swapFMO(uint256 _fmo) private pure returns (uint256) {
+    _fmo = 0; // void assignment to avoid warnings
     return fmo;
   }
 
-  function swapUnderlying(uint256 _underlying) private returns (uint256) {
+  function swapUnderlying(uint256 _underlying) private pure returns (uint256) {
+    _underlying = 0; // void assignment to avoid warnings
     return underlying;
   }
 
