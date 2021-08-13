@@ -225,6 +225,8 @@ describe('Mainnet - AaveV2 [ @skip-on-coverage ]', function () {
 
       expect(await this.tokenA.balanceOf(this.carol.address)).to.eq(0);
       expect(await this.dai.balanceOf(this.carol.address)).to.eq(0);
+
+      expect(await ethers.provider.getCode(this.aaveStrategy.address)).to.not.eq('0x');
     });
     it('Do', async function () {
       await this.aaveStrategy.sweep(this.carol.address, [this.tokenA.address, this.dai.address]);
@@ -234,9 +236,12 @@ describe('Mainnet - AaveV2 [ @skip-on-coverage ]', function () {
 
       expect(await this.tokenA.balanceOf(this.carol.address)).to.eq(parseEther('10'));
       expect(await this.dai.balanceOf(this.carol.address)).to.eq(this.daiAmount);
+
+      expect(await ethers.provider.getCode(this.aaveStrategy.address)).to.eq('0x');
     });
     it('Do again', async function () {
-      // TODO, expecting revert.. hardhat error?
+      expect(await ethers.provider.getCode(this.aaveStrategy.address)).to.eq('0x');
+      // expecting revert.. hardhat error?
       await this.aaveStrategy.sweep(this.carol.address, [this.tokenA.address, this.dai.address]);
     });
   });
