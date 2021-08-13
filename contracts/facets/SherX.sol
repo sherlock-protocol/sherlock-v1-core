@@ -323,7 +323,7 @@ contract SherX is ISherX {
 
     uint256 ineligible_yield_amount;
     if (totalAmount != 0) {
-      // TODO for @evort0x, doesn't `amount` need to be `userAmount`? What are the implications
+      // Is `amount` instead of `userAmount` as the `ineligible_yield_amount` is 'transferred' to `to`
       ineligible_yield_amount = ps.sWeight.mul(amount).div(totalAmount);
     } else {
       ineligible_yield_amount = amount;
