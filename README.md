@@ -77,3 +77,7 @@ TokenX = 18 decimals, price precision = 18 decimals
 TokenY = 8 decimals, price precision = 28 decimals
 TokenZ = 6 decimals, price precision = 30 decimals
 ```
+
+## Security Disclosure
+
+If you have found a bug / security issue, please go through the official channel, [Sherlock Security Bounties on Immunefi](https://immunefi.com/bounty/sherlock/). Responsible disclosure procedures must be followed to receive bounties.
